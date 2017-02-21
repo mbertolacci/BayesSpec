@@ -1,0 +1,39 @@
+0.5.1
+        * Changed the simualted_piecewise dataset and updated documentation
+        * astsa package no longer imported
+        * adaptspec examples included
+        * intracranial_eeg dataset now a univariate time series
+        * Updated authoring
+        * 29.11.2016
+
+0.5.0
+        * Plots are now optional output for adaptspec (plotting = TRUE)
+        * Updated documentation for adaptspec
+        * Updated documentation for simulated_piecewise
+        * Updated simulated_piecewise dataset
+        * 25.11.2016
+
+0.4.0
+        * Added intracranial eeg dataset to adaptSPEC (intracranial_eeg)
+        * Fixed bug in sourcing lin_basis_func
+        * Fixed bug in sourcing beta_derivs
+        * 01.11.2016
+
+0.3.0
+        * Changed package name from adaptSPEC to BayesSpec
+        * Plots are now attributes on the adaptspec() function instead of being printed automatically
+        * Updated descriptions
+        * 13.10.2016
+
+0.2.0
+        * Added simulated_piecewise dataset
+        * Removed exporting of adaptspec supporting functions
+        * Included onAttach message
+        * Fixed bug in dependent pacakge loadings
+        * Added NEWS file
+        * 05.10.2016
+
+0.1.0
+        * Initial internal development
+        * adaptspec and supporting functions only
+        * 29.09.2016

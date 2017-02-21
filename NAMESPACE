@@ -1,0 +1,6 @@
+export(adaptspec)
+import(mvtnorm)
+import(pscl)
+import(trust)
+importFrom("graphics", "hist", "plot")
+importFrom("stats", "fft", "lm", "runif")

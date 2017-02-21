@@ -1,0 +1,14 @@
+Package: BayesSpec
+Type: Package
+Title: Bayesian Spectral Analysis Techniques
+Version: 0.5.2
+Author: Rosen, O., Wood, S. and Stoffer, D.
+Maintainer: Centre for Translational Data Science (CTDS) <andrew.ferris@sydney.edu.au>
+Description: Methods for spectral analysis using the Bayesian framework.
+Imports: mvtnorm (>= 1.0-5), pscl (>= 1.4.9), trust (>= 0.1-7)
+License: GPL-3
+LazyLoad: TRUE
+LazyData: TRUE
+RoxygenNote: 6.0.0
+NeedsCompilation: no
+Packaged: 2017-02-05 23:20:27 UTC; andrewferris

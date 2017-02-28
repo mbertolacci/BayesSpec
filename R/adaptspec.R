@@ -328,13 +328,15 @@ within = function (x,nexp_temp,xi_curr_temp,beta_curr_temp,nseg_curr_temp,tau_te
     log_proposal_prop <- log_beta_prop+log_prop_cut_prop
     log_prior_cut_prop <- 0
     log_prior_cut_curr <- 0
-    for (k in 1:(nexp_temp-1)){
-      if (k==1){
-        log_prior_cut_prop <- -log(nobs-(nexp_temp-k+1)*tmin+1)
-        log_prior_cut_curr <- -log(nobs-(nexp_temp-k+1)*tmin+1)
-      } else {
-        log_prior_cut_prop <- log_prior_cut_prop-log(nobs-xi_prop[k-1]-(nexp_temp-k+1)*tmin+1)
-        log_prior_cut_curr <- log_prior_cut_curr-log(nobs-xi_curr_temp[k-1]-(nexp_temp-k+1)*tmin+1)
+    if (nexp_temp > 1) {
+      for (k in 1:(nexp_temp-1)){
+        if (k==1){
+          log_prior_cut_prop <- -log(nobs-(nexp_temp-k+1)*tmin+1)
+          log_prior_cut_curr <- -log(nobs-(nexp_temp-k+1)*tmin+1)
+        } else {
+          log_prior_cut_prop <- log_prior_cut_prop-log(nobs-xi_prop[k-1]-(nexp_temp-k+1)*tmin+1)
+          log_prior_cut_curr <- log_prior_cut_curr-log(nobs-xi_curr_temp[k-1]-(nexp_temp-k+1)*tmin+1)
+        }
       }
     }
     log_target_prop <- loglike_prop+log_prior_prop+log_prior_cut_prop
@@ -466,21 +468,25 @@ death <- function(x,nexp_curr_temp,nexp_prop,tau_curr_temp,xi_curr_temp,nseg_cur
   } # end for (k in 1:nexp_prop)
   #Evaluating Target density at proposed values
   log_prior_cut_prop <- 0
-  for (k in 1:(nexp_prop-1)){
-    if (k==1){
-      log_prior_cut_prop <- -log(nobs-(nexp_prop-k+1)*tmin+1)
-    } else {
-      log_prior_cut_prop <- log_prior_cut_prop-log(nobs-xi_prop[k-1]-(nexp_prop-k+1)*tmin+1)
+  if (nexp_prop > 1) {
+    for (k in 1:(nexp_prop-1)){
+      if (k==1){
+        log_prior_cut_prop <- -log(nobs-(nexp_prop-k+1)*tmin+1)
+      } else {
+        log_prior_cut_prop <- log_prior_cut_prop-log(nobs-xi_prop[k-1]-(nexp_prop-k+1)*tmin+1)
+      }
     }
   }
   log_target_prop <- loglike_prop+log_tau_prior_prop+log_beta_prior_prop+log_prior_cut_prop
   #Evaluating Target density at current values
   log_prior_cut_curr <- 0
-  for (k in 1:(nexp_curr_temp-1)){
-    if (k==1) {
-      log_prior_cut_curr <- -log(nobs-(nexp_curr_temp-k+1)*tmin+1)
-    } else {
-      log_prior_cut_curr <- log_prior_cut_curr-log(nobs-xi_curr_temp[k-1]-(nexp_curr_temp-k+1)*tmin+1)
+  if (nexp_curr_temp > 1) {
+    for (k in 1:(nexp_curr_temp-1)){
+      if (k==1) {
+        log_prior_cut_curr <- -log(nobs-(nexp_curr_temp-k+1)*tmin+1)
+      } else {
+        log_prior_cut_curr <- log_prior_cut_curr-log(nobs-xi_curr_temp[k-1]-(nexp_curr_temp-k+1)*tmin+1)
+      }
     }
   }
   log_target_curr <- loglike_curr+log_prior_curr+log_prior_cut_curr
@@ -563,11 +569,13 @@ birth <- function(x,nexp_curr,nexp_prop,tau_curr_temp,xi_curr_temp,nseg_curr_tem
   log_cut_prop = -log(nposs_cut) #Proposal for Cut point choice
   #Evaluating prior density for cut points at proposed values
   log_prior_cut_prop = 0
-  for (k in 1:(nexp_prop-1)){
-    if (k==1){
-      log_prior_cut_prop = -log(nobs-(nexp_prop-k+1)*tmin+1)
-    } else{
-      log_prior_cut_prop = log_prior_cut_prop-log(nobs-xi_prop[k-1]-(nexp_prop-k+1)*tmin+1)
+  if (nexp_prop > 1) {
+    for (k in 1:(nexp_prop-1)){
+      if (k==1){
+        log_prior_cut_prop = -log(nobs-(nexp_prop-k+1)*tmin+1)
+      } else{
+        log_prior_cut_prop = log_prior_cut_prop-log(nobs-xi_prop[k-1]-(nexp_prop-k+1)*tmin+1)
+      }
     }
   }
   #Calculating Log Proposal density at Proposed values
@@ -608,11 +616,13 @@ birth <- function(x,nexp_curr,nexp_prop,tau_curr_temp,xi_curr_temp,nseg_curr_tem
   log_proposal_curr = log_beta_curr+log_move_curr
   #Evaluating  prior density for cut points at current values
   log_prior_cut_curr = 0
-  for (k in 1:(nexp_curr-1)){
-    if (k==1){
-      log_prior_cut_curr = -log(nobs-(nexp_curr-k+1)*tmin+1)
-    } else{
-      log_prior_cut_curr = log_prior_cut_curr-log(nobs-xi_curr_temp[k-1]-(nexp_curr-k+1)*tmin+1)
+  if (nexp_curr > 1) {
+    for (k in 1:(nexp_curr-1)){
+      if (k==1){
+        log_prior_cut_curr = -log(nobs-(nexp_curr-k+1)*tmin+1)
+      } else{
+        log_prior_cut_curr = log_prior_cut_curr-log(nobs-xi_curr_temp[k-1]-(nexp_curr-k+1)*tmin+1)
+      }
     }
   }
   if (nexp_curr == 1) log_prior_cut_curr = 0
@@ -880,6 +890,7 @@ if (plotting == TRUE){
 }
 
 z <- list(xi = xi,
+          beta = beta,
           log_spec_hat = log_spec_hat,
           nloop = nloop,
           nwarmup = nwarmup,

@@ -32,3 +32,4 @@ plot.ts(simulated_piecewise)
 Rosen, O., Wood, S. and Stoffer, D. (2012). AdaptSPEC: Adaptive Spectral Estimation for Nonstationary Time Series. J. of the American Statistical Association, 107, 1575-1589
 }
 \keyword{datasets}
+

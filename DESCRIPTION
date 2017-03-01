@@ -7,9 +7,7 @@ Maintainer: Centre for Translational Data Science (CTDS)
     <andrew.ferris@sydney.edu.au>
 Description: Methods for spectral analysis using the Bayesian framework.
 Imports:
-    mvtnorm (>= 1.0-5),
-    pscl (>= 1.4.9),
-    trust (>= 0.1-7),
+    coda,
     Rcpp,
     RcppEigen
 License: GPL-3
@@ -18,3 +16,5 @@ LazyData: TRUE
 RoxygenNote: 5.0.1
 Packaged: 2017-02-05 23:20:27 UTC; andrewferris
 LinkingTo: Rcpp, RcppEigen
+Suggests: testthat,
+    lintr

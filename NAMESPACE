@@ -2,5 +2,4 @@
 
 export(adaptspec)
 importFrom(Rcpp,evalCpp)
-importFrom(coda,mcmc)
 useDynLib(BayesSpec)

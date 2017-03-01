@@ -1,0 +1,2 @@
+linters: with_defaults(single_quotes_linter=NULL)
+exclusions: list('R/RcppExports.R')

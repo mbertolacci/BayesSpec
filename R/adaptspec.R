@@ -25,8 +25,6 @@
 #' @return log_spec_hat Estimates of the log spectra for all segments
 #' @return nexp_curr The number of segments in each iteration.
 #'
-#' @importFrom coda mcmc
-#'
 #' @usage
 #' adaptspec(nloop, nwarmup, nexp_max, x,
 #'    tmin, sigmasqalpha, tau_prior_a, tau_prior_b,
@@ -97,8 +95,9 @@ adaptspec <- function(
 
   x <- as.matrix(x)
   if (detrend) {
-    # Detrend the observations
-    x0 <- 1 : nrow(x)
+    # Detrend the observations (nolint because lintr can't figure out this
+    # is used below)
+    x0 <- 1 : nrow(x)  # nolint
     for (series in 1 : ncol(x)) {
       x[, series] <- lm(x[, series] ~ x0)$res
     }
@@ -119,10 +118,10 @@ adaptspec <- function(
     nexp_start, show_progress
   )
 
-  results$n_segments <- mcmc(results$n_segments)
+  results$n_segments <- coda::mcmc(results$n_segments)
   results$beta <- aperm(results$beta, c(3, 1, 2))
-  results$tau_squared <- mcmc(aperm(results$tau_squared, c(2, 1)))
-  results$cut_point <- mcmc(aperm(results$cut_point, c(2, 1)))
+  results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
+  results$cut_point <- coda::mcmc(aperm(results$cut_point, c(2, 1)))
 
   return(results)
 }

@@ -118,6 +118,8 @@ adaptspec <- function(
     nexp_start, show_progress
   )
 
+  results$prior <- prior
+
   results$n_segments <- coda::mcmc(results$n_segments)
   results$beta <- aperm(results$beta, c(3, 1, 2))
   results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))

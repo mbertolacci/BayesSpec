@@ -15,7 +15,7 @@ namespace bayesspec {
 class AdaptSpecSampler {
 public:
     AdaptSpecSampler(
-        const Eigen::VectorXd& x,
+        const Eigen::MatrixXd& x,
         const AdaptSpecSample& start,
         double probMM1,
         const AdaptSpecPrior& prior
@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    const Eigen::VectorXd x_;
+    const Eigen::MatrixXd& x_;
     const double probMM1_;
 
     const AdaptSpecPrior& prior_;

@@ -1,6 +1,8 @@
 #ifndef SRC_PRIOR_HPP_
 #define SRC_PRIOR_HPP_
 
+#include <RcppEigen.h>
+
 namespace bayesspec {
 
 struct AdaptSpecPrior {
@@ -27,6 +29,19 @@ struct AdaptSpecPrior {
         tauPriorB(tauPriorB_),
         tauUpperLimit(tauUpperLimit_),
         nBases(nBases_) {}
+
+
+    static AdaptSpecPrior fromList(Rcpp::List priorList) {
+        return AdaptSpecPrior(
+            priorList["n_segments_max"],
+            priorList["t_min"],
+            priorList["sigma_squared_alpha"],
+            priorList["tau_prior_a"],
+            priorList["tau_prior_b"],
+            priorList["tau_upper_limit"],
+            priorList["n_bases"]
+        );
+    }
 };
 
 }  // namespace bayespec

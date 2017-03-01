@@ -34,7 +34,7 @@ class AdaptSpecSample : public AdaptSpecParameters {
 public:
     Eigen::VectorXd segmentLengths;
     std::vector<Eigen::MatrixXd> nu;
-    std::vector<Eigen::VectorXd> periodogram;
+    std::vector<Eigen::MatrixXd> periodogram;
 
     Eigen::MatrixXd betaMle;
     std::vector<Eigen::MatrixXd> precisionCholeskyMle;
@@ -45,7 +45,7 @@ public:
     double logPriorCutPoints;
 
     AdaptSpecSample(
-        const Eigen::VectorXd& x,
+        const Eigen::MatrixXd& x,
         const AdaptSpecPrior& prior,
         unsigned int nStartingSegments = 1
     ) : logPriorCutPoints(0),
@@ -77,12 +77,12 @@ public:
 
         cutPoints.resize(prior_.nSegmentsMax);
         segmentLengths.resize(prior_.nSegmentsMax);
-        cutPoints.fill(x_.size());
+        cutPoints.fill(x_.rows());
         segmentLengths.fill(0);
 
         unsigned int lastCutPoint = 0;
         for (unsigned int segment = 0; segment < nSegments; ++segment) {
-            cutPoints[segment] = (segment + 1) * x_.size() / nSegments;
+            cutPoints[segment] = (segment + 1) * x_.rows() / nSegments;
             segmentLengths[segment] = cutPoints[segment] - lastCutPoint;
             tauSquared[segment] = prior_.tauUpperLimit * rng.randu();
 
@@ -132,7 +132,7 @@ public:
         logPriorCutPoints = 0;
         for (unsigned int segment = 0; segment < nSegments - 1; ++segment) {
             logPriorCutPoints -= log(
-                static_cast<double>(x_.size())
+                static_cast<double>(x_.rows())
                 - (segment == 0 ? 0 : cutPoints[segment - 1])
                 - (static_cast<double>(nSegments) - static_cast<double>(segment)) * prior_.tMin
                 + 1
@@ -180,16 +180,12 @@ public:
         if (solver.status() != cppoptlib::Status::GradNormTolerance) {
             Rcpp::Rcout << "Warning: solver failed with status: " << solver.status() << "\n";
             Rcpp::Rcout << solver.criteria();
-            Rcpp::Rcout << "segment details\nx = " << x_.segment(cutPoints[segment] - segmentLengths[segment], segmentLengths[segment]).transpose() << "\n";
-            Rcpp::Rcout << "length = " << segmentLengths[segment] << "\n";
-            Rcpp::Rcout << "periodogram = " << periodogram[segment].transpose() << "\n";
-            Rcpp::Rcout << "nu = " << nu[segment] << "\n";
             Rcpp::stop("Solver failed");
         }
 
         betaMle.row(segment) = thisBetaMle.transpose();
 
-        Eigen::MatrixXd hessian;
+        Eigen::MatrixXd hessian(prior_.nBases + 1, prior_.nBases + 1);
         functor.hessian(thisBetaMle, hessian);
         precisionCholeskyMle[segment] = hessian.llt().matrixU();
 
@@ -206,10 +202,13 @@ public:
         Eigen::VectorXd freqs = Eigen::VectorXd::LinSpaced(nFrequencies + 1, 0, 0.5);
         nu[segment] = splineBasis1d(freqs, prior_.nBases, true);
 
-        Eigen::VectorXd thisX = x_.segment(cutPoints[segment] - segmentLength, segmentLength);
-        fft.fwd(frequencies, thisX);
-        periodogram[segment] = frequencies.segment(0, nFrequencies + 1).cwiseAbs2()
-            / static_cast<double>(segmentLength);
+        periodogram[segment] = Eigen::MatrixXd(nFrequencies + 1, x_.cols());
+        for (unsigned int series = 0; series < x_.cols(); ++series) {
+            Eigen::VectorXd thisX = x_.col(series).segment(cutPoints[segment] - segmentLength, segmentLength);
+            fft.fwd(frequencies, thisX);
+            periodogram[segment].col(series) = frequencies.segment(0, nFrequencies + 1).cwiseAbs2()
+                / static_cast<double>(segmentLength);
+        }
 
         updateSegmentFit(segment);
     }
@@ -349,7 +348,7 @@ public:
     }
 
 private:
-    const Eigen::VectorXd& x_;
+    const Eigen::MatrixXd& x_;
     const AdaptSpecPrior& prior_;
 
     static unsigned int findChangedCutPoint_(const AdaptSpecSample& left, const AdaptSpecSample& right) {

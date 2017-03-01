@@ -1,6 +1,6 @@
 context('sample')
 
-x <- sin(seq(0, 2 * pi, length.out = 20))
+x <- as.matrix(sin(seq(0, 2 * pi, length.out = 20)))
 
 prior <- list(
     n_segments_max = 3,
@@ -36,11 +36,11 @@ test_that('fit and densities', {
     )
 
     # Basis
-    expect_equal(result$periodogram[[1]], c(
+    expect_equal(result$periodogram[[1]], matrix(c(
         0.000000000, 4.699544030, 0.026898256, 0.008475845, 0.004491217,
         0.002946380, 0.002191168, 0.001779383, 0.001548366, 0.001429210,
         0.001392288
-    ))
+    ), ncol = 1))
     expect_equal(result$nu[[1]], rbind(
         c(1,  2.250791e-01,  0.11253954),
         c(1,  2.140629e-01,  0.09104640),
@@ -67,26 +67,52 @@ test_that('fit and densities', {
         c(0.000000, 1.0224588, 0.01854398),
         c(0.000000, 0.0000000, 1.00428261)
     ), tolerance = 1e-5)
-})
 
-test_that('zero fit', {
-    results <- .get_sample_filled(
-        rep(0, 139),
-        list(
-            n_segments_max = 3,
-            t_min = 40,
-            sigma_squared_alpha = 100,
-            tau_prior_a = -1,
-            tau_prior_b = 1,
-            tau_upper_limit = 10000,
-            n_bases = 7
-        ),
+    # Multivariate fit
+    result <- .get_sample_filled(
+        cbind(x, x), prior,
         1,
         matrix(0, nrow = 3, ncol = 3),
         rep(1, 3),
-        c(139, 139, 139)
+        c(20, 20, 20)
     )
-    print(results)
+
+    # Basis
+    expect_equal(result$periodogram[[1]], cbind(c(
+        0.000000000, 4.699544030, 0.026898256, 0.008475845, 0.004491217,
+        0.002946380, 0.002191168, 0.001779383, 0.001548366, 0.001429210,
+        0.001392288
+    ), c(
+        0.000000000, 4.699544030, 0.026898256, 0.008475845, 0.004491217,
+        0.002946380, 0.002191168, 0.001779383, 0.001548366, 0.001429210,
+        0.001392288
+    )))
+    expect_equal(result$nu[[1]], rbind(
+        c(1,  2.250791e-01,  0.11253954),
+        c(1,  2.140629e-01,  0.09104640),
+        c(1,  1.820928e-01,  0.03477663),
+        c(1,  1.322982e-01, -0.03477663),
+        c(1,  6.955326e-02, -0.09104640),
+        c(1,  1.378212e-17, -0.11253954),
+        c(1, -6.955326e-02, -0.09104640),
+        c(1, -1.322982e-01, -0.03477663),
+        c(1, -1.820928e-01,  0.03477663),
+        c(1, -2.140629e-01,  0.09104640),
+        c(1, -2.250791e-01,  0.11253954)
+    ), tolerance = 1e-5)
+
+    # Likelihood and prior
+    expect_equal(result$log_segment_likelihood[1], -46.25754, tolerance = 1e-5)
+    expect_equal(result$log_segment_prior[1], -2.756816, tolerance = 1e-5)
+
+    # Proposal distribution
+    expect_equal(result$log_segment_proposal[1], -15.65005, tolerance = 1e-5)
+    expect_equal(result$beta_mle[1, ], c(-1.623733, 3.860757, 1.632835), tolerance = 1e-5)
+    expect_equal(result$precision_cholesky_mle[[1]], rbind(
+        c(4.401848, 0.8770763, 0.37094314),
+        c(0.000000, 1.0313731, 0.02388138),
+        c(0.000000, 0.0000000, 1.00630540)
+    ), tolerance = 1e-5)
 })
 
 test_that('log_prior_cut_points', {

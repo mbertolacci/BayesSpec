@@ -7,35 +7,39 @@
 using namespace Rcpp;
 
 // adaptspec
-Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, unsigned int nSegmentsMax, Rcpp::NumericVector xR, unsigned int tMin, double sigmaSquaredAlpha, double tauPriorA, double tauPriorB, double tauUpperLimit, double probMM1, unsigned int nBases, unsigned int nSegmentsStart, bool showProgress);
-RcppExport SEXP BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP nSegmentsMaxSEXP, SEXP xRSEXP, SEXP tMinSEXP, SEXP sigmaSquaredAlphaSEXP, SEXP tauPriorASEXP, SEXP tauPriorBSEXP, SEXP tauUpperLimitSEXP, SEXP probMM1SEXP, SEXP nBasesSEXP, SEXP nSegmentsStartSEXP, SEXP showProgressSEXP) {
+Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorList, double probMM1, unsigned int nSegmentsStart, bool showProgress);
+RcppExport SEXP BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP nSegmentsStartSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< unsigned int >::type nLoop(nLoopSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nWarmUp(nWarmUpSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nSegmentsMax(nSegmentsMaxSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type tMin(tMinSEXP);
-    Rcpp::traits::input_parameter< double >::type sigmaSquaredAlpha(sigmaSquaredAlphaSEXP);
-    Rcpp::traits::input_parameter< double >::type tauPriorA(tauPriorASEXP);
-    Rcpp::traits::input_parameter< double >::type tauPriorB(tauPriorBSEXP);
-    Rcpp::traits::input_parameter< double >::type tauUpperLimit(tauUpperLimitSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nBases(nBasesSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nSegmentsStart(nSegmentsStartSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, nSegmentsMax, xR, tMin, sigmaSquaredAlpha, tauPriorA, tauPriorB, tauUpperLimit, probMM1, nBases, nSegmentsStart, showProgress));
+    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, priorList, probMM1, nSegmentsStart, showProgress));
+    return rcpp_result_gen;
+END_RCPP
+}
+// independentMixture
+Rcpp::List independentMixture();
+RcppExport SEXP BayesSpec_independentMixture() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(independentMixture());
     return rcpp_result_gen;
 END_RCPP
 }
 // getSampleDefault
-Rcpp::List getSampleDefault(Rcpp::NumericVector xR, Rcpp::List priorList, unsigned int nStartingSegments);
+Rcpp::List getSampleDefault(Rcpp::NumericMatrix xR, Rcpp::List priorList, unsigned int nStartingSegments);
 RcppExport SEXP BayesSpec_getSampleDefault(SEXP xRSEXP, SEXP priorListSEXP, SEXP nStartingSegmentsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nStartingSegments(nStartingSegmentsSEXP);
     rcpp_result_gen = Rcpp::wrap(getSampleDefault(xR, priorList, nStartingSegments));
@@ -43,12 +47,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // getSampleFilled
-Rcpp::List getSampleFilled(Rcpp::NumericVector xR, Rcpp::List priorList, unsigned int nSegments, Rcpp::NumericMatrix beta, Rcpp::NumericVector tauSquared, Rcpp::IntegerVector cutPoints);
+Rcpp::List getSampleFilled(Rcpp::NumericMatrix xR, Rcpp::List priorList, unsigned int nSegments, Rcpp::NumericMatrix beta, Rcpp::NumericVector tauSquared, Rcpp::IntegerVector cutPoints);
 RcppExport SEXP BayesSpec_getSampleFilled(SEXP xRSEXP, SEXP priorListSEXP, SEXP nSegmentsSEXP, SEXP betaSEXP, SEXP tauSquaredSEXP, SEXP cutPointsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nSegments(nSegmentsSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type beta(betaSEXP);
@@ -59,14 +63,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // getMetropolisLogRatio
-double getMetropolisLogRatio(Rcpp::List currentR, Rcpp::List proposalR, Rcpp::NumericVector xR, Rcpp::List priorList);
+double getMetropolisLogRatio(Rcpp::List currentR, Rcpp::List proposalR, Rcpp::NumericMatrix xR, Rcpp::List priorList);
 RcppExport SEXP BayesSpec_getMetropolisLogRatio(SEXP currentRSEXP, SEXP proposalRSEXP, SEXP xRSEXP, SEXP priorListSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type currentR(currentRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type proposalR(proposalRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
     rcpp_result_gen = Rcpp::wrap(getMetropolisLogRatio(currentR, proposalR, xR, priorList));
     return rcpp_result_gen;

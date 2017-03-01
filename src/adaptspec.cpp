@@ -7,42 +7,32 @@ using namespace bayesspec;
 
 // [[Rcpp::export(name=".adaptspec")]]
 Rcpp::List adaptspec(
-    unsigned int nLoop, unsigned int nWarmUp,
-    unsigned int nSegmentsMax, Rcpp::NumericVector xR,
-    unsigned int tMin,
-    double sigmaSquaredAlpha,
-    double tauPriorA,
-    double tauPriorB,
-    double tauUpperLimit,
+    unsigned int nLoop,
+    unsigned int nWarmUp,
+    Rcpp::NumericMatrix xR,
+    Rcpp::List priorList,
     double probMM1,
-    unsigned int nBases,
     unsigned int nSegmentsStart = 1,
     bool showProgress = false
 ) {
     RNG::initialise();
 
-    Eigen::VectorXd x = Rcpp::as< Eigen::VectorXd >(xR);
-    AdaptSpecPrior prior(
-        nSegmentsMax,
-        tMin,
-        sigmaSquaredAlpha,
-        tauPriorA, tauPriorB, tauUpperLimit,
-        nBases
-    );
+    Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecSample start(x, prior, nSegmentsStart);
     AdaptSpecSampler sampler(x, start, probMM1, prior);
 
     unsigned int nSamples = nLoop - nWarmUp;
     Rcpp::IntegerVector nSegmentsSamples(nSamples);
     Rcpp::NumericVector betaSamples(Rcpp::Dimension({
-        nSegmentsMax,
-        1 + nBases,
+        prior.nSegmentsMax,
+        1 + prior.nBases,
         nSamples
     }));
-    Rcpp::NumericMatrix tauSquaredSamples(nSegmentsMax, nSamples);
-    Rcpp::IntegerMatrix cutPointsSamples(nSegmentsMax, nSamples);
+    Rcpp::NumericMatrix tauSquaredSamples(prior.nSegmentsMax, nSamples);
+    Rcpp::IntegerMatrix cutPointsSamples(prior.nSegmentsMax, nSamples);
 
-    unsigned int nBetas = nSegmentsMax * (1 + nBases);
+    unsigned int nBetas = prior.nSegmentsMax * (1 + prior.nBases);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -63,13 +53,13 @@ Rcpp::List adaptspec(
             );
             std::copy(
                 sampler.getCurrent().tauSquared.data(),
-                sampler.getCurrent().tauSquared.data() + nSegmentsMax,
-                tauSquaredSamples.begin() + sampleIndex * nSegmentsMax
+                sampler.getCurrent().tauSquared.data() + prior.nSegmentsMax,
+                tauSquaredSamples.begin() + sampleIndex * prior.nSegmentsMax
             );
             std::copy(
                 sampler.getCurrent().cutPoints.data(),
-                sampler.getCurrent().cutPoints.data() + nSegmentsMax,
-                cutPointsSamples.begin() + sampleIndex * nSegmentsMax
+                sampler.getCurrent().cutPoints.data() + prior.nSegmentsMax,
+                cutPointsSamples.begin() + sampleIndex * prior.nSegmentsMax
             );
         }
 

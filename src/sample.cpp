@@ -33,20 +33,8 @@ Rcpp::List wrapSample(const AdaptSpecSample& sample) {
     return output;
 }
 
-AdaptSpecPrior getPriorFromList(Rcpp::List priorList) {
-    return AdaptSpecPrior(
-        priorList["n_segments_max"],
-        priorList["t_min"],
-        priorList["sigma_squared_alpha"],
-        priorList["tau_prior_a"],
-        priorList["tau_prior_b"],
-        priorList["tau_upper_limit"],
-        priorList["n_bases"]
-    );
-}
-
 AdaptSpecSample getSampleFromList(
-    Rcpp::List sampleList, const Eigen::VectorXd& x, const AdaptSpecPrior& prior
+    Rcpp::List sampleList, const Eigen::MatrixXd& x, const AdaptSpecPrior& prior
 ) {
     AdaptSpecSample sample(x, prior, 0);
     sample.nSegments = sampleList["n_segments"];
@@ -67,21 +55,21 @@ AdaptSpecSample getSampleFromList(
 
 // [[Rcpp::export(name=".get_sample_default")]]
 Rcpp::List getSampleDefault(
-    Rcpp::NumericVector xR,
+    Rcpp::NumericMatrix xR,
     Rcpp::List priorList,
     unsigned int nStartingSegments
 ) {
     RNG::initialise();
 
-    AdaptSpecPrior prior = getPriorFromList(priorList);
-    AdaptSpecSample sample(Rcpp::as< Eigen::VectorXd >(xR), prior, nStartingSegments);
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    AdaptSpecSample sample(Rcpp::as< Eigen::MatrixXd >(xR), prior, nStartingSegments);
 
     return wrapSample(sample);
 }
 
 // [[Rcpp::export(name=".get_sample_filled")]]
 Rcpp::List getSampleFilled(
-    Rcpp::NumericVector xR,
+    Rcpp::NumericMatrix xR,
     Rcpp::List priorList,
     unsigned int nSegments,
     Rcpp::NumericMatrix beta,
@@ -90,8 +78,8 @@ Rcpp::List getSampleFilled(
 ) {
     RNG::initialise();
 
-    AdaptSpecPrior prior = getPriorFromList(priorList);
-    Eigen::VectorXd x = Rcpp::as< Eigen::VectorXd >(xR);
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
 
     AdaptSpecSample sample(x, prior, 0);
     sample.nSegments = nSegments;
@@ -113,13 +101,13 @@ Rcpp::List getSampleFilled(
 double getMetropolisLogRatio(
     Rcpp::List currentR,
     Rcpp::List proposalR,
-    Rcpp::NumericVector xR,
+    Rcpp::NumericMatrix xR,
     Rcpp::List priorList
 ) {
     RNG::initialise();
 
-    AdaptSpecPrior prior = getPriorFromList(priorList);
-    Eigen::VectorXd x = Rcpp::as< Eigen::VectorXd >(xR);
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
     AdaptSpecSample current = getSampleFromList(currentR, x, prior);
     AdaptSpecSample proposal = getSampleFromList(proposalR, x, prior);
 

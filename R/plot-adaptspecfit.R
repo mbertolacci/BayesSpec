@@ -27,11 +27,7 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
   par(ask = ask)
   coda::densplot(fit$n_segments, main = 'Number of segments histogram')
 
-  n_segments_range <- range(fit$n_segments)
-  for (n_segments in n_segments_range[1] : n_segments_range[2]) {
-    if (n_segments == 1 || sum(fit$n_segments == n_segments) == 0) {
-      next
-    }
+  for (n_segments in unique(results$n_segments)) {
     cut_point <- fit$cut_point[
       fit$n_segments == n_segments,
       1 : n_segments,
@@ -49,7 +45,7 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 
       if (!is.null(fit$freq_hat)) {
         plot(
-          fit$freq_hat, fit$spec_hat[n_segments, segment, ],
+          fit$freq_hat, fit$spec_hat[[n_segments]][, segment],
           type = 'l', xlab = 'Frequency', ylab = 'Log spectral density',
           main = sprintf(
             'Segment %d log spectral density (%d segments)',

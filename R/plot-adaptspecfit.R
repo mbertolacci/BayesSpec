@@ -18,9 +18,8 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 
   old_par <- par(no.readonly = TRUE)
   on.exit(par(old_par))
-
   if (auto_layout) {
-    par(mfrow = c(4, 2))
+    par(mfrow = c(3, 2))
   }
 
   coda::traceplot(fit$n_segments, main = 'Number of segments traceplot')

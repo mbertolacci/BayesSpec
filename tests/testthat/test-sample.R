@@ -14,25 +14,27 @@ prior <- list(
 
 test_that('initialise', {
   result <- .get_sample_default(x, prior, 1)
-  expect_equal(result$cut_points, c(20, 20, 20))
+  expect_equal(result$parameters$cut_points, c(20, 20, 20))
   expect_equal(result$segment_lengths, c(20, 0, 0))
 
   result <- .get_sample_default(x, prior, 2)
-  expect_equal(result$cut_points, c(10, 20, 20))
+  expect_equal(result$parameters$cut_points, c(10, 20, 20))
   expect_equal(result$segment_lengths, c(10, 10, 0))
 
   result <- .get_sample_default(x, prior, 3)
-  expect_equal(result$cut_points, c(6, 13, 20))
+  expect_equal(result$parameters$cut_points, c(6, 13, 20))
   expect_equal(result$segment_lengths, c(6, 7, 7))
 })
 
 test_that('fit and densities', {
   result <- .get_sample_filled(
     x, prior,
-    1,
-    matrix(0, nrow = 3, ncol = 3),
-    rep(1, 3),
-    c(20, 20, 20)
+    list(
+      n_segments = 1,
+      beta = matrix(0, nrow = 3, ncol = 3),
+      tau_squared = rep(1, 3),
+      cut_points = c(20, 20, 20)
+    )
   )
 
   # Basis
@@ -71,10 +73,12 @@ test_that('fit and densities', {
   # Multivariate fit
   result <- .get_sample_filled(
     cbind(x, x), prior,
-    1,
-    matrix(0, nrow = 3, ncol = 3),
-    rep(1, 3),
-    c(20, 20, 20)
+    list(
+      n_segments = 1,
+      beta = matrix(0, nrow = 3, ncol = 3),
+      tau_squared = rep(1, 3),
+      cut_points = c(20, 20, 20)
+    )
   )
 
   # Basis
@@ -122,28 +126,34 @@ test_that('fit and densities', {
 test_that('log_prior_cut_points', {
   result <- .get_sample_filled(
     x, prior,
-    1,
-    matrix(0, nrow = 3, ncol = 3),
-    rep(1, 3),
-    c(20, 20, 20)
+    list(
+      n_segments = 1,
+      beta = matrix(0, nrow = 3, ncol = 3),
+      tau_squared = rep(1, 3),
+      cut_points = c(20, 20, 20)
+    )
   )
   expect_equal(result$log_prior_cut_points, 0)
 
   result <- .get_sample_filled(
     x, prior,
-    2,
-    matrix(0, nrow = 3, ncol = 3),
-    rep(1, 3),
-    c(10, 20, 20)
+    list(
+      n_segments = 2,
+      beta = matrix(0, nrow = 3, ncol = 3),
+      tau_squared = rep(1, 3),
+      cut_points = c(10, 20, 20)
+    )
   )
   expect_equal(result$log_prior_cut_points, -2.944439, tolerance = 1e-5)
 
   result <- .get_sample_filled(
     x, prior,
-    3,
-    matrix(0, nrow = 3, ncol = 3),
-    rep(1, 3),
-    c(6, 13, 20)
+    list(
+      n_segments = 3,
+      beta = matrix(0, nrow = 3, ncol = 3),
+      tau_squared = rep(1, 3),
+      cut_points = c(6, 13, 20)
+    )
   )
   expect_equal(result$log_prior_cut_points, -5.455321, tolerance = 1e-5)
 })

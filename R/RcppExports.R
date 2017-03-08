@@ -5,20 +5,20 @@
     .Call('BayesSpec_adaptspec', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorList, probMM1, nSegmentsStart, showProgress)
 }
 
-.independent_mixture <- function() {
-    .Call('BayesSpec_independentMixture', PACKAGE = 'BayesSpec')
-}
-
 .get_sample_default <- function(xR, priorList, nStartingSegments) {
     .Call('BayesSpec_getSampleDefault', PACKAGE = 'BayesSpec', xR, priorList, nStartingSegments)
 }
 
-.get_sample_filled <- function(xR, priorList, nSegments, beta, tauSquared, cutPoints) {
-    .Call('BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, nSegments, beta, tauSquared, cutPoints)
+.get_sample_filled <- function(xR, priorList, stateList) {
+    .Call('BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, stateList)
 }
 
 .get_metropolis_log_ratio <- function(currentR, proposalR, xR, priorList) {
     .Call('BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList)
+}
+
+.independent_mixture <- function(nLoop, nWarmUp, xR, priorsR, weightsPriorR, probMM1, showProgress = FALSE) {
+    .Call('BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, probMM1, showProgress)
 }
 
 splines_basis1d <- function(xR, nBases, omitLinear = FALSE) {

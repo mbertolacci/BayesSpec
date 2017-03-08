@@ -6,6 +6,8 @@
 #include <sstream>
 #include <RcppEigen.h>
 
+namespace bayesspec {
+
 class ProgressBar {
  public:
     explicit ProgressBar(uint64_t nSteps)
@@ -74,5 +76,7 @@ class ProgressBar {
         Rcpp::Rcout.flush();
     }
 };
+
+}  // namespace bayespec
 
 #endif  // SRC_PROGRESS_HPP_

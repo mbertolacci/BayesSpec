@@ -1,4 +1,4 @@
 library(testthat)
-library(BayesSpec)  # nolint
+suppressPackageStartupMessages(library(BayesSpec))  # nolint
 
 test_check('BayesSpec')

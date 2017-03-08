@@ -50,8 +50,9 @@ class RNG {
 
     static void initialise();
 
- private:
     std::mt19937_64 engine_;
+
+ private:
     std::uniform_real_distribution<double> uniformDistribution_;  // U(0, 1)
     std::normal_distribution<double> normalDistribution_;  // N(0, 1)
     std::exponential_distribution<double> exponentialDistribution_;  // exp(1)

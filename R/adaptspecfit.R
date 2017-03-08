@@ -1,3 +1,43 @@
+adaptspecfit <- function(results, nfreq_hat = 0) {
+  results$n_segments <- coda::mcmc(results$n_segments)
+  results$beta <- aperm(results$beta, c(3, 1, 2))
+  results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
+  results$cut_points <- coda::mcmc(aperm(results$cut_points, c(2, 1)))
+
+  if (nfreq_hat > 0) {
+    # Compute fits of the spectra
+    freq_hat <- (0 : nfreq_hat) / (2 * nfreq_hat)
+    nu_hat <- splines_basis1d(freq_hat, results$prior$n_bases, omitLinear = TRUE)
+
+    spec_hat <- list()
+    for (n_segments in unique(results$n_segments)) {
+      spec_hat[[n_segments]] <- matrix(
+        0, nrow = nfreq_hat + 1, ncol = n_segments
+      )
+      for (segment in 1 : n_segments) {
+        beta <- results$beta[
+          results$n_segments == n_segments,
+          segment, , drop = FALSE  # nolint
+        ]
+        dim(beta) <- dim(beta)[c(1, 3)]
+        spec_hat[[n_segments]][, segment] <- rowMeans(nu_hat %*% t(beta))
+      }
+    }
+    results$freq_hat <- freq_hat
+    results$spec_hat <- spec_hat
+  }
+
+  class(results) <- 'adaptspecfit'
+
+  return(results)
+}
+
+#' @export
+summary.adaptspecfit <- function(fit) {
+  cat('n_segments =')
+  print(table(fit$n_segments))
+}
+
 #' @name plot.adaptspecfit
 #'
 #' @title Summary plots of adaptspecfit objects
@@ -19,22 +59,22 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
   old_par <- par(no.readonly = TRUE)
   on.exit(par(old_par))
   if (auto_layout) {
-    par(mfrow = c(3, 2))
+    par(mfrow = c(2, 2))
   }
 
   coda::traceplot(fit$n_segments, main = 'Number of segments traceplot')
   par(ask = ask)
   coda::densplot(fit$n_segments, main = 'Number of segments histogram')
 
-  for (n_segments in unique(results$n_segments)) {
-    cut_point <- fit$cut_point[
+  for (n_segments in unique(fit$n_segments)) {
+    cut_points <- fit$cut_points[
       fit$n_segments == n_segments,
       1 : n_segments,
       drop = FALSE
     ]
     for (segment in 1 : n_segments) {
       hist(
-        cut_point[, segment], prob = TRUE,
+        cut_points[, segment], prob = TRUE,
         main = sprintf(
           'Segment %d endpoints (%d segments)',
           segment, n_segments

@@ -19,21 +19,10 @@ Rcpp::List adaptspec(
 
     Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
-    AdaptSpecSample start(x, prior, nSegmentsStart);
+    AdaptSpecParameters start(prior, x.rows(), nSegmentsStart);
     AdaptSpecSampler sampler(x, start, probMM1, prior);
 
-    unsigned int nSamples = nLoop - nWarmUp;
-    Rcpp::IntegerVector nSegmentsSamples(nSamples);
-    Rcpp::NumericVector betaSamples(Rcpp::Dimension({
-        prior.nSegmentsMax,
-        1 + prior.nBases,
-        nSamples
-    }));
-    Rcpp::NumericMatrix tauSquaredSamples(prior.nSegmentsMax, nSamples);
-    Rcpp::IntegerMatrix cutPointsSamples(prior.nSegmentsMax, nSamples);
-
-    unsigned int nBetas = prior.nSegmentsMax * (1 + prior.nBases);
-
+    AdaptSpecSamples samples(nLoop - nWarmUp, prior);
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         sampler.sample();
@@ -44,23 +33,7 @@ Rcpp::List adaptspec(
         }
 
         if (iteration >= nWarmUp) {
-            unsigned int sampleIndex = iteration - nWarmUp;
-            nSegmentsSamples[sampleIndex] = sampler.getCurrent().nSegments;
-            std::copy(
-                sampler.getCurrent().beta.data(),
-                sampler.getCurrent().beta.data() + nBetas,
-                betaSamples.begin() + sampleIndex * nBetas
-            );
-            std::copy(
-                sampler.getCurrent().tauSquared.data(),
-                sampler.getCurrent().tauSquared.data() + prior.nSegmentsMax,
-                tauSquaredSamples.begin() + sampleIndex * prior.nSegmentsMax
-            );
-            std::copy(
-                sampler.getCurrent().cutPoints.data(),
-                sampler.getCurrent().cutPoints.data() + prior.nSegmentsMax,
-                cutPointsSamples.begin() + sampleIndex * prior.nSegmentsMax
-            );
+            samples.save(sampler.getCurrent());
         }
 
         if (showProgress) {
@@ -68,11 +41,95 @@ Rcpp::List adaptspec(
         }
     }
 
-    Rcpp::List result;
-    result["n_segments"] = nSegmentsSamples;
-    result["beta"] = betaSamples;
-    result["tau_squared"] = tauSquaredSamples;
-    result["cut_point"] = cutPointsSamples;
+    return samples.asList();
+}
 
-    return result;
+// These functions are used for testing
+
+Rcpp::List wrapState(const AdaptSpecState& state) {
+    Rcpp::List output;
+
+    Rcpp::List parameters;
+    parameters["n_segments"] = Rcpp::wrap(state.parameters.nSegments);
+    parameters["beta"] = Rcpp::wrap(state.parameters.beta);
+    parameters["tau_squared"] = Rcpp::wrap(state.parameters.tauSquared);
+    parameters["cut_points"] = Rcpp::wrap(state.parameters.cutPoints);
+    output["parameters"] = parameters;
+
+    output["segment_lengths"] = Rcpp::wrap(state.segmentLengths);
+    Rcpp::List nu;
+    Rcpp::List periodogram;
+    Rcpp::List precisionCholeskyMle;
+    for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
+        nu.push_back(Rcpp::wrap(state.nu[segment]));
+        periodogram.push_back(Rcpp::wrap(state.periodogram[segment]));
+        precisionCholeskyMle.push_back(Rcpp::wrap(state.precisionCholeskyMle[segment]));
+    }
+    output["nu"] = nu;
+    output["periodogram"] = periodogram;
+    output["beta_mle"] = Rcpp::wrap(state.betaMle);
+    output["precision_cholesky_mle"] = precisionCholeskyMle;
+    output["log_segment_proposal"] = Rcpp::wrap(state.logSegmentProposal);
+    output["log_segment_likelihood"] = Rcpp::wrap(state.logSegmentLikelihood);
+    output["log_segment_prior"] = Rcpp::wrap(state.logSegmentPrior);
+    output["log_prior_cut_points"] = Rcpp::wrap(state.logPriorCutPoints);
+
+    return output;
+}
+
+AdaptSpecState getStateFromList(
+    Rcpp::List parametersList, const Eigen::MatrixXd& x, const AdaptSpecPrior& prior
+) {
+    AdaptSpecParameters parameters(prior);
+    parameters.nSegments = parametersList["n_segments"];
+    parameters.beta = Rcpp::as< Eigen::MatrixXd >(parametersList["beta"]);
+    parameters.tauSquared = Rcpp::as< Eigen::VectorXd >(parametersList["tau_squared"]);
+    parameters.cutPoints = Rcpp::as< Eigen::VectorXi >(parametersList["cut_points"]);
+
+    return AdaptSpecState(parameters, x, prior, 0.8);
+}
+
+// [[Rcpp::export(name=".get_sample_default")]]
+Rcpp::List getSampleDefault(
+    Rcpp::NumericMatrix xR,
+    Rcpp::List priorList,
+    unsigned int nStartingSegments
+) {
+    RNG::initialise();
+
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    AdaptSpecState state(Rcpp::as< Eigen::MatrixXd >(xR), prior, 0.8, nStartingSegments);
+
+    return wrapState(state);
+}
+
+// [[Rcpp::export(name=".get_sample_filled")]]
+Rcpp::List getSampleFilled(
+    Rcpp::NumericMatrix xR,
+    Rcpp::List priorList,
+    Rcpp::List stateList
+) {
+    RNG::initialise();
+
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
+
+    return wrapState(getStateFromList(stateList, x, prior));
+}
+
+// [[Rcpp::export(name=".get_metropolis_log_ratio")]]
+double getMetropolisLogRatio(
+    Rcpp::List currentR,
+    Rcpp::List proposalR,
+    Rcpp::NumericMatrix xR,
+    Rcpp::List priorList
+) {
+    RNG::initialise();
+
+    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
+    AdaptSpecState current = getStateFromList(currentR, x, prior);
+    AdaptSpecState proposal = getStateFromList(proposalR, x, prior);
+
+    return AdaptSpecState::getMetropolisLogRatio(current, proposal);
 }

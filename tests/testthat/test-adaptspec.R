@@ -13,6 +13,6 @@ test_that('sampler gives sane return samples', {
   expect_equal(class(result$tau_squared), 'mcmc')
   expect_equal(dim(result$tau_squared), c(50, 4))
 
-  expect_equal(class(result$cut_point), 'mcmc')
+  expect_equal(class(result$cut_points), 'mcmc')
   expect_equal(dim(result$tau_squared), c(50, 4))
 })

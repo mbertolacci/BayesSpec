@@ -1,7 +1,7 @@
-#ifndef SRC_SEGMENT_FUNCTOR_HPP_
-#define SRC_SEGMENT_FUNCTOR_HPP_
+#ifndef SRC_ADAPTSPEC_SEGMENT_FUNCTOR_HPP_
+#define SRC_ADAPTSPEC_SEGMENT_FUNCTOR_HPP_
 
-#include "cppoptlib/problem.h"
+#include "../cppoptlib/problem.h"
 
 namespace bayesspec {
 
@@ -75,10 +75,11 @@ public:
     void hessian(const Eigen::VectorXd& beta, Eigen::MatrixXd& hessian) {
         unsigned int nHalf = n_ / 2;
         Eigen::ArrayXd negativeFHatExp = (-nu_ * beta).segment(0, nHalf + 1).array().exp();
+        Eigen::VectorXd periodogramExp(negativeFHatExp.size());
 
         hessian.fill(0);
         for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
-            Eigen::VectorXd periodogramExp = (periodogram_.col(series).array() * negativeFHatExp).matrix();
+            periodogramExp = (periodogram_.col(series).segment(0, nHalf + 1).array() * negativeFHatExp).matrix();
 
             if (n_ % 2 == 1) {
                 // Odd
@@ -116,4 +117,4 @@ private:
 
 }  // namespace bayespec
 
-#endif  // SRC_SEGMENT_FUNCTOR_HPP_
+#endif  // SRC_ADAPTSPEC_SEGMENT_FUNCTOR_HPP_

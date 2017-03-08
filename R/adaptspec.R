@@ -119,36 +119,7 @@ adaptspec <- function(
   )
 
   results$prior <- prior
-
-  results$n_segments <- coda::mcmc(results$n_segments)
-  results$beta <- aperm(results$beta, c(3, 1, 2))
-  results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
-  results$cut_point <- coda::mcmc(aperm(results$cut_point, c(2, 1)))
-
-  if (nfreq_hat > 0) {
-    # Compute fits of the spectra
-    freq_hat <- (0 : nfreq_hat) / (2 * nfreq_hat)
-    nu_hat <- splines_basis1d(freq_hat, nbasis, omitLinear = TRUE)
-
-    spec_hat <- list()
-    for (n_segments in unique(results$n_segments)) {
-      spec_hat[[n_segments]] <- matrix(
-        0, nrow = nfreq_hat + 1, ncol = n_segments
-      )
-      for (segment in 1 : n_segments) {
-        beta <- results$beta[
-          results$n_segments == n_segments,
-          segment, , drop = FALSE  # nolint
-        ]
-        dim(beta) <- dim(beta)[c(1, 3)]
-        spec_hat[[n_segments]][, segment] <- rowMeans(nu_hat %*% t(beta))
-      }
-    }
-    results$freq_hat <- freq_hat
-    results$spec_hat <- spec_hat
-  }
-
-  class(results) <- 'adaptspecfit'
+  results <- adaptspecfit(results, nfreq_hat)
 
   if (plotting) {
     plot(results)

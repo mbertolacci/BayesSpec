@@ -1,5 +1,5 @@
-#ifndef SRC_PRIOR_HPP_
-#define SRC_PRIOR_HPP_
+#ifndef SRC_ADAPTSPEC_PRIOR_HPP_
+#define SRC_ADAPTSPEC_PRIOR_HPP_
 
 #include <RcppEigen.h>
 
@@ -46,4 +46,4 @@ struct AdaptSpecPrior {
 
 }  // namespace bayespec
 
-#endif  // SRC_PRIOR_HPP_
+#endif  // SRC_ADAPTSPEC_PRIOR_HPP_

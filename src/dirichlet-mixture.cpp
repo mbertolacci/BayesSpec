@@ -7,17 +7,18 @@
 #endif
 
 #include "adaptspec/samples.hpp"
-#include "independent-mixture/sampler.hpp"
+#include "dirichlet-mixture/sampler.hpp"
 
 using namespace bayesspec;
 
-// [[Rcpp::export(name=".independent_mixture")]]
-Rcpp::List independentMixture(
+// [[Rcpp::export(name=".dirichlet_mixture")]]
+Rcpp::List dirichletMixture(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
     Rcpp::List priorsR,
-    Rcpp::NumericVector weightsPriorR,
+    double alphaPriorShape,
+    double alphaPriorRate,
     double probMM1,
     bool showProgress = false
 ) {
@@ -45,12 +46,13 @@ Rcpp::List independentMixture(
         samples.emplace_back(nLoop - nWarmUp, priors[component]);
     }
 
-    AdaptSpecIndependentMixtureSampler sampler(
-        x, probMM1, starts, priors, Rcpp::as<Eigen::VectorXd>(weightsPriorR)
+    AdaptSpecDirichletMixtureSampler sampler(
+        x, probMM1, starts, priors, alphaPriorShape, alphaPriorRate
     );
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
-    Rcpp::NumericMatrix weightsSamples(nComponents, nLoop - nWarmUp);
+    Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
+    Rcpp::NumericMatrix betaSamples(nComponents, nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -73,10 +75,11 @@ Rcpp::List independentMixture(
                 categoriesSamples.begin() + sampleIndex * x.cols()
             );
             std::copy(
-                sampler.getWeights().data(),
-                sampler.getWeights().data() + nComponents,
-                weightsSamples.begin() + sampleIndex * nComponents
+                sampler.getBeta().data(),
+                sampler.getBeta().data() + nComponents,
+                betaSamples.begin() + sampleIndex * nComponents
             );
+            alphaSamples[sampleIndex] = sampler.getAlpha();
         }
 
         if (showProgress) {
@@ -90,7 +93,8 @@ Rcpp::List independentMixture(
         components.push_back(samples[component].asList());
     }
     results["components"] = components;
-    results["weights"] = weightsSamples;
+    results["beta"] = betaSamples;
+    results["alpha"] = alphaSamples;
     results["categories"] = categoriesSamples;
 
     return results;

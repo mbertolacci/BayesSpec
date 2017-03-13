@@ -6,7 +6,10 @@
 #include "../cppoptlib/meta.h"
 #include "../cppoptlib/solver/newtondescentsolver.h"
 
-#include "../truncated-inverse-gamma.hpp"
+#include "../random/inverse-gamma.hpp"
+#include "../random/truncated-distribution.hpp"
+#include "../random/utils.hpp"
+
 #include "../whittle-likelihood.hpp"
 
 #include "parameters.hpp"
@@ -51,34 +54,13 @@ public:
         x(&x_),
         prior_(&prior),
         probMM1_(probMM1) {
-        initialise_();
-    }
-
-    AdaptSpecState(
-        const Eigen::MatrixXd& x_,
-        const AdaptSpecPrior& prior,
-        double probMM1,
-        unsigned int nStartingSegments = 1
-    ) : parameters(prior, x_.rows(), nStartingSegments),
-        x(&x_),
-        prior_(&prior),
-        probMM1_(probMM1) {
-        parameters.beta.fill(0);
-        parameters.tauSquared.fill(1);
-        initialise_();
-    }
-
-    void updateData(const Eigen::MatrixXd& x_) {
-        x = &x_;
-        for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
-            updateSegment(segment);
-        }
+        initialise_(false);
     }
 
     void updateLogPriorCutPoints() {
         logPriorCutPoints = 0;
         for (unsigned int segment = 0; segment < parameters.nSegments - 1; ++segment) {
-            logPriorCutPoints -= log(
+            logPriorCutPoints -= std::log(
                 static_cast<double>(x->rows())
                 - (segment == 0 ? 0 : parameters.cutPoints[segment - 1])
                 - (static_cast<double>(parameters.nSegments) - static_cast<double>(segment)) * prior_->tMin
@@ -90,11 +72,11 @@ public:
     void updateSegmentDensities(unsigned int segment) {
         logSegmentProposal[segment] = precisionCholeskyMle[segment].diagonal().array().log().sum()
             - 0.5 * (
-                precisionCholeskyMle[segment].triangularView<Eigen::Upper>() * (
+                precisionCholeskyMle[segment].template triangularView<Eigen::Upper>() * (
                     parameters.beta.row(segment) - betaMle.row(segment)
                 ).transpose()
             ).array().square().sum()
-            - 0.5 * (1 + prior_->nBases) * log(2 * M_PI);
+            - 0.5 * (1 + prior_->nBases) * std::log(2 * M_PI);
 
         logSegmentLikelihood[segment] = logWhittleLikelihood(
             nu[segment] * parameters.beta.row(segment).transpose(),
@@ -104,11 +86,11 @@ public:
 
         logSegmentPrior[segment] = (
             -parameters.beta(segment, 0) * parameters.beta(segment, 0) / (2 * prior_->sigmaSquaredAlpha)
-            - 0.5 * log(prior_->sigmaSquaredAlpha)
+            - 0.5 * std::log(prior_->sigmaSquaredAlpha)
             - parameters.beta.row(segment).segment(1, prior_->nBases).array().square().sum() / (2 * parameters.tauSquared[segment])
-            - 0.5 * prior_->nBases * log(parameters.tauSquared[segment])
-            - 0.5 * (1 + prior_->nBases) * log(2 * M_PI)
-            - log(prior_->tauUpperLimit)
+            - 0.5 * prior_->nBases * std::log(parameters.tauSquared[segment])
+            - 0.5 * (1 + prior_->nBases) * std::log(2 * M_PI)
+            - std::log(prior_->tauUpperLimit)
         );
     }
 
@@ -151,10 +133,11 @@ public:
         updateSegmentFit(segment);
     }
 
-    void sample() {
-        sampleBetween_();
-        sampleWithin_();
-        sampleTauSquared_();
+    template<typename RNG>
+    void sample(RNG& rng) {
+        sampleBetween_(rng);
+        sampleWithin_(rng);
+        sampleTauSquared_(rng);
     }
 
     double getLogPosterior() const {
@@ -191,7 +174,7 @@ private:
     const AdaptSpecPrior *prior_;
     double probMM1_;
 
-    void initialise_() {
+    void initialise_(bool initialiseBetaToMle = false) {
         nu.resize(prior_->nSegmentsMax);
         periodogram.resize(prior_->nSegmentsMax);
 
@@ -216,9 +199,11 @@ private:
         for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
             segmentLengths[segment] = parameters.cutPoints[segment] - lastCutPoint;
             updateSegment(segment);
-            // Initialise the parameters to the MLE
-            parameters.beta.row(segment) = betaMle.row(segment);
-            updateSegmentDensities(segment);
+            if (initialiseBetaToMle) {
+                // Initialise the parameters to the MLE
+                parameters.beta.row(segment) = betaMle.row(segment);
+                updateSegmentDensities(segment);
+            }
             lastCutPoint = parameters.cutPoints[segment];
         }
         if (parameters.nSegments > 0) {
@@ -255,10 +240,16 @@ private:
         }
     }
 
-    void sampleBetaProposal_(unsigned int segment) {
+    template<typename RNG>
+    void sampleBetaProposal_(unsigned int segment, RNG& rng) {
+        Eigen::VectorXd unitNormals(betaMle.cols());
+        std::normal_distribution<double> distribution;
+        for (unsigned int i = 0; i < unitNormals.size(); ++i) {
+            unitNormals[i] = distribution(rng);
+        }
         parameters.beta.row(segment) = betaMle.row(segment)
-            + precisionCholeskyMle[segment].triangularView<Eigen::Upper>().solve(
-                rng.randn(betaMle.cols())
+            + precisionCholeskyMle[segment].template triangularView<Eigen::Upper>().solve(
+                unitNormals
             ).transpose();
 
         updateSegmentDensities(segment);
@@ -273,7 +264,8 @@ private:
         updateSegment(segment + 1);
     }
 
-    void insertCutPoint_(unsigned int segmentToCut, unsigned int newCutPoint) {
+    template<typename RNG>
+    void insertCutPoint_(unsigned int segmentToCut, unsigned int newCutPoint, RNG& rng) {
         ++parameters.nSegments;
         // Shift everything after the cut segment right
         for (unsigned int segment = parameters.nSegments - 1; segment > segmentToCut + 1; --segment) {
@@ -299,7 +291,7 @@ private:
         double oldTauSquared = parameters.tauSquared[segmentToCut];
         double zLower = oldTauSquared / (oldTauSquared + prior_->tauUpperLimit);
         double zUpper = prior_->tauUpperLimit / (oldTauSquared + prior_->tauUpperLimit);
-        double z = zLower + rng.randu() * (zUpper - zLower);
+        double z = zLower + randUniform(rng) * (zUpper - zLower);
         parameters.tauSquared[segmentToCut + 1] = oldTauSquared * (1 - z) / z;
         parameters.tauSquared[segmentToCut] = oldTauSquared * z / (1 - z);
 
@@ -308,11 +300,12 @@ private:
         updateSegment(segmentToCut);
         updateSegment(segmentToCut + 1);
 
-        sampleBetaProposal_(segmentToCut);
-        sampleBetaProposal_(segmentToCut + 1);
+        sampleBetaProposal_(segmentToCut, rng);
+        sampleBetaProposal_(segmentToCut + 1, rng);
     }
 
-    void removeCutPoint_(unsigned int segmentToRemove) {
+    template<typename RNG>
+    void removeCutPoint_(unsigned int segmentToRemove, RNG& rng) {
         --parameters.nSegments;
 
         double oldTauSquaredLeft = parameters.tauSquared[segmentToRemove];
@@ -320,7 +313,7 @@ private:
 
         parameters.cutPoints[segmentToRemove] = parameters.cutPoints[segmentToRemove + 1];
         segmentLengths[segmentToRemove] = segmentLengths[segmentToRemove] + segmentLengths[segmentToRemove + 1];
-        parameters.tauSquared[segmentToRemove] = sqrt(oldTauSquaredLeft + oldTauSquaredRight);
+        parameters.tauSquared[segmentToRemove] = std::sqrt(oldTauSquaredLeft + oldTauSquaredRight);
 
         // Shift everything after the cut point left
         for (unsigned int segment = segmentToRemove + 1; segment < parameters.nSegments; ++segment) {
@@ -342,16 +335,20 @@ private:
 
         updateLogPriorCutPoints();
         updateSegment(segmentToRemove);
-        sampleBetaProposal_(segmentToRemove);
+        sampleBetaProposal_(segmentToRemove, rng);
     }
 
-    void sampleBetween_() {
+    template<typename RNG>
+    void sampleBetween_(RNG& rng) {
         if (prior_->nSegmentsMax == 1) {
             return;
         }
 
         std::vector<unsigned int> eligibleMoves = getEligibleMoves_();
-        unsigned int nSegmentsProposal = eligibleMoves[rng.randint(0, eligibleMoves.size() - 1)];
+
+        unsigned int nSegmentsProposal = eligibleMoves[
+            randInteger(0, eligibleMoves.size() - 1, rng)
+        ];
 
         if (nSegmentsProposal == parameters.nSegments) {
             // Do nothing
@@ -365,72 +362,79 @@ private:
                 // Can't cut, so do nothing
                 return;
             }
-            unsigned int segmentToCut = eligibleForCut[rng.randint(0, eligibleForCut.size() - 1)];
+            unsigned int segmentToCut = eligibleForCut[
+                randInteger(0, eligibleForCut.size() - 1, rng)
+            ];
             unsigned int nPossibleCuts = segmentLengths[segmentToCut] - 2 * prior_->tMin + 1;
-            unsigned int newCutPoint = parameters.cutPoints[segmentToCut] - prior_->tMin - rng.randint(
-                0,
-                nPossibleCuts - 1
+            unsigned int newCutPoint = parameters.cutPoints[segmentToCut] - prior_->tMin - randInteger(
+                0, nPossibleCuts - 1, rng
             );
-            proposal.insertCutPoint_(segmentToCut, newCutPoint);
+            proposal.insertCutPoint_(segmentToCut, newCutPoint, rng);
         } else {
-            unsigned int segmentToRemove = rng.randint(0, parameters.nSegments - 2);
-            proposal.removeCutPoint_(segmentToRemove);
+            unsigned int segmentToRemove = randInteger(0, parameters.nSegments - 2, rng);
+            proposal.removeCutPoint_(segmentToRemove, rng);
         }
 
-        double alpha = std::min(1.0, exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
-        if (rng.randu() < alpha) {
+        double alpha = std::min(static_cast<double>(1.0), std::exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
+        if (randUniform(rng) < alpha) {
             *this = proposal;
         }
     }
 
-    void sampleWithin_() {
+    template<typename RNG>
+    void sampleWithin_(RNG& rng) {
         AdaptSpecState proposal(*this);
 
         if (parameters.nSegments == 1) {
             // Just update the parameters
-            proposal.sampleBetaProposal_(0);
+            proposal.sampleBetaProposal_(0, rng);
         } else {
             // Pick a cutpoint to relocate
-            unsigned int segment = rng.randint(0, parameters.nSegments - 2);
+            unsigned int segment = randInteger(0, parameters.nSegments - 2, rng);
             unsigned int nMoves = segmentLengths[segment] + segmentLengths[segment + 1] - 2 * prior_->tMin + 1;
 
             if (nMoves > 1) {
                 unsigned int newCutPoint;
-                if (rng.randu() < probMM1_) {
+                if (randUniform(rng) < probMM1_) {
                     // Make a small move
                     if (segmentLengths[segment] == prior_->tMin) {
                         // The only way is up (baby)
-                        newCutPoint = parameters.cutPoints[segment] + rng.randint(0, 1);
+                        newCutPoint = parameters.cutPoints[segment] + randInteger(0, 1, rng);
                     } else if (segmentLengths[segment + 1] == prior_->tMin) {
                         // The only way is down (sadly, no longer a song lyric)
-                        newCutPoint = parameters.cutPoints[segment] - rng.randint(0, 1);
+                        newCutPoint = parameters.cutPoints[segment] - randInteger(0, 1, rng);
                     } else {
                         // Go either way
-                        newCutPoint = parameters.cutPoints[segment] + rng.randint(-1, 1);
+                        newCutPoint = parameters.cutPoints[segment] + randInteger(-1, 1, rng);
                     }
                 } else {
                     // Make a big move
-                    newCutPoint = parameters.cutPoints[segment + 1] - prior_->tMin - rng.randint(0, nMoves - 1);
+                    newCutPoint = parameters.cutPoints[segment + 1] - prior_->tMin - randInteger(0, nMoves - 1, rng);
                 }
 
                 proposal.moveCutpoint_(segment, newCutPoint);
             }
 
-            proposal.sampleBetaProposal_(segment);
-            proposal.sampleBetaProposal_(segment + 1);
+            proposal.sampleBetaProposal_(segment, rng);
+            proposal.sampleBetaProposal_(segment + 1, rng);
         }
 
-        double alpha = std::min(1.0, exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
-        if (rng.randu() < alpha) {
+        double alpha = std::min(static_cast<double>(1.0), std::exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
+        if (randUniform(rng) < alpha) {
             *this = proposal;
         }
     }
 
-    void sampleTauSquared_() {
+    template<typename RNG>
+    void sampleTauSquared_(RNG& rng) {
         for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
             double alpha = static_cast<double>(prior_->nBases) / 2.0 + prior_->tauPriorA;
             double beta = parameters.beta.row(segment).segment(1, prior_->nBases).array().square().sum() / 2.0 + prior_->tauPriorB;
-            parameters.tauSquared[segment] = rTruncatedInverseGamma(alpha, beta, prior_->tauUpperLimit);
+            RightTruncatedDistribution<InverseGammaDistribution> distribution(
+                InverseGammaDistribution(alpha, beta),
+                prior_->tauUpperLimit
+            );
+            parameters.tauSquared[segment] = distribution(rng);
             updateSegmentFit(segment);
         }
     }
@@ -453,13 +457,13 @@ private:
 
         unsigned int nPossibleCuts = current.segmentLengths[segment] - 2 * current.prior_->tMin + 1;
 
-        double logMoveCurrent = -log(static_cast<double>(proposal.getEligibleMoves_().size()));
-        double logMoveProposal = -log(static_cast<double>(current.getEligibleMoves_().size()));
-        double logSegmentChoiceProposal = -log(static_cast<double>(current.getEligibleCuts_().size()));
-        double logCutProposal = -log(static_cast<double>(nPossibleCuts));
+        double logMoveCurrent = -std::log(static_cast<double>(proposal.getEligibleMoves_().size()));
+        double logMoveProposal = -std::log(static_cast<double>(current.getEligibleMoves_().size()));
+        double logSegmentChoiceProposal = -std::log(static_cast<double>(current.getEligibleCuts_().size()));
+        double logCutProposal = -std::log(static_cast<double>(nPossibleCuts));
 
-        double tauSum = sqrt(proposal.parameters.tauSquared[segment]) + sqrt(proposal.parameters.tauSquared[segment + 1]);
-        double logJacobian = log(2) + 2 * log(tauSum);
+        double tauSum = std::sqrt(proposal.parameters.tauSquared[segment]) + std::sqrt(proposal.parameters.tauSquared[segment + 1]);
+        double logJacobian = std::log(2) + 2 * std::log(tauSum);
 
         return (
             proposal.getLogPosterior() - current.getLogPosterior()
@@ -473,11 +477,11 @@ private:
     static double getMetropolisLogRatioDeath_(const AdaptSpecState& current, const AdaptSpecState& proposal) {
         unsigned int segment = findChangedCutPoint_(current, proposal);
 
-        double logMoveCurrent = -log(static_cast<double>(proposal.getEligibleMoves_().size()));
-        double logMoveProposal = -log(static_cast<double>(current.getEligibleMoves_().size()));
-        double logSegmentChoiceProposal = -log(static_cast<double>(current.parameters.nSegments - 1));
-        double tauSum = sqrt(current.parameters.tauSquared[segment]) + sqrt(current.parameters.tauSquared[segment + 1]);
-        double logJacobian = -log(2) + 2 * log(tauSum);
+        double logMoveCurrent = -std::log(static_cast<double>(proposal.getEligibleMoves_().size()));
+        double logMoveProposal = -std::log(static_cast<double>(current.getEligibleMoves_().size()));
+        double logSegmentChoiceProposal = -std::log(static_cast<double>(current.parameters.nSegments - 1));
+        double tauSum = std::sqrt(current.parameters.tauSquared[segment]) + std::sqrt(current.parameters.tauSquared[segment + 1]);
+        double logJacobian = -std::log(2) + 2 * std::log(tauSum);
 
         return (
             proposal.getLogPosterior() - current.getLogPosterior()
@@ -501,16 +505,16 @@ private:
             && absDiff(current.parameters.cutPoints[movedSegment], proposal.parameters.cutPoints[movedSegment]) == 1) {
             // Moved only one step, so the jump might not be symmetrical
 
-            logMoveCurrent = -log(3);
-            logMoveProposal = -log(3);
+            logMoveCurrent = -std::log(3);
+            logMoveProposal = -std::log(3);
             int tMin = current.prior_->tMin;
             // We know only one or the other can be true, because otherwise
             // nothing would have moved
             if (current.parameters.cutPoints[movedSegment] == tMin || current.parameters.cutPoints[movedSegment + 1] == tMin) {
-                logMoveProposal = -log(2);
+                logMoveProposal = -std::log(2);
             }
             if (proposal.parameters.cutPoints[movedSegment] == tMin || proposal.parameters.cutPoints[movedSegment + 1] == tMin) {
-                logMoveCurrent = -log(2);
+                logMoveCurrent = -std::log(2);
             }
         }
 

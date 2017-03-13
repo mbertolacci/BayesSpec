@@ -39,7 +39,8 @@ public:
         }
     }
 
-    void sample(const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent, unsigned int count) {
+    template<typename RNG>
+    void sample(const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent, unsigned int count, RNG& rng) {
         Eigen::MatrixXd thisX(x_.rows(), count);
 
         for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
@@ -63,7 +64,7 @@ public:
 
         AdaptSpecParameters oldParameters = state.parameters;
         Eigen::VectorXd oldSegmentLengths = state.segmentLengths;
-        state.sample();
+        state.sample(rng);
 
         std::vector<Eigen::MatrixXd> oldAllPeriodograms = allPeriodograms;
         Eigen::MatrixXd oldAllLogSegmentLikelihoods = allLogSegmentLikelihoods;

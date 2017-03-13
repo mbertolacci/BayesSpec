@@ -1,5 +1,5 @@
 #' @export
-adaptspec_independent_mixture <- function(
+adaptspec_dirichlet_mixture <- function(
   nloop, nwarmup, nexp_max, x, n_components,
   tmin, sigmasqalpha, tau_prior_a, tau_prior_b, tau_up_limit, prob_mm1,
   step_size_max, var_inflate, nbasis, nfreq_hat,
@@ -62,10 +62,11 @@ adaptspec_independent_mixture <- function(
     )),
     n_components
   )
-  weight_prior <- rep(1, n_components)
+  alpha_prior_shape <- 0.5
+  alpha_prior_rate <- 0.5
 
-  results <- .independent_mixture(
-    nloop, nwarmup, x, priors, weight_prior, prob_mm1,
+  results <- .dirichlet_mixture(
+    nloop, nwarmup, x, priors, alpha_prior_shape, alpha_prior_rate, prob_mm1,
     show_progress
   )
   for (component in 1 : n_components) {
@@ -74,7 +75,8 @@ adaptspec_independent_mixture <- function(
       results$components[[component]], nfreq_hat
     )
   }
-  results$weights <- coda::mcmc(aperm(results$weights, c(2, 1)))
+  results$beta <- coda::mcmc(aperm(results$beta, c(2, 1)))
+  results$alpha <- coda::mcmc(results$alpha)
   results$categories <- coda::mcmc(aperm(results$categories, c(2, 1)))
 
   return(results)

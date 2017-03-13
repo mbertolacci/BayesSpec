@@ -7,17 +7,19 @@
 #endif
 
 #include "adaptspec/samples.hpp"
-#include "independent-mixture/sampler.hpp"
+#include "stick-breaking-mixture/sampler.hpp"
 
 using namespace bayesspec;
 
-// [[Rcpp::export(name=".independent_mixture")]]
-Rcpp::List independentMixture(
+// [[Rcpp::export(name=".stick_breaking_mixture")]]
+Rcpp::List stickBreakingMixture(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
+    Rcpp::NumericMatrix designMatrixR,
     Rcpp::List priorsR,
-    Rcpp::NumericVector weightsPriorR,
+    Rcpp::NumericVector priorMeanR,
+    Rcpp::NumericMatrix priorPrecisionR,
     double probMM1,
     bool showProgress = false
 ) {
@@ -32,6 +34,9 @@ Rcpp::List independentMixture(
 
     unsigned int nComponents = priorsR.size();
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
+    Eigen::MatrixXd designMatrix = Rcpp::as<Eigen::MatrixXd>(designMatrixR);
+    Eigen::VectorXd priorMean = Rcpp::as<Eigen::VectorXd>(priorMeanR);
+    Eigen::MatrixXd priorPrecision = Rcpp::as<Eigen::MatrixXd>(priorPrecisionR);
 
     std::vector<AdaptSpecParameters> starts;
     std::vector<AdaptSpecPrior> priors;
@@ -45,12 +50,14 @@ Rcpp::List independentMixture(
         samples.emplace_back(nLoop - nWarmUp, priors[component]);
     }
 
-    AdaptSpecIndependentMixtureSampler sampler(
-        x, probMM1, starts, priors, Rcpp::as<Eigen::VectorXd>(weightsPriorR)
+    AdaptSpecStickBreakingMixtureSampler sampler(
+        x, designMatrix,
+        probMM1, starts, priors, priorMean, priorPrecision
     );
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
-    Rcpp::NumericMatrix weightsSamples(nComponents, nLoop - nWarmUp);
+    Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
+    Rcpp::NumericMatrix betaSamples(nComponents, nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -72,11 +79,12 @@ Rcpp::List independentMixture(
                 sampler.getCategories().data() + x.cols(),
                 categoriesSamples.begin() + sampleIndex * x.cols()
             );
-            std::copy(
-                sampler.getWeights().data(),
-                sampler.getWeights().data() + nComponents,
-                weightsSamples.begin() + sampleIndex * nComponents
-            );
+            // std::copy(
+            //     sampler.getBeta().data(),
+            //     sampler.getBeta().data() + nComponents,
+            //     betaSamples.begin() + sampleIndex * nComponents
+            // );
+            // alphaSamples[sampleIndex] = sampler.getAlpha();
         }
 
         if (showProgress) {
@@ -90,7 +98,8 @@ Rcpp::List independentMixture(
         components.push_back(samples[component].asList());
     }
     results["components"] = components;
-    results["weights"] = weightsSamples;
+    results["beta"] = betaSamples;
+    results["alpha"] = alphaSamples;
     results["categories"] = categoriesSamples;
 
     return results;

@@ -3,6 +3,8 @@
 S3method(plot,adaptspecfit)
 S3method(summary,adaptspecfit)
 export(adaptspec)
+export(adaptspec_dirichlet_mixture)
 export(adaptspec_independent_mixture)
+export(adaptspec_stick_breaking_mixture)
 importFrom(Rcpp,evalCpp)
 useDynLib(BayesSpec)

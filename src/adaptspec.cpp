@@ -1,6 +1,9 @@
+#include <random>
+
 #include <RcppEigen.h>
 
-#include "adaptspec.hpp"
+#include "adaptspec/sampler.hpp"
+#include "adaptspec/samples.hpp"
 #include "progress.hpp"
 
 using namespace bayesspec;
@@ -15,9 +18,9 @@ Rcpp::List adaptspec(
     unsigned int nSegmentsStart = 1,
     bool showProgress = false
 ) {
-    RNG::initialise();
+    std::mt19937_64 rng(static_cast<uint_fast64_t>(UINT_FAST64_MAX * R::unif_rand()));
 
-    Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
+    Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters start(prior, x.rows(), nSegmentsStart);
     AdaptSpecSampler sampler(x, start, probMM1, prior);
@@ -25,7 +28,7 @@ Rcpp::List adaptspec(
     AdaptSpecSamples samples(nLoop - nWarmUp, prior);
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
-        sampler.sample();
+        sampler.sample(rng);
 
         if (iteration % 100 == 0) {
             // NOTE(mgnb): checks whether the user has pressed Ctrl-C (among other things)
@@ -95,10 +98,9 @@ Rcpp::List getSampleDefault(
     Rcpp::List priorList,
     unsigned int nStartingSegments
 ) {
-    RNG::initialise();
-
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
-    AdaptSpecState state(Rcpp::as< Eigen::MatrixXd >(xR), prior, 0.8, nStartingSegments);
+    AdaptSpecParameters parameters(prior, xR.rows(), nStartingSegments);
+    AdaptSpecState state(parameters, Rcpp::as< Eigen::MatrixXd >(xR), prior, 0.8);
 
     return wrapState(state);
 }
@@ -109,8 +111,6 @@ Rcpp::List getSampleFilled(
     Rcpp::List priorList,
     Rcpp::List stateList
 ) {
-    RNG::initialise();
-
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
 
@@ -124,8 +124,6 @@ double getMetropolisLogRatio(
     Rcpp::NumericMatrix xR,
     Rcpp::List priorList
 ) {
-    RNG::initialise();
-
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
     AdaptSpecState current = getStateFromList(currentR, x, prior);

@@ -17,13 +17,9 @@ public:
         const AdaptSpecPrior& prior
     ) : current_(start, x, prior, probMM1) {}
 
-    void sample() {
-        current_.sample();
-    }
-
-    void sample(const Eigen::MatrixXd& x) {
-        current_.updateData(x);
-        sample();
+    template<typename RNG>
+    void sample(RNG& rng) {
+        current_.sample(rng);
     }
 
     const AdaptSpecParameters& getCurrent() const {

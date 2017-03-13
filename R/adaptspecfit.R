@@ -7,7 +7,9 @@ adaptspecfit <- function(results, nfreq_hat = 0) {
   if (nfreq_hat > 0) {
     # Compute fits of the spectra
     freq_hat <- (0 : nfreq_hat) / (2 * nfreq_hat)
-    nu_hat <- splines_basis1d(freq_hat, results$prior$n_bases, omitLinear = TRUE)
+    nu_hat <- splines_basis1d(
+      freq_hat, results$prior$n_bases, omitLinear = TRUE
+    )
 
     spec_hat <- list()
     for (n_segments in unique(results$n_segments)) {

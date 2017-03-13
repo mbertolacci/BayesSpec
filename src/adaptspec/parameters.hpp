@@ -3,7 +3,7 @@
 
 #include <RcppEigen.h>
 
-#include "../rng.hpp"
+#include "../random/utils.hpp"
 #include "../whittle-likelihood.hpp"
 
 #include "prior.hpp"
@@ -31,11 +31,12 @@ public:
     ) : AdaptSpecParameters(prior) {
         nSegments = nStartingSegments;
         cutPoints.fill(nObservations);
-        beta.fill(0);
+        beta.fill(0.1);
+        tauSquared.fill(1);
         // Split evenly
         for (unsigned int segment = 0; segment < nSegments; ++segment) {
             cutPoints[segment] = (segment + 1) * nObservations / nSegments;
-            tauSquared[segment] = prior.tauUpperLimit * rng.randu();
+            tauSquared[segment] = prior.tauUpperLimit / 2;
         }
     }
 };

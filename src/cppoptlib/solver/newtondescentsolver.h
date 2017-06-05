@@ -25,10 +25,11 @@ class NewtonDescentSolver : public ISolver<ProblemType, 2> {
         do {
             objFunc.gradient(x0, grad);
             objFunc.hessian(x0, hessian);
-            hessian += (1e-5) * THessian::Identity(DIM, DIM);
+            // hessian += (1e-5) * THessian::Identity(DIM, DIM);
             TVector delta_x = hessian.lu().solve(-grad);
-            const double rate = Armijo<ProblemType, 1>::linesearch(x0, delta_x, objFunc) ;
-            x0 = x0 + rate * delta_x;
+            // const double rate = Armijo<ProblemType, 2>::linesearch(x0, delta_x, objFunc) ;
+            // x0 = x0 + rate * delta_x;
+            x0 = x0 + delta_x;
             // std::cout << "iter: "<<iter<< ", f = " <<  objFunc.value(x0) << ", ||g||_inf "<<gradNorm  << std::endl;
             ++this->m_current.iterations;
             this->m_current.gradNorm = grad.template lpNorm<Eigen::Infinity>();

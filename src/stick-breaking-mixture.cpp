@@ -20,6 +20,7 @@ Rcpp::List stickBreakingMixture(
     Rcpp::List priorsR,
     Rcpp::NumericVector priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
+    Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     bool showProgress = false
 ) {
@@ -49,10 +50,13 @@ Rcpp::List stickBreakingMixture(
         starts.emplace_back(priors[component], x.rows(), 1);
         samples.emplace_back(nLoop - nWarmUp, priors[component]);
     }
+    Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecStickBreakingMixtureSampler sampler(
         x, designMatrix,
-        probMM1, starts, priors, priorMean, priorPrecision
+        probMM1, starts,
+        initialCategories,
+        priors, priorMean, priorPrecision
     );
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);

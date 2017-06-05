@@ -17,10 +17,11 @@ public:
         const Eigen::MatrixXd& x,
         double probMM1,
         const std::vector<AdaptSpecParameters>& componentStart,
+        const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
         double alphaPriorShape,
         double alphaPriorRate
-    ) : Base(x, probMM1, componentStart, componentPriors),
+    ) : Base(x, probMM1, componentStart, initialCategories, componentPriors),
         alphaPriorShape_(alphaPriorShape),
         alphaPriorRate_(alphaPriorRate),
         beta_(nComponents_),

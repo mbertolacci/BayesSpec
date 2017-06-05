@@ -17,19 +17,19 @@
     .Call('BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList)
 }
 
-.dirichlet_mixture <- function(nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, probMM1, showProgress = FALSE) {
-    .Call('BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, probMM1, showProgress)
+.dirichlet_mixture <- function(nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, showProgress = FALSE) {
+    .Call('BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, showProgress)
 }
 
-.independent_mixture <- function(nLoop, nWarmUp, xR, priorsR, weightsPriorR, probMM1, showProgress = FALSE) {
-    .Call('BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, probMM1, showProgress)
+.independent_mixture <- function(nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, showProgress = FALSE) {
+    .Call('BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, showProgress)
 }
 
 splines_basis1d <- function(xR, nBases, omitLinear = FALSE) {
     .Call('BayesSpec_splineBasis1dR', PACKAGE = 'BayesSpec', xR, nBases, omitLinear)
 }
 
-.stick_breaking_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, probMM1, showProgress = FALSE) {
-    .Call('BayesSpec_stickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, probMM1, showProgress)
+.stick_breaking_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, initialCategoriesR, probMM1, showProgress = FALSE) {
+    .Call('BayesSpec_stickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, initialCategoriesR, probMM1, showProgress)
 }
 

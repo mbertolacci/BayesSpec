@@ -64,8 +64,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dirichletMixture
-Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, double probMM1, bool showProgress);
-RcppExport SEXP BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP probMM1SEXP, SEXP showProgressSEXP) {
+Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, Rcpp::IntegerVector initialCategoriesR, double probMM1, bool showProgress);
+RcppExport SEXP BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -75,15 +75,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< double >::type alphaPriorShape(alphaPriorShapeSEXP);
     Rcpp::traits::input_parameter< double >::type alphaPriorRate(alphaPriorRateSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type initialCategoriesR(initialCategoriesRSEXP);
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(dirichletMixture(nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, probMM1, showProgress));
+    rcpp_result_gen = Rcpp::wrap(dirichletMixture(nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }
 // independentMixture
-Rcpp::List independentMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, Rcpp::NumericVector weightsPriorR, double probMM1, bool showProgress);
-RcppExport SEXP BayesSpec_independentMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP weightsPriorRSEXP, SEXP probMM1SEXP, SEXP showProgressSEXP) {
+Rcpp::List independentMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, Rcpp::NumericVector weightsPriorR, Rcpp::IntegerVector initialCategoriesR, double probMM1, bool showProgress);
+RcppExport SEXP BayesSpec_independentMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP weightsPriorRSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -92,9 +93,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type weightsPriorR(weightsPriorRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type initialCategoriesR(initialCategoriesRSEXP);
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(independentMixture(nLoop, nWarmUp, xR, priorsR, weightsPriorR, probMM1, showProgress));
+    rcpp_result_gen = Rcpp::wrap(independentMixture(nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -112,8 +114,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // stickBreakingMixture
-Rcpp::List stickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericVector priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double probMM1, bool showProgress);
-RcppExport SEXP BayesSpec_stickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP probMM1SEXP, SEXP showProgressSEXP) {
+Rcpp::List stickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericVector priorMeanR, Rcpp::NumericMatrix priorPrecisionR, Rcpp::IntegerVector initialCategoriesR, double probMM1, bool showProgress);
+RcppExport SEXP BayesSpec_stickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -124,9 +126,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type priorMeanR(priorMeanRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type priorPrecisionR(priorPrecisionRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type initialCategoriesR(initialCategoriesRSEXP);
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(stickBreakingMixture(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, probMM1, showProgress));
+    rcpp_result_gen = Rcpp::wrap(stickBreakingMixture(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, initialCategoriesR, probMM1, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }

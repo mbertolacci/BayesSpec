@@ -16,9 +16,10 @@ public:
         const Eigen::MatrixXd& x,
         double probMM1,
         const std::vector<AdaptSpecParameters>& componentStart,
+        const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
-        const Eigen::VectorXd weightsPrior
-    ) : Base(x, probMM1, componentStart, componentPriors),
+        const Eigen::VectorXd& weightsPrior
+    ) : Base(x, probMM1, componentStart, initialCategories, componentPriors),
         weightsPrior_(weightsPrior),
         weights_(nComponents_) {
         weights_.fill(1.0 / static_cast<double>(nComponents_));

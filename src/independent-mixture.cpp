@@ -18,6 +18,7 @@ Rcpp::List independentMixture(
     Rcpp::NumericMatrix xR,
     Rcpp::List priorsR,
     Rcpp::NumericVector weightsPriorR,
+    Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     bool showProgress = false
 ) {
@@ -45,8 +46,15 @@ Rcpp::List independentMixture(
         samples.emplace_back(nLoop - nWarmUp, priors[component]);
     }
 
+    Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
+    Eigen::VectorXd weightsPrior = Rcpp::as<Eigen::VectorXd>(weightsPriorR);
+
     AdaptSpecIndependentMixtureSampler sampler(
-        x, probMM1, starts, priors, Rcpp::as<Eigen::VectorXd>(weightsPriorR)
+        x, probMM1,
+        starts,
+        initialCategories,
+        priors,
+        weightsPrior
     );
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);

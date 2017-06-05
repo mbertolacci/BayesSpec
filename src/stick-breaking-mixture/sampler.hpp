@@ -18,10 +18,11 @@ public:
         const Eigen::MatrixXd& designMatrix,
         double probMM1,
         const std::vector<AdaptSpecParameters>& componentStart,
+        const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
         const Eigen::VectorXd& priorMean,
         const Eigen::MatrixXd& priorPrecision
-    ) : Base(x, probMM1, componentStart, componentPriors),
+    ) : Base(x, probMM1, componentStart, initialCategories, componentPriors),
         designMatrix_(designMatrix),
         priorMean_(priorMean),
         priorPrecision_(priorPrecision),

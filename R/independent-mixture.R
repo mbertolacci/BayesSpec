@@ -3,7 +3,9 @@ adaptspec_independent_mixture <- function(
   nloop, nwarmup, nexp_max, x, n_components,
   tmin, sigmasqalpha, tau_prior_a, tau_prior_b, tau_up_limit, prob_mm1,
   step_size_max, var_inflate, nbasis, nfreq_hat,
-  plotting, detrend = TRUE, nexp_start = 1, show_progress = FALSE
+  initial_categories = NULL,
+  plotting = FALSE,
+  detrend = TRUE, nexp_start = 1, show_progress = FALSE
 ) {
   # For optional variables
   if (missing(sigmasqalpha)) {
@@ -36,9 +38,6 @@ adaptspec_independent_mixture <- function(
   if (missing(tmin)) {
     tmin <- 40
   }
-  if (missing(plotting)) {
-    plotting <- FALSE
-  }
 
   x <- as.matrix(x)
   if (detrend) {
@@ -48,6 +47,10 @@ adaptspec_independent_mixture <- function(
     for (series in 1 : ncol(x)) {
       x[, series] <- lm(x[, series] ~ x0)$res
     }
+  }
+
+  if (is.null(initial_categories)) {
+    initial_categories <- (0 : (ncol(data) - 1)) %% n_components
   }
 
   priors <- rep(
@@ -65,7 +68,7 @@ adaptspec_independent_mixture <- function(
   weight_prior <- rep(1, n_components)
 
   results <- .independent_mixture(
-    nloop, nwarmup, x, priors, weight_prior, prob_mm1,
+    nloop, nwarmup, x, priors, weight_prior, initial_categories, prob_mm1,
     show_progress
   )
   for (component in 1 : n_components) {

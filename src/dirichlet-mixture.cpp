@@ -19,6 +19,7 @@ Rcpp::List dirichletMixture(
     Rcpp::List priorsR,
     double alphaPriorShape,
     double alphaPriorRate,
+    Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     bool showProgress = false
 ) {
@@ -46,8 +47,12 @@ Rcpp::List dirichletMixture(
         samples.emplace_back(nLoop - nWarmUp, priors[component]);
     }
 
+    Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
+
     AdaptSpecDirichletMixtureSampler sampler(
-        x, probMM1, starts, priors, alphaPriorShape, alphaPriorRate
+        x, probMM1, starts,
+        initialCategories,
+        priors, alphaPriorShape, alphaPriorRate
     );
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);

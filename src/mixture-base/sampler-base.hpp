@@ -18,15 +18,13 @@ public:
         const Eigen::MatrixXd& x,
         double probMM1,
         const std::vector<AdaptSpecParameters>& componentStart,
+        const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors
     ) : x_(x),
         nComponents_(componentPriors.size()),
-        categories_(x.cols()),
+        categories_(initialCategories),
         allWeights_(x.cols(), nComponents_),
         counts_(nComponents_) {
-        for (unsigned int series = 0; series < x.cols(); ++series) {
-            categories_[series] = series % nComponents_;
-        }
         updateCounts_();
 
         componentStates_.reserve(nComponents_);

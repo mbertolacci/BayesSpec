@@ -26,7 +26,11 @@
 }
 
 splines_basis1d <- function(xR, nBases, omitLinear = FALSE) {
-    .Call('BayesSpec_splineBasis1dR', PACKAGE = 'BayesSpec', xR, nBases, omitLinear)
+    .Call('BayesSpec_splines_basis1d', PACKAGE = 'BayesSpec', xR, nBases, omitLinear)
+}
+
+splines_thinplate <- function(designMatrix, nBases) {
+    .Call('BayesSpec_splines_thinplate', PACKAGE = 'BayesSpec', designMatrix, nBases)
 }
 
 .stick_breaking_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, initialCategoriesR, probMM1, showProgress = FALSE) {

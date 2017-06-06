@@ -100,16 +100,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// splineBasis1dR
-Rcpp::NumericMatrix splineBasis1dR(Rcpp::NumericVector xR, unsigned int nBases, bool omitLinear);
-RcppExport SEXP BayesSpec_splineBasis1dR(SEXP xRSEXP, SEXP nBasesSEXP, SEXP omitLinearSEXP) {
+// splines_basis1d
+Rcpp::NumericMatrix splines_basis1d(Rcpp::NumericVector xR, unsigned int nBases, bool omitLinear);
+RcppExport SEXP BayesSpec_splines_basis1d(SEXP xRSEXP, SEXP nBasesSEXP, SEXP omitLinearSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nBases(nBasesSEXP);
     Rcpp::traits::input_parameter< bool >::type omitLinear(omitLinearSEXP);
-    rcpp_result_gen = Rcpp::wrap(splineBasis1dR(xR, nBases, omitLinear));
+    rcpp_result_gen = Rcpp::wrap(splines_basis1d(xR, nBases, omitLinear));
+    return rcpp_result_gen;
+END_RCPP
+}
+// splines_thinplate
+Rcpp::List splines_thinplate(const Eigen::MatrixXd& designMatrix, unsigned int nBases);
+RcppExport SEXP BayesSpec_splines_thinplate(SEXP designMatrixSEXP, SEXP nBasesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type designMatrix(designMatrixSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nBases(nBasesSEXP);
+    rcpp_result_gen = Rcpp::wrap(splines_thinplate(designMatrix, nBases));
     return rcpp_result_gen;
 END_RCPP
 }

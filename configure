@@ -633,6 +633,7 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_fftw3
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1245,6 +1246,12 @@ fi
 if test -n "$ac_init_help"; then
 
   cat <<\_ACEOF
+
+Optional Features:
+  --disable-option-checking  ignore unrecognized --enable/--with options
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+--enable-fftw Use fftw3 if it's available
 
 Some influential environment variables:
   CC          C compiler command
@@ -2748,6 +2755,13 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
+# Check whether --enable-fftw3 was given.
+if test "${enable_fftw3+set}" = set; then :
+  enableval=$enable_fftw3;
+fi
+
+
+if test "$enable_fftw3" = "yes"; then
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for fftw_free in -lfftw3" >&5
 $as_echo_n "checking for fftw_free in -lfftw3... " >&6; }
@@ -2756,7 +2770,7 @@ if ${ac_cv_lib_fftw3_fftw_free+:} false; then :
 else
   ac_check_lib_save_LIBS=$LIBS
 LIBS="-lfftw3 -lm -lfftw3
- $LIBS"
+   $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -2788,16 +2802,12 @@ fi
 $as_echo "$ac_cv_lib_fftw3_fftw_free" >&6; }
 if test "x$ac_cv_lib_fftw3_fftw_free" = xyes; then :
 
-    PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
-    LIBS="-lfftw3 ${LIBS}"
+      PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
+      LIBS="-lfftw3 ${LIBS}"
 
 fi
 
-
-# if test -n "${HAVE_LIBFFTW}"; then
-#   #LIBS="-lfftw3 ${LIBS}"
-#   PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
-# fi
+fi
 
 PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE -I spectra/include ${PKG_CXXFLAGS}"
 

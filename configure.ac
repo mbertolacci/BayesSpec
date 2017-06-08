@@ -15,19 +15,18 @@ CXXFLAGS=`${R_HOME}/bin/R CMD config CXXFLAGS`
 AC_PROG_CC
 AC_PROG_CPP
 
-AC_CHECK_LIB(fftw3, fftw_free,
-  [
-    PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
-    LIBS="-lfftw3 ${LIBS}"
-  ],
-  ,
-  [-lm -lfftw3]
-)
+AC_ARG_ENABLE(fftw3, [--enable-fftw Use fftw3 if it's available])
 
-# if test -n "${HAVE_LIBFFTW}"; then
-#   #LIBS="-lfftw3 ${LIBS}"
-#   PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
-# fi
+if test "$enable_fftw3" = "yes"; then
+  AC_CHECK_LIB(fftw3, fftw_free,
+    [
+      PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
+      LIBS="-lfftw3 ${LIBS}"
+    ],
+    ,
+    [-lm -lfftw3]
+  )
+fi
 
 PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE -I spectra/include ${PKG_CXXFLAGS}"
 

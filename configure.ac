@@ -18,14 +18,8 @@ AC_PROG_CPP
 AC_ARG_ENABLE(fftw3, [--enable-fftw Use fftw3 if it's available])
 
 if test "$enable_fftw3" = "yes"; then
-  AC_CHECK_LIB(fftw3, fftw_free,
-    [
-      PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
-      LIBS="-lfftw3 ${LIBS}"
-    ],
-    ,
-    [-lm -lfftw3]
-  )
+  PKG_CXXFLAGS="-DEIGEN_FFTW_DEFAULT ${PKG_CXXFLAGS}"
+  LIBS="-lfftw3 ${LIBS}"
 fi
 
 PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE -I spectra/include ${PKG_CXXFLAGS}"

@@ -3,9 +3,6 @@
 
 #include <RcppEigen.h>
 
-#include "../cppoptlib/meta.h"
-#include "../cppoptlib/solver/newtondescentsolver.h"
-
 #include "../random/inverse-gamma.hpp"
 #include "../random/truncated-distribution.hpp"
 #include "../random/utils.hpp"
@@ -14,7 +11,7 @@
 
 #include "parameters.hpp"
 #include "prior.hpp"
-#include "segment-functor.hpp"
+#include "beta-optimiser.hpp"
 #include "utils.hpp"
 
 namespace bayesspec {
@@ -97,7 +94,7 @@ public:
     }
 
     void updateSegmentFit(unsigned int segment) {
-        SegmentFunctor functor(
+        BetaOptimiser optimiser(
             segmentLengths[segment],
             periodogram[segment],
             nu[segment],
@@ -105,19 +102,18 @@ public:
             parameters.tauSquared[segment]
         );
 
-        Eigen::VectorXd thisBetaMle = parameters.beta.row(segment).transpose();
-        cppoptlib::NewtonDescentSolver<SegmentFunctor> solver;
-        solver.minimize(functor, thisBetaMle);
-        if (solver.status() != cppoptlib::Status::GradNormTolerance) {
-            Rcpp::Rcout << "Warning: solver failed with status: " << solver.status() << "\n";
-            Rcpp::Rcout << solver.criteria();
-            Rcpp::stop("Solver failed");
+        // Outputs
+        Eigen::VectorXd beta(prior_->nBases + 1);
+        Eigen::VectorXd gradient(prior_->nBases + 1);
+        Eigen::MatrixXd hessian(prior_->nBases + 1, prior_->nBases + 1);
+        int status = optimiser.run(beta, gradient, hessian);
+        if (status != 1) {
+            Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
+            Rcpp::stop("Optimiser failed");
         }
 
-        betaMle.row(segment) = thisBetaMle.transpose();
+        betaMle.row(segment) = beta.transpose();
 
-        Eigen::MatrixXd hessian(prior_->nBases + 1, prior_->nBases + 1);
-        functor.hessian(thisBetaMle, hessian);
         hessian /= varInflate_;
         precisionCholeskyMle[segment] = hessian.llt().matrixU();
 
@@ -169,6 +165,7 @@ public:
         stream << "logSegmentProposal = " << state.logSegmentProposal.transpose() << "\n";
         stream << "logSegmentLikelihood = " << state.logSegmentLikelihood.transpose() << "\n";
         stream << "logSegmentPrior = " << state.logSegmentPrior.transpose() << "\n";
+        stream << "betaMle = " << state.betaMle.topRows(state.parameters.nSegments) << "\n";
         stream << "xSum = " << state.x->sum() << "\n";
         return stream;
     }

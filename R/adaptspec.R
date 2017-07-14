@@ -114,7 +114,7 @@ adaptspec <- function(
   )
 
   results <- .adaptspec(
-    nloop, nwarmup, x, prior, prob_mm1,
+    nloop, nwarmup, x, prior, prob_mm1, var_inflate,
     nexp_start, show_progress
   )
 

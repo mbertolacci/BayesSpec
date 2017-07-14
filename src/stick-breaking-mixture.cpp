@@ -18,10 +18,13 @@ Rcpp::List stickBreakingMixture(
     Rcpp::NumericMatrix xR,
     Rcpp::NumericMatrix designMatrixR,
     Rcpp::List priorsR,
-    Rcpp::NumericVector priorMeanR,
+    Rcpp::NumericMatrix priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
+    double tauPriorASquared, double tauPriorNu,
     Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
+    double varInflate,
+    unsigned int nSplineBases,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -36,7 +39,7 @@ Rcpp::List stickBreakingMixture(
     unsigned int nComponents = priorsR.size();
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
     Eigen::MatrixXd designMatrix = Rcpp::as<Eigen::MatrixXd>(designMatrixR);
-    Eigen::VectorXd priorMean = Rcpp::as<Eigen::VectorXd>(priorMeanR);
+    Eigen::MatrixXd priorMean = Rcpp::as<Eigen::MatrixXd>(priorMeanR);
     Eigen::MatrixXd priorPrecision = Rcpp::as<Eigen::MatrixXd>(priorPrecisionR);
 
     std::vector<AdaptSpecParameters> starts;
@@ -54,14 +57,21 @@ Rcpp::List stickBreakingMixture(
 
     AdaptSpecStickBreakingMixtureSampler sampler(
         x, designMatrix,
-        probMM1, starts,
+        probMM1, varInflate, starts,
         initialCategories,
-        priors, priorMean, priorPrecision
+        priors, priorMean, priorPrecision,
+        tauPriorASquared, tauPriorNu,
+        nSplineBases
     );
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
-    Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
-    Rcpp::NumericMatrix betaSamples(nComponents, nLoop - nWarmUp);
+    unsigned int nBetas = priorMean.rows() * priorMean.cols();
+    Rcpp::NumericVector betaSamples(Rcpp::Dimension({
+        designMatrix.cols(),
+        nComponents - 1,
+        nLoop - nWarmUp
+    }));
+    Rcpp::NumericMatrix tauSquaredSamples(nComponents - 1, nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -83,12 +93,16 @@ Rcpp::List stickBreakingMixture(
                 sampler.getCategories().data() + x.cols(),
                 categoriesSamples.begin() + sampleIndex * x.cols()
             );
-            // std::copy(
-            //     sampler.getBeta().data(),
-            //     sampler.getBeta().data() + nComponents,
-            //     betaSamples.begin() + sampleIndex * nComponents
-            // );
-            // alphaSamples[sampleIndex] = sampler.getAlpha();
+            std::copy(
+                sampler.getBeta().data(),
+                sampler.getBeta().data() + nBetas,
+                betaSamples.begin() + sampleIndex * nBetas
+            );
+            std::copy(
+                sampler.getTauSquared().data(),
+                sampler.getTauSquared().data() + nComponents - 1,
+                tauSquaredSamples.begin() + sampleIndex * (nComponents - 1)
+            );
         }
 
         if (showProgress) {
@@ -103,8 +117,8 @@ Rcpp::List stickBreakingMixture(
     }
     results["components"] = components;
     results["beta"] = betaSamples;
-    results["alpha"] = alphaSamples;
     results["categories"] = categoriesSamples;
+    results["tau_squared"] = tauSquaredSamples;
 
     return results;
 }

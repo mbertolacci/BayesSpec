@@ -17,6 +17,7 @@ public:
     MixtureSamplerBase(
         const Eigen::MatrixXd& x,
         double probMM1,
+        double varInflate,
         const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors
@@ -30,7 +31,7 @@ public:
         componentStates_.reserve(nComponents_);
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_.emplace_back(
-                x_, componentStart[component], componentPriors[component], probMM1
+                x_, componentStart[component], componentPriors[component], probMM1, varInflate
             );
         }
     }

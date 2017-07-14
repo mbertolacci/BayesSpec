@@ -16,12 +16,13 @@ public:
     AdaptSpecDirichletMixtureSampler(
         const Eigen::MatrixXd& x,
         double probMM1,
+        double varInflate,
         const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
         double alphaPriorShape,
         double alphaPriorRate
-    ) : Base(x, probMM1, componentStart, initialCategories, componentPriors),
+    ) : Base(x, probMM1, varInflate, componentStart, initialCategories, componentPriors),
         alphaPriorShape_(alphaPriorShape),
         alphaPriorRate_(alphaPriorRate),
         beta_(nComponents_),

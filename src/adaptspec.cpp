@@ -15,6 +15,7 @@ Rcpp::List adaptspec(
     Rcpp::NumericMatrix xR,
     Rcpp::List priorList,
     double probMM1,
+    double varInflate,
     unsigned int nSegmentsStart = 1,
     bool showProgress = false
 ) {
@@ -23,7 +24,7 @@ Rcpp::List adaptspec(
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters start(prior, x.rows(), nSegmentsStart);
-    AdaptSpecSampler sampler(x, start, probMM1, prior);
+    AdaptSpecSampler sampler(x, start, probMM1, varInflate, prior);
 
     AdaptSpecSamples samples(nLoop - nWarmUp, prior);
     ProgressBar progressBar(nLoop);
@@ -89,7 +90,7 @@ AdaptSpecState getStateFromList(
     parameters.tauSquared = Rcpp::as< Eigen::VectorXd >(parametersList["tau_squared"]);
     parameters.cutPoints = Rcpp::as< Eigen::VectorXi >(parametersList["cut_points"]);
 
-    return AdaptSpecState(parameters, x, prior, 0.8);
+    return AdaptSpecState(parameters, x, prior, 0.8, 1);
 }
 
 // [[Rcpp::export(name=".get_sample_default")]]
@@ -100,7 +101,7 @@ Rcpp::List getSampleDefault(
 ) {
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters parameters(prior, xR.rows(), nStartingSegments);
-    AdaptSpecState state(parameters, Rcpp::as< Eigen::MatrixXd >(xR), prior, 0.8);
+    AdaptSpecState state(parameters, Rcpp::as< Eigen::MatrixXd >(xR), prior, 0.8, 1);
 
     return wrapState(state);
 }

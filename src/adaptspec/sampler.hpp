@@ -14,8 +14,9 @@ public:
         const Eigen::MatrixXd& x,
         const AdaptSpecParameters& start,
         double probMM1,
+        double varInflate,
         const AdaptSpecPrior& prior
-    ) : current_(start, x, prior, probMM1) {}
+    ) : current_(start, x, prior, probMM1, varInflate) {}
 
     template<typename RNG>
     void sample(RNG& rng) {

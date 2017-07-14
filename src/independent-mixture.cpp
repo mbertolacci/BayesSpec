@@ -20,6 +20,7 @@ Rcpp::List independentMixture(
     Rcpp::NumericVector weightsPriorR,
     Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
+    double varInflate,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -50,7 +51,7 @@ Rcpp::List independentMixture(
     Eigen::VectorXd weightsPrior = Rcpp::as<Eigen::VectorXd>(weightsPriorR);
 
     AdaptSpecIndependentMixtureSampler sampler(
-        x, probMM1,
+        x, probMM1, varInflate,
         starts,
         initialCategories,
         priors,

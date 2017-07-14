@@ -21,6 +21,7 @@ Rcpp::List dirichletMixture(
     double alphaPriorRate,
     Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
+    double varInflate,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -50,7 +51,7 @@ Rcpp::List dirichletMixture(
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecDirichletMixtureSampler sampler(
-        x, probMM1, starts,
+        x, probMM1, varInflate, starts,
         initialCategories,
         priors, alphaPriorShape, alphaPriorRate
     );

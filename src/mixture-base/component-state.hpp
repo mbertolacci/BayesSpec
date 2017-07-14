@@ -20,8 +20,9 @@ public:
         const Eigen::MatrixXd& x,
         const AdaptSpecParameters& start,
         const AdaptSpecPrior& prior,
-        double probMM1
-    ) : state(start, x, prior, probMM1),
+        double probMM1,
+        double varInflate
+    ) : state(start, x, prior, probMM1, varInflate),
         x_(x) {
         allPeriodograms.resize(prior.nSegmentsMax);
         allLogSegmentLikelihoods.resize(x.cols(), prior.nSegmentsMax);

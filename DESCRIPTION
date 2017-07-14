@@ -16,5 +16,6 @@ LazyData: TRUE
 RoxygenNote: 5.0.1
 Packaged: 2017-02-05 23:20:27 UTC; andrewferris
 LinkingTo: Rcpp, RcppEigen
-Suggests: testthat,
+Suggests:
+    testthat,
     lintr

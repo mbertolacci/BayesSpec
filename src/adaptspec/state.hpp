@@ -49,11 +49,13 @@ public:
         const AdaptSpecParameters& parameters_,
         const Eigen::MatrixXd& x_,
         const AdaptSpecPrior& prior,
-        double probMM1
+        double probMM1,
+        double varInflate
     ) : parameters(parameters_),
         x(&x_),
         prior_(&prior),
-        probMM1_(probMM1) {
+        probMM1_(probMM1),
+        varInflate_(varInflate) {
         initialise_(false);
     }
 
@@ -116,6 +118,7 @@ public:
 
         Eigen::MatrixXd hessian(prior_->nBases + 1, prior_->nBases + 1);
         functor.hessian(thisBetaMle, hessian);
+        hessian /= varInflate_;
         precisionCholeskyMle[segment] = hessian.llt().matrixU();
 
         updateSegmentDensities(segment);
@@ -173,6 +176,7 @@ public:
 private:
     const AdaptSpecPrior *prior_;
     double probMM1_;
+    double varInflate_;
 
     void initialise_(bool initialiseBetaToMle = false) {
         nu.resize(prior_->nSegmentsMax);

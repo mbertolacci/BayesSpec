@@ -12,7 +12,7 @@ public:
         double sigmaSquaredAlpha,
         double tauSquared
     ) : n_(n),
-        logPeriodogram_(periodogram.topRows(n / 2 + 1).array().log()),
+        periodogram_(periodogram.topRows(n / 2 + 1).array()),
         nu_(nu),
         sigmaSquaredAlpha_(sigmaSquaredAlpha),
         tauSquared_(tauSquared) {}
@@ -21,8 +21,8 @@ public:
         beta_ = beta;
         fHat_ = nu_ * beta_;
         devExp_ = (
-            logPeriodogram_.colwise() - fHat_.array()
-        ).exp().matrix();
+            periodogram_.colwise() / fHat_.array().exp()
+        ).matrix();
     }
 
     double value() const {
@@ -30,7 +30,7 @@ public:
         unsigned int nTake = n_ % 2 == 0 ? nHalf - 1 : nHalf;
 
         double result = 0;
-        for (unsigned int series = 0; series < logPeriodogram_.cols(); ++series) {
+        for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
             result -= (fHat_.segment(1, nTake) + devExp_.col(series).segment(1, nTake)).sum();
             result -= 0.5 * (fHat_[0] + devExp_(0, series));
             if (n_ % 2 == 0) {
@@ -51,7 +51,7 @@ public:
 
         // Likelihood contribution
         gradient.fill(0);
-        for (unsigned int series = 0; series < logPeriodogram_.cols(); ++series) {
+        for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
             if (n_ % 2 == 1) {
                 // Odd
                 gradient += -nu_.block(1, 0, nHalf, nu_.cols()).transpose() * oneMDevExp.col(series).segment(1, nHalf);
@@ -77,7 +77,7 @@ public:
 
         // Likelihood contribution
         hessian.fill(0);
-        for (unsigned int series = 0; series < logPeriodogram_.cols(); ++series) {
+        for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
             if (n_ % 2 == 1) {
                 // Odd
                 hessian += (
@@ -110,17 +110,18 @@ public:
         // makes the log spectrum a constant that bounds the log periodogram
         // from above
         beta.fill(0);
-        if (logPeriodogram_.size() > 0) {
-            beta[0] = logPeriodogram_.maxCoeff();
+        if (periodogram_.size() > 0) {
+            beta[0] = std::log(periodogram_.maxCoeff());
         }
     }
 
 private:
     const unsigned int n_;
-    const Eigen::MatrixXd nu_;
+    const Eigen::MatrixXd& nu_;
     const double sigmaSquaredAlpha_;
     const double tauSquared_;
-    const Eigen::ArrayXXd logPeriodogram_;
+
+    Eigen::ArrayXXd periodogram_;
 
     // Mutables
     Eigen::VectorXd beta_;
@@ -205,7 +206,7 @@ private:
     Status status_() const {
         // Stop if gradient very small
         if (currentGradient_.lpNorm<Eigen::Infinity>() < tolerance_) return CONVERGED;
-        // Stop is last step was very small
+        // Stop if last step was very small
         if ((lastRate_ * lastDirection_).lpNorm<Eigen::Infinity>() < tolerance_) return CONVERGED;
         if (currentIteration_ == maxIterations_) return MAX_ITERATIONS_REACHED;
         if (hessianLLT_.info() != Eigen::Success) return HESSIAN_NOT_POSITIVE_DEFINITE;

@@ -103,7 +103,7 @@ public:
         );
 
         // Outputs
-        Eigen::VectorXd beta(prior_->nBases + 1);
+        Eigen::VectorXd beta(parameters.beta.row(segment).transpose());
         Eigen::VectorXd gradient(prior_->nBases + 1);
         Eigen::MatrixXd hessian(prior_->nBases + 1, prior_->nBases + 1);
         int status = optimiser.run(beta, gradient, hessian);

@@ -105,16 +105,6 @@ public:
         hessian *= -1.0;
     }
 
-    void reasonableStart(Eigen::VectorXd& beta) const {
-        // NOTE(mgnb): Numerically this is a safe starting point, because it
-        // makes the log spectrum a constant that bounds the log periodogram
-        // from above
-        beta.fill(0);
-        if (periodogram_.size() > 0) {
-            beta[0] = std::log(periodogram_.maxCoeff());
-        }
-    }
-
 private:
     const unsigned int n_;
     const Eigen::MatrixXd& nu_;
@@ -154,15 +144,16 @@ public:
         tolerance_(sqrtEpsilon()),
         armijoC_(0.01),
         armijoRho_(0.5) {
-        functor_.reasonableStart(currentBeta_);
-        functor_.setBeta(currentBeta_);
-        functor_.gradient(currentGradient_);
-        functor_.hessian(currentHessian_);
-        hessianLLT_.compute(currentHessian_);
         lastDirection_.fill(1);
     }
 
     Status run(Eigen::VectorXd& beta, Eigen::VectorXd& gradient, Eigen::MatrixXd& hessian) {
+        currentBeta_ = beta;
+        functor_.setBeta(currentBeta_);
+        functor_.gradient(currentGradient_);
+        functor_.hessian(currentHessian_);
+        hessianLLT_.compute(currentHessian_);
+
         while (status_() == RUNNING) {
             takeSingleStep_();
         }

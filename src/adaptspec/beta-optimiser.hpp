@@ -188,7 +188,7 @@ private:
         double fStart = functor_.value();
         double m = armijoC_ * lastDirection_.dot(currentGradient_);
         functor_.setBeta(currentBeta_ + lastRate_ * lastDirection_);
-        double currentValue_ = functor_.value();
+        currentValue_ = functor_.value();
         while (
             (lastRate_ * lastDirection_).lpNorm<Eigen::Infinity>() > tolerance_
             && currentValue_ - fStart > lastRate_ * m

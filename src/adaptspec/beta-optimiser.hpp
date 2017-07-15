@@ -12,7 +12,7 @@ public:
         double sigmaSquaredAlpha,
         double tauSquared
     ) : n_(n),
-        periodogram_(periodogram.topRows(n / 2 + 1).array()),
+        periodogram_(periodogram),
         nu_(nu),
         sigmaSquaredAlpha_(sigmaSquaredAlpha),
         tauSquared_(tauSquared) {}
@@ -20,25 +20,25 @@ public:
     void setBeta(const Eigen::VectorXd& beta) {
         beta_ = beta;
         fHat_ = nu_ * beta_;
+
         devExp_ = (
-            periodogram_.colwise() / fHat_.array().exp()
+            periodogram_.array().colwise() / fHat_.array().exp()
         ).matrix();
+
+        // Prescale the real-valued special cases
+        fHat_[0] *= 0.5;
+        devExp_.row(0) = devExp_.row(0) * 0.5;
+        if (n_ % 2 == 0) {
+            fHat_[n_ / 2] *= 0.5;
+            devExp_.row(n_ / 2) = devExp_.row(n_ / 2) * 0.5;
+        }
     }
 
     double value() const {
-        unsigned int nHalf = n_ / 2;
-        unsigned int nTake = n_ % 2 == 0 ? nHalf - 1 : nHalf;
+        // Likelihood contribution
+        double result = -periodogram_.cols() * fHat_.sum() - devExp_.sum();
 
-        double result = 0;
-        for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
-            result -= (fHat_.segment(1, nTake) + devExp_.col(series).segment(1, nTake)).sum();
-            result -= 0.5 * (fHat_[0] + devExp_(0, series));
-            if (n_ % 2 == 0) {
-                result -= 0.5 * (fHat_[nHalf] + devExp_(nHalf, series));
-            }
-            result -= 0.5 * static_cast<double>(n_) * log(2 * M_PI);
-        }
-
+        // Prior contributions
         result -= 0.5 * beta_[0] * beta_[0] / sigmaSquaredAlpha_;
         result -= 0.5 * beta_.segment(1, beta_.size() - 1).squaredNorm() / tauSquared_;
 
@@ -46,26 +46,19 @@ public:
     }
 
     void gradient(Eigen::VectorXd& gradient) const {
-        unsigned int nHalf = n_ / 2;
         Eigen::MatrixXd oneMDevExp = (1.0 - devExp_.array()).matrix();
+        oneMDevExp.row(0) = (oneMDevExp.row(0).array() - 0.5).matrix();
+        if (n_ % 2 == 0) {
+            oneMDevExp.row(n_ / 2) = (oneMDevExp.row(n_ / 2).array() - 0.5).matrix();
+        }
 
         // Likelihood contribution
         gradient.fill(0);
-        for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
-            if (n_ % 2 == 1) {
-                // Odd
-                gradient += -nu_.block(1, 0, nHalf, nu_.cols()).transpose() * oneMDevExp.col(series).segment(1, nHalf);
-            } else {
-                // Even
-                gradient += -nu_.block(1, 0, nHalf - 1, nu_.cols()).transpose() * oneMDevExp.col(series).segment(1, nHalf - 1)
-                    - 0.5 * oneMDevExp(nHalf, series) * nu_.row(nHalf).transpose();
-            }
-            gradient -= 0.5 * oneMDevExp(0, series) * nu_.row(0).transpose();
-        }
+        gradient.noalias() -= (oneMDevExp.transpose() * nu_).colwise().sum();
 
         // Prior contribution
         gradient[0] -= beta_[0] / sigmaSquaredAlpha_;
-        gradient.segment(1, beta_.size() - 1) -= (
+        gradient.segment(1, beta_.size() - 1).noalias() -= (
             beta_.segment(1, beta_.size() - 1).array() / tauSquared_
         ).matrix();
 
@@ -73,27 +66,10 @@ public:
     }
 
     void hessian(Eigen::MatrixXd& hessian) const {
-        unsigned int nHalf = n_ / 2;
-
         // Likelihood contribution
         hessian.fill(0);
         for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
-            if (n_ % 2 == 1) {
-                // Odd
-                hessian += (
-                    -nu_.block(1, 0, nHalf, nu_.cols()).transpose()
-                    * devExp_.col(series).segment(1, nHalf).asDiagonal()
-                    * nu_.block(1, 0, nHalf, nu_.cols())
-                ) - 0.5 * devExp_(0, series) * nu_.row(0).transpose() * nu_.row(0);
-            } else {
-                // Even
-                hessian += (
-                    -nu_.block(1, 0, nHalf - 1, nu_.cols()).transpose()
-                    * devExp_.col(series).segment(1, nHalf - 1).asDiagonal()
-                    * nu_.block(1, 0, nHalf - 1, nu_.cols())
-                ) - 0.5 * devExp_(0, series) * nu_.row(0).transpose() * nu_.row(0)
-                  - 0.5 * devExp_(nHalf, series) * nu_.row(nHalf).transpose() * nu_.row(nHalf);
-            }
+            hessian.noalias() -= nu_.transpose() * devExp_.col(series).asDiagonal() * nu_;
         }
 
         // Prior contribution
@@ -107,11 +83,11 @@ public:
 
 private:
     const unsigned int n_;
+    const Eigen::MatrixXd& periodogram_;
     const Eigen::MatrixXd& nu_;
     const double sigmaSquaredAlpha_;
     const double tauSquared_;
 
-    Eigen::ArrayXXd periodogram_;
 
     // Mutables
     Eigen::VectorXd beta_;

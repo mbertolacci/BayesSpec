@@ -35,6 +35,8 @@ adaptspec_independent_mixture <- function(
   component_priors <- rep(list(component_prior), n_components)
   weight_prior <- rep(1, n_components)
 
+  stopifnot(length(initial_categories) == ncol(x))
+
   results <- .independent_mixture(
     n_loop, n_warm_up, x, component_priors, weight_prior, initial_categories,
     prob_mm1, var_inflate,

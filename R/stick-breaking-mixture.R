@@ -61,6 +61,8 @@ adaptspec_stick_breaking_mixture <- function(
     mixture_prior$precision <- matrix(1 / 100, nrow = ncol(design_matrix), ncol = n_components - 1)
   }
 
+  stopifnot(length(initial_categories) == ncol(x))
+
   results <- .stick_breaking_mixture(
     n_loop, n_warm_up, x, design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,

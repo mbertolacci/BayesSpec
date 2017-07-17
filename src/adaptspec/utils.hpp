@@ -2,8 +2,12 @@
 #define SRC_ADAPTSPEC_UTILS_HPP_
 
 #include <RcppEigen.h>
-// #include <unsupported/Eigen/FFT>
-#include <fftw3.h>
+
+#ifdef BAYESSPEC_FFTW
+    #include <fftw3.h>
+#else
+    #include <unsupported/Eigen/FFT>
+#endif
 
 #include "../splines.hpp"
 
@@ -26,35 +30,43 @@ public:
         unsigned int cutPoint,
         unsigned int n
     ) {
-        // Eigen::FFT<double> fft;
-
         unsigned int nRows = n / 2 + 1;
 
         Eigen::VectorXd thisX(n);
         Eigen::VectorXcd frequencies(nRows);
 
-        fftw_plan plan;
-        #pragma omp critical
-        {
-            plan = fftw_plan_dft_r2c_1d(
-                n,
-                thisX.data(),
-                reinterpret_cast<fftw_complex *>(frequencies.data()),
-                FFTW_ESTIMATE
-            );
-        }
+        #ifdef BAYESSPEC_FFTW
+            fftw_plan plan;
+            #pragma omp critical
+            {
+                plan = fftw_plan_dft_r2c_1d(
+                    n,
+                    thisX.data(),
+                    reinterpret_cast<fftw_complex *>(frequencies.data()),
+                    FFTW_ESTIMATE
+                );
+            }
+        #else
+            Eigen::FFT<double> fft;
+        #endif
 
         Eigen::MatrixXd periodogram(nRows, x.cols());
         for (unsigned int series = 0; series < x.cols(); ++series) {
             thisX = x.col(series).segment(cutPoint - n, n);
-            fftw_execute(plan);
+            #ifdef BAYESSPEC_FFTW
+                fftw_execute(plan);
+            #else
+                fft.fwd(frequencies, thisX);
+            #endif
             periodogram.col(series) = frequencies.cwiseAbs2() / static_cast<double>(n);
         }
 
-        #pragma omp critical
-        {
-            fftw_destroy_plan(plan);
-        }
+        #ifdef BAYESSPEC_FFTW
+            #pragma omp critical
+            {
+                fftw_destroy_plan(plan);
+            }
+        #endif
 
         return periodogram;
     }

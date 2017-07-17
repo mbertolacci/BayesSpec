@@ -126,6 +126,7 @@ public:
     Status run(Eigen::VectorXd& beta, Eigen::VectorXd& gradient, Eigen::MatrixXd& hessian) {
         currentBeta_ = beta;
         functor_.setBeta(currentBeta_);
+        currentValue_ = functor_.value();
         functor_.gradient(currentGradient_);
         functor_.hessian(currentHessian_);
         hessianLLT_.compute(currentHessian_);
@@ -185,7 +186,7 @@ private:
 
         // Perform back-tracking line-search
         lastRate_ = 1.0;
-        double fStart = functor_.value();
+        double fStart = currentValue_;
         double m = armijoC_ * lastDirection_.dot(currentGradient_);
         functor_.setBeta(currentBeta_ + lastRate_ * lastDirection_);
         currentValue_ = functor_.value();

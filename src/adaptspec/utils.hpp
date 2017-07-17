@@ -2,7 +2,8 @@
 #define SRC_ADAPTSPEC_UTILS_HPP_
 
 #include <RcppEigen.h>
-#include <unsupported/Eigen/FFT>
+// #include <unsupported/Eigen/FFT>
+#include <fftw3.h>
 
 #include "../splines.hpp"
 
@@ -25,17 +26,32 @@ public:
         unsigned int cutPoint,
         unsigned int n
     ) {
-        Eigen::FFT<double> fft;
-        Eigen::VectorXcd frequencies;
+        // Eigen::FFT<double> fft;
 
         unsigned int nRows = n / 2 + 1;
 
+        Eigen::VectorXcd frequencies(nRows);
         Eigen::MatrixXd periodogram(nRows, x.cols());
+        Eigen::VectorXd thisX(n);
         for (unsigned int series = 0; series < x.cols(); ++series) {
-            Eigen::VectorXd thisX = x.col(series).segment(cutPoint - n, n);
-            fft.fwd(frequencies, thisX);
-            periodogram.col(series) = frequencies.segment(0, nRows).cwiseAbs2()
-                / static_cast<double>(n);
+            fftw_plan plan;
+            #pragma omp critical
+            {
+                plan = fftw_plan_dft_r2c_1d(
+                    n,
+                    thisX.data(),
+                    reinterpret_cast<fftw_complex *>(frequencies.data()),
+                    FFTW_ESTIMATE
+                );
+            }
+            thisX = x.col(series).segment(cutPoint - n, n);
+            fftw_execute(plan);
+            #pragma omp critical
+            {
+                fftw_destroy_plan(plan);
+            }
+
+            periodogram.col(series) = frequencies.cwiseAbs2() / static_cast<double>(n);
         }
 
         return periodogram;

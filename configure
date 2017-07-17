@@ -2720,6 +2720,7 @@ if test "$enable_fftw3" = "yes"; then
   LIBS="-lfftw3 ${LIBS}"
 fi
 
+LIBS="-lfftw3 ${LIBS}"
 PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE -I spectra/include ${PKG_CXXFLAGS}"
 
 

@@ -30,28 +30,30 @@ public:
 
         unsigned int nRows = n / 2 + 1;
 
-        Eigen::VectorXcd frequencies(nRows);
-        Eigen::MatrixXd periodogram(nRows, x.cols());
         Eigen::VectorXd thisX(n);
+        Eigen::VectorXcd frequencies(nRows);
+
+        fftw_plan plan;
+        #pragma omp critical
+        {
+            plan = fftw_plan_dft_r2c_1d(
+                n,
+                thisX.data(),
+                reinterpret_cast<fftw_complex *>(frequencies.data()),
+                FFTW_ESTIMATE
+            );
+        }
+
+        Eigen::MatrixXd periodogram(nRows, x.cols());
         for (unsigned int series = 0; series < x.cols(); ++series) {
-            fftw_plan plan;
-            #pragma omp critical
-            {
-                plan = fftw_plan_dft_r2c_1d(
-                    n,
-                    thisX.data(),
-                    reinterpret_cast<fftw_complex *>(frequencies.data()),
-                    FFTW_ESTIMATE
-                );
-            }
             thisX = x.col(series).segment(cutPoint - n, n);
             fftw_execute(plan);
-            #pragma omp critical
-            {
-                fftw_destroy_plan(plan);
-            }
-
             periodogram.col(series) = frequencies.cwiseAbs2() / static_cast<double>(n);
+        }
+
+        #pragma omp critical
+        {
+            fftw_destroy_plan(plan);
         }
 
         return periodogram;

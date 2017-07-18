@@ -45,9 +45,11 @@ adaptspec_stick_breaking_mixture <- function(
   }
 
   if (is.null(initial_categories)) {
-    # If no initial categories are provided, distribute evenly between components
     initial_categories <- (0 : (ncol(data) - 1)) %% n_components
+  } else if (initial_categories == 'random') {
+    initial_categories <- sample.int(n_components, ncol(data), replace = TRUE) - 1
   }
+
   # Use default values, override with any provided
   component_prior <- .extend_list(base_component_prior, component_prior)
   component_priors <- rep(list(component_prior), n_components)

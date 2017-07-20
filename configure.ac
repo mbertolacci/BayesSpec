@@ -21,7 +21,7 @@ AC_CHECK_LIB(fftw3, fftw_free,
     LIBS="-lfftw3 ${LIBS}"
   ],
   ,
-  [-lm -lfftw3]
+  [-lm]
 )
 
 PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE -I spectra/include ${PKG_CXXFLAGS}"

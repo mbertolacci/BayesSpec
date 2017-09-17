@@ -1,43 +1,11 @@
 #' @export
 adaptspec_dirichlet_mixture <- function(
-  nloop, nwarmup, nexp_max, x, n_components,
-  tmin, sigmasqalpha, tau_prior_a, tau_prior_b, tau_up_limit, prob_mm1,
-  step_size_max, var_inflate, nbasis, nfreq_hat,
+  n_loop, n_warm_up, x, n_components,
+  component_model = adaptspec_model(),
   initial_categories = NULL,
-  plotting = FALSE, detrend = TRUE, nexp_start = 1, show_progress = FALSE
+  prob_mm1 = 0.8, var_inflate = 1, n_freq_hat = 50,
+  plotting = FALSE, detrend = TRUE, show_progress = FALSE
 ) {
-  # For optional variables
-  if (missing(sigmasqalpha)) {
-    sigmasqalpha <- 100
-  }
-  if (missing(tau_prior_a)) {
-    tau_prior_a <- -1
-  }
-  if (missing(tau_prior_b)) {
-    tau_prior_b <- 0
-  }
-  if (missing(tau_up_limit)) {
-    tau_up_limit <- 10000
-  }
-  if (missing(prob_mm1)) {
-    prob_mm1 <- 0.8
-  }
-  if (missing(step_size_max)) {
-    step_size_max <- 10
-  }
-  if (missing(var_inflate)) {
-    var_inflate <- 1
-  }
-  if (missing(nbasis)) {
-    nbasis <- 7
-  }
-  if (missing(nfreq_hat)) {
-    nfreq_hat <- 50
-  }
-  if (missing(tmin)) {
-    tmin <- 40
-  }
-
   x <- as.matrix(x)
   if (detrend) {
     # Detrend the observations (nolint because lintr can't figure out this
@@ -49,39 +17,32 @@ adaptspec_dirichlet_mixture <- function(
   }
 
   if (is.null(initial_categories)) {
-    initial_categories <- (0 : (ncol(data) - 1)) %% n_components
+    initial_categories <- (0 : (ncol(x) - 1)) %% n_components
+  } else if (initial_categories == 'random') {
+    initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
   }
+  stopifnot(length(initial_categories) == ncol(x))
 
-  priors <- rep(
-    list(list(
-      n_segments_max = nexp_max,
-      t_min = tmin,
-      sigma_squared_alpha = sigmasqalpha,
-      tau_prior_a = tau_prior_a,
-      tau_prior_b = tau_prior_b,
-      tau_upper_limit = tau_up_limit,
-      n_bases = nbasis
-    )),
-    n_components
-  )
+  component_priors <- rep(list(component_model), n_components)
   alpha_prior_shape <- 0.5
   alpha_prior_rate <- 0.5
 
+
   results <- .dirichlet_mixture(
-    nloop, nwarmup, x, priors, alpha_prior_shape, alpha_prior_rate,
+    n_loop, n_warm_up, x, component_priors, alpha_prior_shape, alpha_prior_rate,
     initial_categories,
-    prob_mm1,
+    prob_mm1, var_inflate,
     show_progress
   )
-  for (component in 1 : n_components) {
-    results$components[[component]]$prior <- priors[[component]]
-    results$components[[component]] <- adaptspecfit(
-      results$components[[component]], nfreq_hat
-    )
-  }
+  results$n_components <- n_components
   results$beta <- coda::mcmc(aperm(results$beta, c(2, 1)))
   results$alpha <- coda::mcmc(results$alpha)
-  results$categories <- coda::mcmc(aperm(results$categories, c(2, 1)))
+  results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))
+
+  results$var_inflate <- var_inflate
+  results$prob_mm1 <- prob_mm1
+
+  results <- adaptspecmixturefit(results, component_priors, n_freq_hat)
 
   return(results)
 }

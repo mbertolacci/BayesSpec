@@ -1,17 +1,7 @@
-base_component_prior_ind <- list(
-  n_segments_max = 10,
-  t_min = 40,
-  sigma_squared_alpha = 100,
-  tau_prior_a = -1,
-  tau_prior_b = 0,
-  tau_upper_limit = 10000,
-  n_bases = 7
-)
-
 #' @export
 adaptspec_independent_mixture <- function(
   n_loop, n_warm_up, x, n_components,
-  component_prior = base_component_prior_ind,
+  component_model = adaptspec_model(),
   initial_categories = NULL,
   prob_mm1 = 0.8, var_inflate = 1, n_freq_hat = 50,
   plotting = FALSE, detrend = TRUE, show_progress = FALSE
@@ -32,9 +22,7 @@ adaptspec_independent_mixture <- function(
     initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
   }
 
-  # Use default values, override with any provided
-  component_prior <- .extend_list(base_component_prior_ind, component_prior)
-  component_priors <- rep(list(component_prior), n_components)
+  component_priors <- rep(list(component_model), n_components)
   weight_prior <- rep(1, n_components)
 
   stopifnot(length(initial_categories) == ncol(x))
@@ -44,14 +32,13 @@ adaptspec_independent_mixture <- function(
     prob_mm1, var_inflate,
     show_progress
   )
-  for (component in 1 : n_components) {
-    results$components[[component]]$prior <- component_priors[[component]]
-    results$components[[component]] <- adaptspecfit(
-      results$components[[component]], n_freq_hat
-    )
-  }
+  results$n_components <- n_components
   results$weights <- coda::mcmc(aperm(results$weights, c(2, 1)))
-  results$categories <- coda::mcmc(aperm(results$categories, c(2, 1)))
+  results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))
+  results$var_inflate <- var_inflate
+  results$prob_mm1 <- prob_mm1
+
+  results <- adaptspecmixturefit(results, component_priors, n_freq_hat)
 
   return(results)
 }

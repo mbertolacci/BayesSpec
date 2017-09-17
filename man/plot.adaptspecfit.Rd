@@ -16,4 +16,3 @@ plot.mcmc(fit, ask = dev.interactive(), auto_layout = TRUE)
 \description{
 Plots an adaptspecfit object
 }
-

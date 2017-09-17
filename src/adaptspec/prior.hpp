@@ -6,6 +6,7 @@
 namespace bayesspec {
 
 struct AdaptSpecPrior {
+    unsigned int nSegmentsMin;
     unsigned int nSegmentsMax;
     unsigned int tMin;
     double sigmaSquaredAlpha;
@@ -15,6 +16,7 @@ struct AdaptSpecPrior {
     unsigned int nBases;
 
     AdaptSpecPrior(
+        unsigned int nSegmentsMin_,
         unsigned int nSegmentsMax_,
         unsigned int tMin_,
         double sigmaSquaredAlpha_,
@@ -22,7 +24,8 @@ struct AdaptSpecPrior {
         double tauPriorB_,
         double tauUpperLimit_,
         unsigned int nBases_
-    ) : nSegmentsMax(nSegmentsMax_),
+    ) : nSegmentsMin(nSegmentsMin_),
+        nSegmentsMax(nSegmentsMax_),
         tMin(tMin_),
         sigmaSquaredAlpha(sigmaSquaredAlpha_),
         tauPriorA(tauPriorA_),
@@ -30,9 +33,9 @@ struct AdaptSpecPrior {
         tauUpperLimit(tauUpperLimit_),
         nBases(nBases_) {}
 
-
     static AdaptSpecPrior fromList(Rcpp::List priorList) {
         return AdaptSpecPrior(
+            priorList["n_segments_min"],
             priorList["n_segments_max"],
             priorList["t_min"],
             priorList["sigma_squared_alpha"],

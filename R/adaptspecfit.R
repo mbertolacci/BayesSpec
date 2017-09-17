@@ -7,9 +7,7 @@ adaptspecfit <- function(results, nfreq_hat = 0) {
   if (nfreq_hat > 0) {
     # Compute fits of the spectra
     freq_hat <- (0 : nfreq_hat) / (2 * nfreq_hat)
-    nu_hat <- splines_basis1d(
-      freq_hat, results$prior$n_bases, omitLinear = TRUE
-    )
+    nu_hat <- splines_basis1d_demmler_reinsch(freq_hat, results$prior$n_bases)
 
     spec_hat <- list()
     for (n_segments in unique(results$n_segments)) {
@@ -35,9 +33,37 @@ adaptspecfit <- function(results, nfreq_hat = 0) {
 }
 
 #' @export
-summary.adaptspecfit <- function(fit) {
-  cat('n_segments =')
-  print(table(fit$n_segments))
+summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
+  cat('Posterior distribution of number of segments =')
+  print(table(fit$n_segments) / length(fit$n_segments))
+
+  for (n_segments in sort(unique(fit$n_segments))) {
+    if (n_segments == 1) next
+    n_iterations <- sum(fit$n_segments == n_segments)
+    if (n_iterations < iterations_threshold) next
+    cat(sprintf('--- For n_segments = %d, number of iterations = %d\n', n_segments, n_iterations))
+    for (segment in 1 : (n_segments - 1)) {
+      cat('Posterior distribution of cut point', segment, '\n')
+      print(table(
+        fit$cut_points[fit$n_segments == n_segments, segment]
+      ) / n_iterations)
+    }
+  }
+}
+
+#' @export
+diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
+  cat(sprintf('Tuning parameters: var_inflate = %f, prob_mm1 = %f\n', fit$var_inflate, fit$prob_mm1))
+  cat('Rejection rates for spline fit parameters\n')
+  for (n_segments in sort(unique(fit$n_segments))) {
+    n_iterations <- sum(fit$n_segments == n_segments)
+    if (n_iterations < iterations_threshold) next
+    cat(sprintf('--- For n_segments = %d, number of iterations = %d\n', n_segments, n_iterations))
+    for (segment in 1 : n_segments) {
+      cat('Segment', segment, '\n')
+      print(coda::rejectionRate(coda::mcmc(fit$beta[fit$n_segments == n_segments, segment, ])))
+    }
+  }
 }
 
 #' @name plot.adaptspecfit
@@ -66,7 +92,11 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 
   coda::traceplot(fit$n_segments, main = 'Number of segments traceplot')
   par(ask = ask)
-  coda::densplot(fit$n_segments, main = 'Number of segments histogram')
+  barplot(
+    table(fit$n_segments) / length(fit$n_segments),
+    main = 'Number of segments histogram',
+    ylim = c(0, 1)
+  )
 
   for (n_segments in unique(fit$n_segments)) {
     cut_points <- fit$cut_points[

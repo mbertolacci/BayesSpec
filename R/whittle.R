@@ -1,8 +1,8 @@
 #' @export
 sample_whittle_spline <- function(n, beta) {
   n_frequencies <- floor(n / 2) + 1
-  frequencies <- seq(0, 0.5, length.out = n_frequencies)
-  nu <- splines_basis1d(frequencies, length(beta) - 1, omitLinear = TRUE)
+  frequencies <- (0 : (n_frequencies - 1)) / n
+  nu <- splines_basis1d_demmler_reinsch(frequencies, length(beta) - 1)
   f_hat <- nu %*% beta
 
   # Draw a DFT (so to speak)
@@ -11,7 +11,7 @@ sample_whittle_spline <- function(n, beta) {
     dft_middle <- (sqrt(0.5) * exp(as.vector(f_hat[2 : (n_frequencies - 1)]) / 2)) * (
       rnorm(n_frequencies - 2) - 1i * rnorm(n_frequencies - 2)
     )
-    dft_last <- exp(f_hat[n_frequencies] / 2)
+    dft_last <- exp(f_hat[n_frequencies] / 2) * rnorm(1)
   } else {
     dft_middle <- (sqrt(0.5) * exp(as.vector(f_hat[2 : n_frequencies]) / 2)) * (
       rnorm(n_frequencies - 1) - 1i * rnorm(n_frequencies - 1)

@@ -43,7 +43,7 @@ Rcpp::List independentMixture(
     std::vector<AdaptSpecSamples> samples;
     for (unsigned int component = 0; component < nComponents; ++component) {
         priors.push_back(AdaptSpecPrior::fromList(priorsR[component]));
-        starts.emplace_back(priors[component], x.rows(), 1);
+        starts.emplace_back(priors[component], x.rows());
         samples.emplace_back(nLoop - nWarmUp, priors[component]);
     }
 

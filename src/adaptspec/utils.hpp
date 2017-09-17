@@ -17,10 +17,10 @@ class AdaptSpecUtils {
 public:
     static
     Eigen::MatrixXd calculateNu(unsigned int n, unsigned int nBases) {
-        unsigned int nFrequencies = n / 2;
-        return splineBasis1d(
-            Eigen::VectorXd::LinSpaced(nFrequencies + 1, 0, 0.5),
-            nBases, true
+        unsigned int maxFrequency = n / 2;
+        return splineBasis1dDemmlerReinsch(
+            Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency) / static_cast<double>(n),
+            nBases
         );
     }
 

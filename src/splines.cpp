@@ -3,28 +3,19 @@
 
 using namespace bayesspec;
 
-// [[Rcpp::export(name="splines_basis1d")]]
-Rcpp::NumericMatrix splines_basis1d(Rcpp::NumericVector xR, unsigned int nBases, bool omitLinear = false) {
+// [[Rcpp::export(name="splines_basis1d_demmler_reinsch")]]
+Rcpp::NumericMatrix splines_basis1d_demmler_reinsch(Rcpp::NumericVector xR, unsigned int nBases) {
     typedef Eigen::Map<Eigen::VectorXd> MapVXd;
 
     MapVXd x = Rcpp::as< MapVXd >(xR);
-    return Rcpp::wrap(splineBasis1d(
-        x, nBases, omitLinear
-    ));
-}
+    if (x.size() > 1) {
+        double spacing = x[1] - x[0];
+        for (int i = 2; i < x.size(); ++i) {
+            if (std::abs(x[i] - x[i - 1] - spacing) > std::sqrt(Eigen::NumTraits<double>::epsilon())) {
+                Rcpp::stop("Covariate is not evenly spaced");
+            }
+        }
+    }
 
-// [[Rcpp::export]]
-Rcpp::List splines_thinplate(const Eigen::MatrixXd& designMatrix, unsigned int nBases) {
-    Thinplate2Kernel kernel(designMatrix, nBases);
-    if (kernel.info() == Eigen::NumericalIssue) {
-        Rcpp::stop("Covariance matrix had NaN elements");
-    }
-    if (kernel.info() == Eigen::NoConvergence) {
-        Rcpp::stop("Convergence issue while computing basis vectors");
-    }
-    Rcpp::List output;
-    output["covariance"] = kernel.covariance();
-    output["design_matrix"] = kernel.designMatrix();
-    output["eigenvalues"] = kernel.eigenvalues();
-    return output;
+    return Rcpp::wrap(splineBasis1dDemmlerReinsch(x, nBases));
 }

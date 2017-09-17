@@ -162,9 +162,10 @@ public:
         stream << "beta = " << state.parameters.beta.topRows(state.parameters.nSegments) << "\n";
         stream << "tauSquared = " << state.parameters.tauSquared.segment(0, state.parameters.nSegments).transpose() << "\n";
         stream << "segmentLengths = " << state.segmentLengths.transpose() << "\n";
-        stream << "logSegmentProposal = " << state.logSegmentProposal.transpose() << "\n";
-        stream << "logSegmentLikelihood = " << state.logSegmentLikelihood.transpose() << "\n";
-        stream << "logSegmentPrior = " << state.logSegmentPrior.transpose() << "\n";
+        stream << "logSegmentProposal = " << state.logSegmentProposal.segment(0, state.parameters.nSegments).transpose() << "\n";
+        stream << "logSegmentLikelihood = " << state.logSegmentLikelihood.segment(0, state.parameters.nSegments).transpose() << "\n";
+        stream << "logSegmentPrior = " << state.logSegmentPrior.segment(0, state.parameters.nSegments).transpose() << "\n";
+        stream << "logPriorCutPoints = " << state.logPriorCutPoints << "\n";
         stream << "betaMle = " << state.betaMle.topRows(state.parameters.nSegments) << "\n";
         stream << "xSum = " << state.x->sum() << "\n";
         return stream;
@@ -223,16 +224,19 @@ private:
     }
 
     std::vector<unsigned int> getEligibleMoves_() const {
-        bool anyEligibleForCut = (segmentLengths.array() > 2 * prior_->tMin).any();
+        if (prior_->nSegmentsMax == prior_->nSegmentsMin) {
+            return {};
+        }
 
+        bool anyEligibleForCut = (segmentLengths.array() > 2 * prior_->tMin).any();
         if (anyEligibleForCut == 0) {
-            if (parameters.nSegments == 1) {
-                return { 1 };
+            if (parameters.nSegments == prior_->nSegmentsMin) {
+                return {};
             }
             return { parameters.nSegments - 1 };
         } else {
-            if (parameters.nSegments == 1) {
-                return { 2 };
+            if (parameters.nSegments == prior_->nSegmentsMin) {
+                return { prior_->nSegmentsMin + 1 };
             } else if (parameters.nSegments == prior_->nSegmentsMax) {
                 return { parameters.nSegments - 1 };
             } else {
@@ -261,6 +265,7 @@ private:
         segmentLengths[segment] = segment == 0 ? newCutPoint : newCutPoint - parameters.cutPoints[segment - 1];
         segmentLengths[segment + 1] = parameters.cutPoints[segment + 1] - newCutPoint;
 
+        updateLogPriorCutPoints();
         updateSegment(segment);
         updateSegment(segment + 1);
     }
@@ -314,7 +319,7 @@ private:
 
         parameters.cutPoints[segmentToRemove] = parameters.cutPoints[segmentToRemove + 1];
         segmentLengths[segmentToRemove] = segmentLengths[segmentToRemove] + segmentLengths[segmentToRemove + 1];
-        parameters.tauSquared[segmentToRemove] = std::sqrt(oldTauSquaredLeft + oldTauSquaredRight);
+        parameters.tauSquared[segmentToRemove] = std::sqrt(oldTauSquaredLeft * oldTauSquaredRight);
 
         // Shift everything after the cut point left
         for (unsigned int segment = segmentToRemove + 1; segment < parameters.nSegments; ++segment) {
@@ -341,11 +346,10 @@ private:
 
     template<typename RNG>
     void sampleBetween_(RNG& rng) {
-        if (prior_->nSegmentsMax == 1) {
+        std::vector<unsigned int> eligibleMoves = getEligibleMoves_();
+        if (eligibleMoves.size() == 0) {
             return;
         }
-
-        std::vector<unsigned int> eligibleMoves = getEligibleMoves_();
 
         unsigned int nSegmentsProposal = eligibleMoves[
             randInteger(0, eligibleMoves.size() - 1, rng)
@@ -456,12 +460,21 @@ private:
     static double getMetropolisLogRatioBirth_(const AdaptSpecState& current, const AdaptSpecState& proposal) {
         unsigned int segment = findChangedCutPoint_(current, proposal);
 
-        unsigned int nPossibleCuts = current.segmentLengths[segment] - 2 * current.prior_->tMin + 1;
-
         double logMoveCurrent = -std::log(static_cast<double>(proposal.getEligibleMoves_().size()));
         double logMoveProposal = -std::log(static_cast<double>(current.getEligibleMoves_().size()));
+
+        double logSegmentChoiceCurrent = -std::log(static_cast<double>(proposal.parameters.nSegments - 1));
         double logSegmentChoiceProposal = -std::log(static_cast<double>(current.getEligibleCuts_().size()));
+
+        unsigned int nPossibleCuts = current.segmentLengths[segment] - 2 * current.prior_->tMin + 1;
         double logCutProposal = -std::log(static_cast<double>(nPossibleCuts));
+
+        double currentTauSquared = current.parameters.tauSquared[segment];
+        double tauUpperLimit = current.prior_->tauUpperLimit;
+        double zLower = currentTauSquared / (currentTauSquared + tauUpperLimit);
+        double zUpper = tauUpperLimit / (currentTauSquared + tauUpperLimit);
+        // See insertCutPoint_
+        double logZProposal = -std::log(zUpper - zLower);
 
         double tauSum = std::sqrt(proposal.parameters.tauSquared[segment]) + std::sqrt(proposal.parameters.tauSquared[segment + 1]);
         double logJacobian = std::log(2) + 2 * std::log(tauSum);
@@ -470,7 +483,9 @@ private:
             proposal.getLogPosterior() - current.getLogPosterior()
             + current.getLogSegmentProposal() - proposal.getLogSegmentProposal()
             + logMoveCurrent - logMoveProposal
-            - logSegmentChoiceProposal - logCutProposal
+            + logSegmentChoiceCurrent - logSegmentChoiceProposal
+            - logCutProposal
+            - logZProposal
             + logJacobian
         );
     }
@@ -480,15 +495,30 @@ private:
 
         double logMoveCurrent = -std::log(static_cast<double>(proposal.getEligibleMoves_().size()));
         double logMoveProposal = -std::log(static_cast<double>(current.getEligibleMoves_().size()));
+
+        double logSegmentChoiceCurrent = -std::log(static_cast<double>(proposal.getEligibleCuts_().size()));
         double logSegmentChoiceProposal = -std::log(static_cast<double>(current.parameters.nSegments - 1));
+
+        unsigned int nPossibleCuts = proposal.segmentLengths[segment] - 2 * proposal.prior_->tMin + 1;
+        double logCutCurrent = -std::log(static_cast<double>(nPossibleCuts));
+
+        double proposalTauSquared = proposal.parameters.tauSquared[segment];
+        double tauUpperLimit = current.prior_->tauUpperLimit;
+        double zLower = proposalTauSquared / (proposalTauSquared + tauUpperLimit);
+        double zUpper = tauUpperLimit / (proposalTauSquared + tauUpperLimit);
+        // See insertCutPoint_
+        double logZCurrent = -std::log(zUpper - zLower);
+
         double tauSum = std::sqrt(current.parameters.tauSquared[segment]) + std::sqrt(current.parameters.tauSquared[segment + 1]);
-        double logJacobian = -std::log(2) + 2 * std::log(tauSum);
+        double logJacobian = -std::log(2) - 2 * std::log(tauSum);
 
         return (
             proposal.getLogPosterior() - current.getLogPosterior()
             + current.getLogSegmentProposal() - proposal.getLogSegmentProposal()
             + logMoveCurrent - logMoveProposal
-            - logSegmentChoiceProposal
+            + logSegmentChoiceCurrent - logSegmentChoiceProposal
+            + logCutCurrent
+            + logZCurrent
             + logJacobian
         );
     }
@@ -503,6 +533,7 @@ private:
         double logMoveCurrent = 0;
         double logMoveProposal = 0;
         if (movedSegment != nSegments
+            && current.probMM1_ > 0
             && absDiff(current.parameters.cutPoints[movedSegment], proposal.parameters.cutPoints[movedSegment]) == 1) {
             // Moved only one step, so the jump might not be symmetrical
 
@@ -511,10 +542,10 @@ private:
             int tMin = current.prior_->tMin;
             // We know only one or the other can be true, because otherwise
             // nothing would have moved
-            if (current.parameters.cutPoints[movedSegment] == tMin || current.parameters.cutPoints[movedSegment + 1] == tMin) {
+            if (current.segmentLengths[movedSegment] == tMin || current.segmentLengths[movedSegment + 1] == tMin) {
                 logMoveProposal = -std::log(2);
             }
-            if (proposal.parameters.cutPoints[movedSegment] == tMin || proposal.parameters.cutPoints[movedSegment + 1] == tMin) {
+            if (proposal.segmentLengths[movedSegment] == tMin || proposal.segmentLengths[movedSegment + 1] == tMin) {
                 logMoveCurrent = -std::log(2);
             }
         }

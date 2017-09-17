@@ -39,6 +39,11 @@ public:
             tauSquared[segment] = prior.tauUpperLimit / 2;
         }
     }
+
+    AdaptSpecParameters(
+        const AdaptSpecPrior& prior,
+        unsigned int nObservations
+    ) : AdaptSpecParameters(prior, nObservations, prior.nSegmentsMin) {}
 };
 
 }  // namespace bayesspec

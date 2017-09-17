@@ -65,10 +65,9 @@ model2 <- adaptspec(nloop = 400, nwarmup = 100,
 summary(model2)
 
 }
-\author{
-Rosen, O., Wood, S. and Stoffer, D.
-}
 \references{
 Rosen, O., Wood, S. and Stoffer, D. (2012). AdaptSPEC: Adaptive Spectral Estimation for Nonstationary Time Series. J. of the American Statistical Association, 107, 1575-1589
 }
-
+\author{
+Rosen, O., Wood, S. and Stoffer, D.
+}

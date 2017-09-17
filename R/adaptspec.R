@@ -53,77 +53,117 @@
 NULL
 
 adaptspec <- function(
-  nloop, nwarmup, nexp_max, x,
-  tmin, sigmasqalpha, tau_prior_a, tau_prior_b, tau_up_limit, prob_mm1,
-  step_size_max, var_inflate, nbasis, nfreq_hat,
-  plotting, detrend = TRUE, nexp_start = 1, show_progress = FALSE
+  # Sampler
+  n_loop,
+  n_warm_up,
+  # Data
+  data,
+  detrend = TRUE,
+  # Model
+  n_segments_min = 1,
+  n_segments_max = 10,
+  t_min = 40,
+  sigma_squared_alpha = 100,
+  tau_prior_a = -1,
+  tau_prior_b = 0,
+  tau_upper_limit = 10000,
+  n_bases = 7,
+  # Sampler control
+  prob_mm1 = 0.8,
+  var_inflate = 1,
+  n_freq_hat = 50,
+  n_segments_start = max(1, n_segments_min),
+  show_progress = FALSE,
+  # Extra
+  plotting = FALSE
 ) {
-  # For optional variables
-  if (missing(sigmasqalpha)) {
-    sigmasqalpha <- 100
-  }
-  if (missing(tau_prior_a)) {
-    tau_prior_a <- -1
-  }
-  if (missing(tau_prior_b)) {
-    tau_prior_b <- 0
-  }
-  if (missing(tau_up_limit)) {
-    tau_up_limit <- 10000
-  }
-  if (missing(prob_mm1)) {
-    prob_mm1 <- 0.8
-  }
-  if (missing(step_size_max)) {
-    step_size_max <- 10
-  }
-  if (missing(var_inflate)) {
-    var_inflate <- 1
-  }
-  if (missing(nbasis)) {
-    nbasis <- 7
-  }
-  if (missing(nfreq_hat)) {
-    nfreq_hat <- 50
-  }
-  if (missing(tmin)) {
-    tmin <- 40
-  }
-  if (missing(plotting)) {
-    plotting <- FALSE
-  }
-
-  x <- as.matrix(x)
-  if (detrend) {
-    # Detrend the observations (nolint because lintr can't figure out this
-    # is used below)
-    x0 <- 1 : nrow(x)  # nolint
-    for (series in 1 : ncol(x)) {
-      x[, series] <- lm(x[, series] ~ x0)$res
-    }
-  }
-
-  prior <- list(
-    n_segments_max = nexp_max,
-    t_min = tmin,
-    sigma_squared_alpha = sigmasqalpha,
-    tau_prior_a = tau_prior_a,
-    tau_prior_b = tau_prior_b,
-    tau_upper_limit = tau_up_limit,
-    n_bases = nbasis
+  results <- adaptspec_sample(
+    adaptspec_model(
+      n_segments_min = n_segments_min,
+      n_segments_max = n_segments_max,
+      t_min = t_min,
+      sigma_squared_alpha = sigma_squared_alpha,
+      tau_prior_a = tau_prior_a,
+      tau_prior_b = tau_prior_b,
+      tau_upper_limit = tau_upper_limit,
+      n_bases = n_bases
+    ),
+    n_loop = n_loop,
+    n_warm_up = n_warm_up,
+    data = data,
+    detrend = detrend,
+    prob_mm1 = prob_mm1,
+    var_inflate = var_inflate,
+    n_freq_hat = n_freq_hat,
+    n_segments_start = n_segments_start,
+    show_progress = show_progress
   )
-
-  results <- .adaptspec(
-    nloop, nwarmup, x, prior, prob_mm1, var_inflate,
-    nexp_start, show_progress
-  )
-
-  results$prior <- prior
-  results <- adaptspecfit(results, nfreq_hat)
 
   if (plotting) {
     plot(results)
   }
+
+  return(results)
+}
+
+#' @export
+adaptspec_model <- function(
+  n_segments_min = 1,
+  n_segments_max = 10,
+  t_min = 40,
+  sigma_squared_alpha = 100,
+  tau_prior_a = -1,
+  tau_prior_b = 0,
+  tau_upper_limit = 10000,
+  n_bases = 7
+) {
+  model <- list(
+    n_segments_min = n_segments_min,
+    n_segments_max = n_segments_max,
+    t_min = t_min,
+    sigma_squared_alpha = sigma_squared_alpha,
+    tau_prior_a = tau_prior_a,
+    tau_prior_b = tau_prior_b,
+    tau_upper_limit = tau_upper_limit,
+    n_bases = n_bases
+  )
+  class(model) <- 'adaptspecmodel'
+  return(model)
+}
+
+#' @export
+adaptspec_sample <- function(
+  model,
+  n_loop,
+  n_warm_up,
+  data,
+  detrend = TRUE,
+  prob_mm1 = 0.8,
+  var_inflate = 1,
+  n_freq_hat = 50,
+  n_segments_start = model$n_segments_min,
+  show_progress = FALSE
+) {
+  data <- as.matrix(data)
+  if (detrend && ncol(data) > 0) {
+    # Detrend the observations (nolint because lintr can't figure out this
+    # is used below)
+    data0 <- 1 : nrow(data)  # nolint
+    for (series in 1 : ncol(data)) {
+      data[, series] <- lm(data[, series] ~ data0)$res
+    }
+  }
+
+  results <- .adaptspec(
+    n_loop, n_warm_up, data, model, prob_mm1, var_inflate,
+    n_segments_start, show_progress
+  )
+
+  results$detrend <- detrend
+  results$prob_mm1 <- prob_mm1
+  results$var_inflate <- var_inflate
+  results$prior <- model
+  results <- adaptspecfit(results, n_freq_hat)
 
   return(results)
 }

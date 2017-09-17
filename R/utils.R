@@ -8,3 +8,6 @@
   }
   return(output)
 }
+
+#' @export
+diagnostics <- function(x, ...) UseMethod('diagnostics', x)

@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // adaptspec
 Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorList, double probMM1, double varInflate, unsigned int nSegmentsStart, bool showProgress);
-RcppExport SEXP BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP nSegmentsStartSEXP, SEXP showProgressSEXP) {
+RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP nSegmentsStartSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,7 +26,7 @@ END_RCPP
 }
 // getSampleDefault
 Rcpp::List getSampleDefault(Rcpp::NumericMatrix xR, Rcpp::List priorList, unsigned int nStartingSegments);
-RcppExport SEXP BayesSpec_getSampleDefault(SEXP xRSEXP, SEXP priorListSEXP, SEXP nStartingSegmentsSEXP) {
+RcppExport SEXP _BayesSpec_getSampleDefault(SEXP xRSEXP, SEXP priorListSEXP, SEXP nStartingSegmentsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,7 +39,7 @@ END_RCPP
 }
 // getSampleFilled
 Rcpp::List getSampleFilled(Rcpp::NumericMatrix xR, Rcpp::List priorList, Rcpp::List stateList);
-RcppExport SEXP BayesSpec_getSampleFilled(SEXP xRSEXP, SEXP priorListSEXP, SEXP stateListSEXP) {
+RcppExport SEXP _BayesSpec_getSampleFilled(SEXP xRSEXP, SEXP priorListSEXP, SEXP stateListSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -52,7 +52,7 @@ END_RCPP
 }
 // getMetropolisLogRatio
 double getMetropolisLogRatio(Rcpp::List currentR, Rcpp::List proposalR, Rcpp::NumericMatrix xR, Rcpp::List priorList);
-RcppExport SEXP BayesSpec_getMetropolisLogRatio(SEXP currentRSEXP, SEXP proposalRSEXP, SEXP xRSEXP, SEXP priorListSEXP) {
+RcppExport SEXP _BayesSpec_getMetropolisLogRatio(SEXP currentRSEXP, SEXP proposalRSEXP, SEXP xRSEXP, SEXP priorListSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -66,7 +66,7 @@ END_RCPP
 }
 // dirichletMixture
 Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, bool showProgress);
-RcppExport SEXP BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP showProgressSEXP) {
+RcppExport SEXP _BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -86,7 +86,7 @@ END_RCPP
 }
 // independentMixture
 Rcpp::List independentMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, Rcpp::NumericVector weightsPriorR, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, bool showProgress);
-RcppExport SEXP BayesSpec_independentMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP weightsPriorRSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP showProgressSEXP) {
+RcppExport SEXP _BayesSpec_independentMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP weightsPriorRSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -103,34 +103,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// splines_basis1d
-Rcpp::NumericMatrix splines_basis1d(Rcpp::NumericVector xR, unsigned int nBases, bool omitLinear);
-RcppExport SEXP BayesSpec_splines_basis1d(SEXP xRSEXP, SEXP nBasesSEXP, SEXP omitLinearSEXP) {
+// splines_basis1d_demmler_reinsch
+Rcpp::NumericMatrix splines_basis1d_demmler_reinsch(Rcpp::NumericVector xR, unsigned int nBases);
+RcppExport SEXP _BayesSpec_splines_basis1d_demmler_reinsch(SEXP xRSEXP, SEXP nBasesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nBases(nBasesSEXP);
-    Rcpp::traits::input_parameter< bool >::type omitLinear(omitLinearSEXP);
-    rcpp_result_gen = Rcpp::wrap(splines_basis1d(xR, nBases, omitLinear));
-    return rcpp_result_gen;
-END_RCPP
-}
-// splines_thinplate
-Rcpp::List splines_thinplate(const Eigen::MatrixXd& designMatrix, unsigned int nBases);
-RcppExport SEXP BayesSpec_splines_thinplate(SEXP designMatrixSEXP, SEXP nBasesSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type designMatrix(designMatrixSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nBases(nBasesSEXP);
-    rcpp_result_gen = Rcpp::wrap(splines_thinplate(designMatrix, nBases));
+    rcpp_result_gen = Rcpp::wrap(splines_basis1d_demmler_reinsch(xR, nBases));
     return rcpp_result_gen;
 END_RCPP
 }
 // stickBreakingMixture
 Rcpp::List stickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, unsigned int nSplineBases, bool showProgress);
-RcppExport SEXP BayesSpec_stickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP nSplineBasesSEXP, SEXP showProgressSEXP) {
+RcppExport SEXP _BayesSpec_stickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP nSplineBasesSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -154,7 +141,7 @@ END_RCPP
 }
 // logWhittleLikelihood
 Rcpp::NumericVector logWhittleLikelihood(Rcpp::NumericVector fHatR, Rcpp::NumericMatrix periodogramR, unsigned int n);
-RcppExport SEXP BayesSpec_logWhittleLikelihood(SEXP fHatRSEXP, SEXP periodogramRSEXP, SEXP nSEXP) {
+RcppExport SEXP _BayesSpec_logWhittleLikelihood(SEXP fHatRSEXP, SEXP periodogramRSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -164,4 +151,52 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(logWhittleLikelihood(fHatR, periodogramR, n));
     return rcpp_result_gen;
 END_RCPP
+}
+// logWhittleLikelihoodBeta
+double logWhittleLikelihoodBeta(Rcpp::NumericVector betaR, Rcpp::NumericMatrix nuR, Rcpp::NumericMatrix periodogramR, unsigned int n);
+RcppExport SEXP _BayesSpec_logWhittleLikelihoodBeta(SEXP betaRSEXP, SEXP nuRSEXP, SEXP periodogramRSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type betaR(betaRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type nuR(nuRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type periodogramR(periodogramRSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(logWhittleLikelihoodBeta(betaR, nuR, periodogramR, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// logWhittleLikelihoodBetaDeriv
+Rcpp::NumericVector logWhittleLikelihoodBetaDeriv(Rcpp::NumericVector betaR, Rcpp::NumericMatrix nuR, Rcpp::NumericMatrix periodogramR, unsigned int n);
+RcppExport SEXP _BayesSpec_logWhittleLikelihoodBetaDeriv(SEXP betaRSEXP, SEXP nuRSEXP, SEXP periodogramRSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type betaR(betaRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type nuR(nuRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type periodogramR(periodogramRSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(logWhittleLikelihoodBetaDeriv(betaR, nuR, periodogramR, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 8},
+    {"_BayesSpec_getSampleDefault", (DL_FUNC) &_BayesSpec_getSampleDefault, 3},
+    {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 3},
+    {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 4},
+    {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 10},
+    {"_BayesSpec_independentMixture", (DL_FUNC) &_BayesSpec_independentMixture, 9},
+    {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
+    {"_BayesSpec_stickBreakingMixture", (DL_FUNC) &_BayesSpec_stickBreakingMixture, 14},
+    {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},
+    {"_BayesSpec_logWhittleLikelihoodBeta", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBeta, 4},
+    {"_BayesSpec_logWhittleLikelihoodBetaDeriv", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBetaDeriv, 4},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_BayesSpec(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

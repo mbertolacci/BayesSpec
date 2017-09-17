@@ -2,42 +2,46 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 .adaptspec <- function(nLoop, nWarmUp, xR, priorList, probMM1, varInflate, nSegmentsStart = 1L, showProgress = FALSE) {
-    .Call('BayesSpec_adaptspec', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorList, probMM1, varInflate, nSegmentsStart, showProgress)
+    .Call('_BayesSpec_adaptspec', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorList, probMM1, varInflate, nSegmentsStart, showProgress)
 }
 
 .get_sample_default <- function(xR, priorList, nStartingSegments) {
-    .Call('BayesSpec_getSampleDefault', PACKAGE = 'BayesSpec', xR, priorList, nStartingSegments)
+    .Call('_BayesSpec_getSampleDefault', PACKAGE = 'BayesSpec', xR, priorList, nStartingSegments)
 }
 
 .get_sample_filled <- function(xR, priorList, stateList) {
-    .Call('BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, stateList)
+    .Call('_BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, stateList)
 }
 
 .get_metropolis_log_ratio <- function(currentR, proposalR, xR, priorList) {
-    .Call('BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList)
+    .Call('_BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList)
 }
 
 .dirichlet_mixture <- function(nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, showProgress = FALSE) {
-    .Call('BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, showProgress)
+    .Call('_BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, showProgress)
 }
 
 .independent_mixture <- function(nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, showProgress = FALSE) {
-    .Call('BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, showProgress)
+    .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, showProgress)
 }
 
-splines_basis1d <- function(xR, nBases, omitLinear = FALSE) {
-    .Call('BayesSpec_splines_basis1d', PACKAGE = 'BayesSpec', xR, nBases, omitLinear)
-}
-
-splines_thinplate <- function(designMatrix, nBases) {
-    .Call('BayesSpec_splines_thinplate', PACKAGE = 'BayesSpec', designMatrix, nBases)
+splines_basis1d_demmler_reinsch <- function(xR, nBases) {
+    .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }
 
 .stick_breaking_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, nSplineBases, showProgress = FALSE) {
-    .Call('BayesSpec_stickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, nSplineBases, showProgress)
+    .Call('_BayesSpec_stickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, nSplineBases, showProgress)
 }
 
 .log_whittle_likelihood <- function(fHatR, periodogramR, n) {
-    .Call('BayesSpec_logWhittleLikelihood', PACKAGE = 'BayesSpec', fHatR, periodogramR, n)
+    .Call('_BayesSpec_logWhittleLikelihood', PACKAGE = 'BayesSpec', fHatR, periodogramR, n)
+}
+
+.log_whittle_likelihood_beta <- function(betaR, nuR, periodogramR, n) {
+    .Call('_BayesSpec_logWhittleLikelihoodBeta', PACKAGE = 'BayesSpec', betaR, nuR, periodogramR, n)
+}
+
+.log_whittle_likelihood_beta_deriv <- function(betaR, nuR, periodogramR, n) {
+    .Call('_BayesSpec_logWhittleLikelihoodBetaDeriv', PACKAGE = 'BayesSpec', betaR, nuR, periodogramR, n)
 }
 

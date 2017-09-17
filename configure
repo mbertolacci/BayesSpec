@@ -2794,7 +2794,7 @@ if test "x$ac_cv_lib_fftw3_fftw_free" = xyes; then :
 fi
 
 
-PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE -I spectra/include ${PKG_CXXFLAGS}"
+PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE ${PKG_CXXFLAGS}"
 
 
 

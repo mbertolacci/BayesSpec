@@ -109,6 +109,7 @@ public:
         int status = optimiser.run(beta, gradient, hessian);
         if (status != 1) {
             Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
+            Rcpp::Rcout << "Current state =\n" << *this << "\n";
             Rcpp::stop("Optimiser failed");
         }
 

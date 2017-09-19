@@ -3,8 +3,6 @@
 
 #include <RcppEigen.h>
 
-#include "../random/inverse-gamma.hpp"
-#include "../random/truncated-distribution.hpp"
 #include "../random/utils.hpp"
 
 #include "../whittle-likelihood.hpp"
@@ -436,11 +434,39 @@ private:
         for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
             double alpha = static_cast<double>(prior_->nBases) / 2.0 + prior_->tauPriorA;
             double beta = parameters.beta.row(segment).segment(1, prior_->nBases).array().square().sum() / 2.0 + prior_->tauPriorB;
-            RightTruncatedDistribution<InverseGammaDistribution> distribution(
-                InverseGammaDistribution(alpha, beta),
-                prior_->tauUpperLimit
+
+            // Draw from right-truncated inverse gamma distribution
+            double logConst1 = R::pgamma(
+                1 / prior_->tauUpperLimit,
+                alpha,
+                1 / beta,
+                // Gets upper tail probability
+                0,
+                // Gets log probability
+                1
             );
-            parameters.tauSquared[segment] = distribution(rng);
+            double u = randUniform(rng);
+            double logConst2 = std::log(u) + logConst1;
+            parameters.tauSquared[segment] = 1 / R::qgamma(
+                logConst2,
+                alpha,
+                1 / beta,
+                // Specifies first argument is upper tail probability
+                0,
+                // Specifies first argument is log probability
+                1
+            );
+
+            if (parameters.tauSquared[segment] == 0) {
+                Rcpp::Rcout << "Sample of tauSquared[" << segment << "] failed\n"
+                    << "  alpha = " << alpha << "\n"
+                    << "  beta = " << beta << "\n"
+                    << "  logConst1 = " << logConst1 << "\n"
+                    << "  logConst2 = " << logConst2 << "\n";
+                Rcpp::Rcout << "Current state =\n" << *this << "\n";
+                Rcpp::stop("Sample of tauSquared failed");
+            }
+
             updateSegmentFit(segment);
         }
     }

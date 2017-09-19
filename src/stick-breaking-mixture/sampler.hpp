@@ -3,8 +3,9 @@
 
 #include <RcppEigen.h>
 
-#include "../random/polyagamma.hpp"
+#include "../random/inverse-gamma.hpp"
 #include "../random/utils.hpp"
+#include "../random/polyagamma.hpp"
 #include "../mixture-base/sampler-base.hpp"
 
 namespace bayesspec {

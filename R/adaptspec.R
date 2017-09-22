@@ -145,12 +145,15 @@ adaptspec_sample <- function(
   show_progress = FALSE
 ) {
   data <- as.matrix(data)
+  detrend_fits <- NULL
   if (detrend && ncol(data) > 0) {
     # Detrend the observations (nolint because lintr can't figure out this
     # is used below)
     data0 <- 1 : nrow(data)  # nolint
+    detrend_fits <- list()
     for (series in 1 : ncol(data)) {
-      data[, series] <- lm(data[, series] ~ data0)$res
+      detrend_fits[[series]] <- lm(data[, series] ~ data0)
+      data[, series] <- detrend_fits[[series]]$res
     }
   }
 
@@ -163,6 +166,7 @@ adaptspec_sample <- function(
   results$prob_mm1 <- prob_mm1
   results$var_inflate <- var_inflate
   results$prior <- model
+  results$detrend_fits <- detrend_fits
   results <- adaptspecfit(results, n_freq_hat)
 
   return(results)

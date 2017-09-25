@@ -145,6 +145,10 @@ adaptspec_sample <- function(
   show_progress = FALSE
 ) {
   data <- as.matrix(data)
+
+  # Cannot allow too many segments
+  stopifnot(nrow(data) >= (model$n_segments_max * model$t_min))
+
   detrend_fits <- NULL
   if (detrend && ncol(data) > 0) {
     # Detrend the observations (nolint because lintr can't figure out this

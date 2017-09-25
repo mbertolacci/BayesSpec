@@ -59,6 +59,7 @@ diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
     n_iterations <- sum(fit$n_segments == n_segments)
     if (n_iterations < iterations_threshold) next
     cat(sprintf('--- For n_segments = %d, number of iterations = %d\n', n_segments, n_iterations))
+    if (n_iterations == 1) next
 
     rejection_rates <- sapply(1 : n_segments, function(segment) {
       coda::rejectionRate(coda::mcmc(fit$beta[fit$n_segments == n_segments, segment, 1]))

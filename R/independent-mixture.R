@@ -26,6 +26,8 @@ adaptspec_independent_mixture <- function(
   weight_prior <- rep(1, n_components)
 
   stopifnot(length(initial_categories) == ncol(x))
+  # Cannot allow too many segments
+  stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
   results <- .independent_mixture(
     n_loop, n_warm_up, x, component_priors, weight_prior, initial_categories,

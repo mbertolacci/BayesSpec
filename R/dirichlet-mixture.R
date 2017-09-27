@@ -22,6 +22,8 @@ adaptspec_dirichlet_mixture <- function(
     initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
   }
   stopifnot(length(initial_categories) == ncol(x))
+  # Cannot allow too many segments
+  stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
   component_priors <- rep(list(component_model), n_components)
   alpha_prior_shape <- 0.5

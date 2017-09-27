@@ -62,6 +62,8 @@ adaptspec_stick_breaking_mixture <- function(
   }
 
   stopifnot(length(initial_categories) == ncol(x))
+  # Cannot allow too many segments
+  stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
   results <- .stick_breaking_mixture(
     n_loop, n_warm_up, x, design_matrix, component_priors,

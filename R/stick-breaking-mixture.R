@@ -33,7 +33,7 @@ adaptspec_stick_breaking_mixture <- function(
   spline_prior <- .extend_list(base_spline_prior, spline_prior)
   if (spline_prior$n_bases > 0) {
     if (is.null(spline_prior$type)) {
-      spline_prior$type <- ifelse(ncol(design_matrix == 1), 'smoothing', 'thinplate')
+      spline_prior$type <- ifelse(ncol(design_matrix) == 1, 'smoothing', 'thinplate')
     }
     stopifnot(spline_prior$type %in% c('smoothing', 'thinplate'))
 

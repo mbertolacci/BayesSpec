@@ -18,7 +18,7 @@ adaptspec_independent_mixture <- function(
 
   if (is.null(initial_categories)) {
     initial_categories <- (0 : (ncol(x) - 1)) %% n_components
-  } else if (initial_categories == 'random') {
+  } else if (is.character(initial_categories) && initial_categories == 'random') {
     initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
   }
 

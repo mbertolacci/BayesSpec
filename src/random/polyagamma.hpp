@@ -18,6 +18,9 @@ public:
 
     template<typename RNG>
     double operator()(RNG& rng) {
+        if (std::isnan(z_)) {
+            throw std::runtime_error("PolyagammaDistribution given NaN");
+        }
         return samplePolyagammaSingle(rng);
     }
 

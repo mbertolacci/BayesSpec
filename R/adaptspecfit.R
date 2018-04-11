@@ -3,6 +3,7 @@ adaptspecfit <- function(results, nfreq_hat = 0) {
   results$beta <- aperm(results$beta, c(3, 1, 2))
   results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
   results$cut_points <- coda::mcmc(aperm(results$cut_points, c(2, 1)))
+  results$log_posterior <- coda::mcmc(results$log_posterior)
 
   if (nfreq_hat > 0) {
     # Compute fits of the spectra

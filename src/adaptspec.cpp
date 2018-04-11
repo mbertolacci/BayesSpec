@@ -27,6 +27,7 @@ Rcpp::List adaptspec(
     AdaptSpecSampler sampler(x, start, probMM1, varInflate, prior);
 
     AdaptSpecSamples samples(nLoop - nWarmUp, prior);
+    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         sampler.sample(rng);
@@ -38,6 +39,7 @@ Rcpp::List adaptspec(
 
         if (iteration >= nWarmUp) {
             samples.save(sampler.getCurrent());
+            logPosteriorSamples[iteration - nWarmUp] = sampler.getLogPosterior();
         }
 
         if (showProgress) {
@@ -45,7 +47,9 @@ Rcpp::List adaptspec(
         }
     }
 
-    return samples.asList();
+    Rcpp::List output = samples.asList();
+    output["log_posterior"] = logPosteriorSamples;
+    return output;
 }
 
 // These functions are used for testing

@@ -27,6 +27,10 @@ public:
         return current_.parameters;
     }
 
+    double getLogPosterior() const {
+        return current_.getLogPosterior();
+    }
+
 private:
     AdaptSpecState current_;
 };

@@ -45,6 +45,13 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
 .stick_breaking_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress = FALSE) {
     .Call('_BayesSpec_stickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress)
 }
+
+.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies) {
+    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies)
+}
+
+.time_varying_spectra_mixture_mean <- function(componentSamples, categories) {
+    .Call('_BayesSpec_timeVaryingSpectraMixtureMean', PACKAGE = 'BayesSpec', componentSamples, categories)
 }
 
 .log_whittle_likelihood <- function(fHatR, periodogramR, n) {

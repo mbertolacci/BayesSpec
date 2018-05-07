@@ -17,3 +17,9 @@ diagnostic_plots <- function(x, ...) UseMethod('diagnostic_plots', x)
 
 #' @export
 diagnostic_warnings <- function(x, ...) UseMethod('diagnostic_warnings', x)
+
+#' @export
+time_varying_spectra_samples <- function(x, ...) UseMethod('time_varying_spectra_samples', x)
+
+#' @export
+time_varying_spectra_mean <- function(x, ...) UseMethod('time_varying_spectra_mean', x)

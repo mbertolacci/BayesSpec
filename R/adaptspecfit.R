@@ -210,3 +210,16 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
     }
   }
 }
+
+#' @export
+time_varying_spectra_samples.adaptspecfit <- function(fit, n_frequencies) {
+  .time_varying_spectra_samples(fit$n_segments, fit$cut_points, fit$beta, n_frequencies)
+}
+
+#' @export
+time_varying_spectra_mean.adaptspecfit <- function(fit, n_frequencies) {
+  samples <- time_varying_spectra_samples(fit, n_frequencies)
+  output <- apply(samples, 2 : 3, mean)
+  attr(output, 'frequencies') <- attr(samples, 'frequencies')
+  output
+}

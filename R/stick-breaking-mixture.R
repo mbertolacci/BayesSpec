@@ -8,7 +8,7 @@ base_spline_prior <- list(
 )
 
 #' @export
-adaptspec_stick_breaking_mixture <- function(
+adaptspec_lsbp_mixture <- function(
   n_loop, n_warm_up, x, design_matrix, n_components,
   component_model = adaptspec_model(),
   mixture_prior = base_mixture_prior,

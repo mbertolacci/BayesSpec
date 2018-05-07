@@ -78,7 +78,11 @@ public:
     }
 
     double getWeightsLogPrior_() const {
-        return 0;
+        return (
+            priorPrecision_.array().log().sum() / 2.0
+            - ((parameters_ - priorMean_).array().square() * priorPrecision_.array()).sum() / 2.0
+            - (tauPriorNu_ + 1) / 2.0 * (1.0 + tauSquared_.array() / (tauPriorNu_ * tauPriorASquared_)).log().sum()
+        );
     }
 
 private:

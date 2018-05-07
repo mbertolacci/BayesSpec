@@ -24,7 +24,7 @@ Rcpp::List adaptspec(
 
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
-    AdaptSpecParameters start(prior, x.rows(), nSegmentsStart);
+    AdaptSpecParameters start(prior, x, nSegmentsStart);
     AdaptSpecSampler sampler(x, start, probMM1, burnInVarInflate, prior);
 
     AdaptSpecSamples samples(nLoop - nWarmUp, prior);

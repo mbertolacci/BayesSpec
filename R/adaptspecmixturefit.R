@@ -19,3 +19,14 @@ diagnostics.adaptspecmixturefit <- function(fit, ...) {
     diagnostics(fit$components[[component]], ...)
   }
 }
+
+#' @export
+diagnostic_warnings.adaptspecmixturefit <- function(fit, ...) {
+  for (component in 1 : fit$n_components) {
+    diagnostic_warnings(
+      fit$components[[component]],
+      prefix = sprintf('component %d, ', component),
+      ...
+    )
+  }
+}

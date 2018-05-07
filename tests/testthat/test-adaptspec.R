@@ -3,7 +3,10 @@ context('adaptspec')
 test_that('sampler gives sane return samples', {
   x <- as.matrix(sin(seq(0, 2 * pi, length.out = 20)))
 
-  result <- adaptspec(50, 0, x, n_segments_max = 4, n_bases = 3)
+  result <- adaptspec(
+    50, 0, x, n_segments_max = 4, n_bases = 3, t_min = 4,
+    run_diagnostics = FALSE
+  )
   expect_equal(class(result$n_segments), 'mcmc')
   expect_equal(length(result$n_segments), 50)
 

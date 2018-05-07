@@ -76,7 +76,8 @@ adaptspec <- function(
   n_segments_start = max(1, n_segments_min),
   show_progress = FALSE,
   # Extra
-  plotting = FALSE
+  plotting = FALSE,
+  run_diagnostics = TRUE
 ) {
   results <- adaptspec_sample(
     adaptspec_model(
@@ -98,7 +99,8 @@ adaptspec <- function(
     burn_in_var_inflate = burn_in_var_inflate,
     n_freq_hat = n_freq_hat,
     n_segments_start = n_segments_start,
-    show_progress = show_progress
+    show_progress = show_progress,
+    run_diagnostics = run_diagnostics
   )
 
   if (plotting) {
@@ -145,7 +147,8 @@ adaptspec_sample <- function(
   burn_in_var_inflate = var_inflate,
   n_freq_hat = 50,
   n_segments_start = model$n_segments_min,
-  show_progress = FALSE
+  show_progress = FALSE,
+  run_diagnostics = TRUE
 ) {
   data <- as.matrix(data)
 
@@ -175,6 +178,8 @@ adaptspec_sample <- function(
   results$prior <- model
   results$detrend_fits <- detrend_fits
   results <- adaptspecfit(results, n_freq_hat)
+
+  if (run_diagnostics) diagnostic_warnings(results)
 
   return(results)
 }

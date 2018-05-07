@@ -70,6 +70,47 @@ diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
   }
 }
 
+#' @export
+diagnostic_warnings.adaptspecfit <- function(
+  fit,
+  effective_size_threshold = 100,
+  iterations_proportion_threshold = 0.01,
+  prefix = ''
+) {
+  n_iterations_total <- length(fit$n_segments)
+
+  for (n_segments in as.integer(sort(unique(fit$n_segments)))) {
+    n_iterations <- sum(fit$n_segments == n_segments)
+
+    if (n_iterations / n_iterations_total < iterations_proportion_threshold) next
+
+    for (segment in 1 : n_segments) {
+      if (sum(fit$n_segments == n_segments) == 1) next
+      beta_worst_neff <- min(coda::effectiveSize(coda::mcmc(
+        fit$beta[fit$n_segments == n_segments, segment, ]
+      )))
+      if (beta_worst_neff <= effective_size_threshold) {
+        warning(sprintf(
+          '%sn_segments = %d, segment = %d has beta with effective sample size %f',
+          prefix, n_segments, segment, beta_worst_neff
+        ))
+      }
+
+      tau_squared_neff <- coda::effectiveSize(
+        fit$tau_squared[fit$n_segments == n_segments, segment]
+      )
+      if (tau_squared_neff <= effective_size_threshold) {
+        warning(sprintf(
+          '%sn_segments = %d, segment = %d tau_squared has effective sample size %f',
+          prefix, n_segments, segment, tau_squared_neff
+        ))
+      }
+    }
+  }
+
+  invisible(NULL)
+}
+
 #' @name plot.adaptspecfit
 #'
 #' @title Summary plots of adaptspecfit objects

@@ -6,7 +6,8 @@ adaptspec_dirichlet_mixture <- function(
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
   first_category_fixed = FALSE,
   n_freq_hat = 50,
-  plotting = FALSE, detrend = TRUE, show_progress = FALSE
+  plotting = FALSE, detrend = TRUE, show_progress = FALSE,
+  run_diagnostics = TRUE
 ) {
   x <- as.matrix(x)
   if (detrend) {
@@ -52,6 +53,9 @@ adaptspec_dirichlet_mixture <- function(
   results$prob_mm1 <- prob_mm1
 
   results <- adaptspecmixturefit(results, component_priors, n_freq_hat)
+  class(results) <- c('adaptspecdppmixturefit', 'adaptspecmixturefit')
+
+  if (run_diagnostics) diagnostic_warnings(results)
 
   return(results)
 }

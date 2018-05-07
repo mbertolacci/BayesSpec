@@ -72,7 +72,7 @@ adaptspec_lsbp_mixture <- function(
   # Cannot allow too many segments
   stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
-  results <- .stick_breaking_mixture(
+  results <- .lsbp_mixture(
     n_loop, n_warm_up, x, design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,

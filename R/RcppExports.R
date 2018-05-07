@@ -25,6 +25,10 @@
     .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, showProgress)
 }
 
+.lsbp_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress = FALSE) {
+    .Call('_BayesSpec_logisticStickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress)
+}
+
 .rand_gamma <- function(n, shape, scale) {
     .Call('_BayesSpec_randGamma', PACKAGE = 'BayesSpec', n, shape, scale)
 }
@@ -40,10 +44,6 @@ rloggamma <- function(n, shape, logScale) {
 #' @export
 splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
-}
-
-.stick_breaking_mixture <- function(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress = FALSE) {
-    .Call('_BayesSpec_stickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress)
 }
 
 .time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies) {

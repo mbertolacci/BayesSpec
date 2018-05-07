@@ -1,5 +1,5 @@
-#ifndef SRC_STICK_BREAKING_MIXTURE_SAMPLER_HPP_
-#define SRC_STICK_BREAKING_MIXTURE_SAMPLER_HPP_
+#ifndef SRC_LSBP_SAMPLER_HPP_
+#define SRC_LSBP_SAMPLER_HPP_
 
 #include <RcppEigen.h>
 
@@ -18,11 +18,11 @@ double log1pexp(double x) {
     return std::log1p(std::exp(x));
 }
 
-class AdaptSpecStickBreakingMixtureSampler : public MixtureSamplerBase<AdaptSpecStickBreakingMixtureSampler> {
+class AdaptSpecLogisticStickBreakingPriorMixtureSampler : public MixtureSamplerBase<AdaptSpecLogisticStickBreakingPriorMixtureSampler> {
 public:
-    typedef MixtureSamplerBase<AdaptSpecStickBreakingMixtureSampler> Base;
+    typedef MixtureSamplerBase<AdaptSpecLogisticStickBreakingPriorMixtureSampler> Base;
 
-    AdaptSpecStickBreakingMixtureSampler(
+    AdaptSpecLogisticStickBreakingPriorMixtureSampler(
         const Eigen::MatrixXd& x,
         const Eigen::MatrixXd& designMatrix,
         double probMM1,
@@ -164,4 +164,4 @@ private:
 
 }  // namespace bayespec
 
-#endif  // SRC_STICK_BREAKING_MIXTURE_SAMPLER_HPP_
+#endif  // SRC_LSBP_SAMPLER_HPP_

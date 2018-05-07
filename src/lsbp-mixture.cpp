@@ -7,12 +7,12 @@
 #endif
 
 #include "adaptspec/samples.hpp"
-#include "stick-breaking-mixture/sampler.hpp"
+#include "lsbp-mixture/sampler.hpp"
 
 using namespace bayesspec;
 
-// [[Rcpp::export(name=".stick_breaking_mixture")]]
-Rcpp::List stickBreakingMixture(
+// [[Rcpp::export(name=".lsbp_mixture")]]
+Rcpp::List logisticStickBreakingMixture(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
@@ -57,7 +57,7 @@ Rcpp::List stickBreakingMixture(
     }
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
-    AdaptSpecStickBreakingMixtureSampler sampler(
+    AdaptSpecLogisticStickBreakingPriorMixtureSampler sampler(
         x, designMatrix,
         probMM1, burnInVarInflate, firstCategoryFixed,
         starts, initialCategories,

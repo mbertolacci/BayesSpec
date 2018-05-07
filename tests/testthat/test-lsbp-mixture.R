@@ -1,4 +1,4 @@
-context('adaptspec_stick_breaking_mixture')
+context('adaptspec_lsbp_mixture')
 
 test_that('sampler gives sane return samples', {
   x <- cbind(
@@ -9,7 +9,7 @@ test_that('sampler gives sane return samples', {
   )
   design_matrix <- as.matrix(1 : 4)
 
-  result <- adaptspec_stick_breaking_mixture(
+  result <- adaptspec_lsbp_mixture(
     50, 0, x, design_matrix, 2,
     component_model = adaptspec_model(n_segments_max = 2, t_min = 10),
     run_diagnostics = FALSE

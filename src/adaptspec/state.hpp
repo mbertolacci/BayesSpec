@@ -30,8 +30,8 @@ public:
     std::vector<Eigen::MatrixXd> nu;
     std::vector<Eigen::MatrixXd> periodogram;
 
-    Eigen::MatrixXd betaMle;
-    std::vector<Eigen::MatrixXd> precisionCholeskyMle;
+    Eigen::MatrixXd betaMode;
+    std::vector<Eigen::MatrixXd> precisionCholeskyMode;
 
     Eigen::VectorXd logSegmentProposal;
     Eigen::VectorXd logSegmentLikelihood;
@@ -67,10 +67,10 @@ public:
     }
 
     void updateSegmentDensities(unsigned int segment) {
-        logSegmentProposal[segment] = precisionCholeskyMle[segment].diagonal().array().log().sum()
+        logSegmentProposal[segment] = precisionCholeskyMode[segment].diagonal().array().log().sum()
             - 0.5 * (
-                precisionCholeskyMle[segment].template triangularView<Eigen::Upper>() * (
-                    parameters.beta.row(segment) - betaMle.row(segment)
+                precisionCholeskyMode[segment].template triangularView<Eigen::Upper>() * (
+                    parameters.beta.row(segment) - betaMode.row(segment)
                 ).transpose()
             ).array().square().sum()
             - 0.5 * (1 + prior_->nBases) * std::log(2 * M_PI);
@@ -111,10 +111,10 @@ public:
             Rcpp::stop("Optimiser failed");
         }
 
-        betaMle.row(segment) = beta.transpose();
+        betaMode.row(segment) = beta.transpose();
 
         hessian /= varInflate_;
-        precisionCholeskyMle[segment] = hessian.llt().matrixU();
+        precisionCholeskyMode[segment] = hessian.llt().matrixU();
 
         updateSegmentDensities(segment);
     }
@@ -165,7 +165,7 @@ public:
         stream << "logSegmentLikelihood = " << state.logSegmentLikelihood.segment(0, state.parameters.nSegments).transpose() << "\n";
         stream << "logSegmentPrior = " << state.logSegmentPrior.segment(0, state.parameters.nSegments).transpose() << "\n";
         stream << "logPriorCutPoints = " << state.logPriorCutPoints << "\n";
-        stream << "betaMle = " << state.betaMle.topRows(state.parameters.nSegments) << "\n";
+        stream << "betaMode = " << state.betaMode.topRows(state.parameters.nSegments) << "\n";
         stream << "xSum = " << state.x->sum() << "\n";
         return stream;
     }
@@ -179,11 +179,11 @@ private:
         nu.resize(prior_->nSegmentsMax);
         periodogram.resize(prior_->nSegmentsMax);
 
-        betaMle.resize(prior_->nSegmentsMax, 1 + prior_->nBases);
-        betaMle.fill(0);
-        precisionCholeskyMle.resize(prior_->nSegmentsMax);
+        betaMode.resize(prior_->nSegmentsMax, 1 + prior_->nBases);
+        betaMode.fill(0);
+        precisionCholeskyMode.resize(prior_->nSegmentsMax);
         for (unsigned int segment = 0; segment < prior_->nSegmentsMax; ++segment) {
-            precisionCholeskyMle[segment].fill(0);
+            precisionCholeskyMode[segment].fill(0);
         }
 
         logSegmentProposal.resize(prior_->nSegmentsMax);
@@ -246,13 +246,13 @@ private:
 
     template<typename RNG>
     void sampleBetaProposal_(unsigned int segment, RNG& rng) {
-        Eigen::VectorXd unitNormals(betaMle.cols());
+        Eigen::VectorXd unitNormals(betaMode.cols());
         std::normal_distribution<double> distribution;
         for (unsigned int i = 0; i < unitNormals.size(); ++i) {
             unitNormals[i] = distribution(rng);
         }
-        parameters.beta.row(segment) = betaMle.row(segment)
-            + precisionCholeskyMle[segment].template triangularView<Eigen::Upper>().solve(
+        parameters.beta.row(segment) = betaMode.row(segment)
+            + precisionCholeskyMode[segment].template triangularView<Eigen::Upper>().solve(
                 unitNormals
             ).transpose();
 
@@ -280,8 +280,8 @@ private:
             segmentLengths[segment] = segmentLengths[segment - 1];
             nu[segment] = nu[segment - 1];
             periodogram[segment] = periodogram[segment - 1];
-            betaMle.row(segment) = betaMle.row(segment - 1);
-            precisionCholeskyMle[segment] = precisionCholeskyMle[segment - 1];
+            betaMode.row(segment) = betaMode.row(segment - 1);
+            precisionCholeskyMode[segment] = precisionCholeskyMode[segment - 1];
             logSegmentProposal[segment] = logSegmentProposal[segment - 1];
             logSegmentLikelihood[segment] = logSegmentLikelihood[segment - 1];
             logSegmentPrior[segment] = logSegmentPrior[segment - 1];
@@ -328,8 +328,8 @@ private:
             segmentLengths[segment] = segmentLengths[segment + 1];
             nu[segment] = nu[segment + 1];
             periodogram[segment] = periodogram[segment + 1];
-            betaMle.row(segment) = betaMle.row(segment + 1);
-            precisionCholeskyMle[segment] = precisionCholeskyMle[segment + 1];
+            betaMode.row(segment) = betaMode.row(segment + 1);
+            precisionCholeskyMode[segment] = precisionCholeskyMode[segment + 1];
             logSegmentProposal[segment] = logSegmentProposal[segment + 1];
             logSegmentLikelihood[segment] = logSegmentLikelihood[segment + 1];
             logSegmentPrior[segment] = logSegmentPrior[segment + 1];

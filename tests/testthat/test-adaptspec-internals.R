@@ -64,11 +64,11 @@ test_that('fit and densities', {
   # Proposal distribution
   expect_equal(result$log_segment_proposal[1], -6.155771, tolerance = 1e-5)
   expect_equal(
-    result$beta_mle[1, ],
+    result$beta_mode[1, ],
     c(-1.4011321, 0.9491272, 1.8207917),
     tolerance = 1e-5
   )
-  expect_equal(result$precision_cholesky_mle[[1]], rbind(
+  expect_equal(result$precision_cholesky_mode[[1]], rbind(
     c(3.098204, 1.229431, 0.58769266),
     c(0.000000, 1.085998, 0.08152192),
     c(0.000000, 0.000000, 1.01947443)
@@ -116,11 +116,11 @@ test_that('fit and densities', {
   # Proposal distribution
   expect_equal(result$log_segment_proposal[1], -16.84566, tolerance = 1e-5)
   expect_equal(
-    result$beta_mle[1, ],
+    result$beta_mode[1, ],
     c(-2.316213, 2.067875, 3.687743),
     tolerance = 1e-5
   )
-  expect_equal(result$precision_cholesky_mle[[1]], rbind(
+  expect_equal(result$precision_cholesky_mode[[1]], rbind(
     c(4.322475, 1.801671, 0.8531555),
     c(0.000000, 1.098086, 0.1034432),
     c(0.000000, 0.000000, 1.0311801)

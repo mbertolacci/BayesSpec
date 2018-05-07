@@ -67,16 +67,16 @@ Rcpp::List wrapState(const AdaptSpecState& state) {
     output["segment_lengths"] = Rcpp::wrap(state.segmentLengths);
     Rcpp::List nu;
     Rcpp::List periodogram;
-    Rcpp::List precisionCholeskyMle;
+    Rcpp::List precisionCholeskyMode;
     for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
         nu.push_back(Rcpp::wrap(state.nu[segment]));
         periodogram.push_back(Rcpp::wrap(state.periodogram[segment]));
-        precisionCholeskyMle.push_back(Rcpp::wrap(state.precisionCholeskyMle[segment]));
+        precisionCholeskyMode.push_back(Rcpp::wrap(state.precisionCholeskyMode[segment]));
     }
     output["nu"] = nu;
     output["periodogram"] = periodogram;
-    output["beta_mle"] = Rcpp::wrap(state.betaMle);
-    output["precision_cholesky_mle"] = precisionCholeskyMle;
+    output["beta_mode"] = Rcpp::wrap(state.betaMode);
+    output["precision_cholesky_mode"] = precisionCholeskyMode;
     output["log_segment_proposal"] = Rcpp::wrap(state.logSegmentProposal);
     output["log_segment_likelihood"] = Rcpp::wrap(state.logSegmentLikelihood);
     output["log_segment_prior"] = Rcpp::wrap(state.logSegmentPrior);

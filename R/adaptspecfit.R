@@ -3,7 +3,9 @@ adaptspecfit <- function(results, n_freq_hat = 0) {
   results$beta <- aperm(results$beta, c(3, 1, 2))
   results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
   results$cut_points <- coda::mcmc(aperm(results$cut_points, c(2, 1)))
-  results$log_posterior <- coda::mcmc(results$log_posterior)
+  if (!is.null(results$log_posterior)) {
+    results$log_posterior <- coda::mcmc(results$log_posterior)
+  }
 
   if (n_freq_hat > 0) {
     # Compute fits of the spectra
@@ -39,7 +41,9 @@ window.adaptspecfit <- function(fit, ...) {
   fit$n_segments <- window(fit$n_segments, ...)
   fit$tau_squared <- window(fit$tau_squared, ...)
   fit$cut_points <- window(fit$cut_points, ...)
-  fit$log_posterior <- window(fit$log_posterior, ...)
+  if (!is.null(fit$log_posterior)) {
+    fit$log_posterior <- window(fit$log_posterior, ...)
+  }
 
   time_after <- time(fit$n_segments)
   fit$beta <- fit$beta[time_before %in% time_after, , ]

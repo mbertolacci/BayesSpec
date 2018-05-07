@@ -70,29 +70,46 @@ public:
         AdaptSpecParameters oldParameters = state.parameters;
         Eigen::VectorXd oldSegmentLengths = state.segmentLengths;
         state.sample(rng);
+        updateInternals_(isComponent, oldParameters, oldSegmentLengths);
+    }
 
+private:
+    const Eigen::MatrixXd& x_;
+
+    void updateInternals_(
+        const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent,
+        const AdaptSpecParameters& oldParameters,
+        const Eigen::VectorXd& oldSegmentLengths
+    ) {
         std::vector<Eigen::MatrixXd> oldAllPeriodograms = allPeriodograms;
         Eigen::MatrixXd oldAllLogSegmentLikelihoods = allLogSegmentLikelihoods;
 
         for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-            bool sameSegment = false;
-            bool sameBeta = false;
+            bool hasMatchingSegment = false;
 
+            unsigned int matchingOldSegment = 0;
             for (unsigned int segmentOld = 0; segmentOld < oldParameters.nSegments; ++segmentOld) {
                 if (state.parameters.cutPoints[segment] == oldParameters.cutPoints[segmentOld]
                     && state.segmentLengths[segment] == oldSegmentLengths[segmentOld]) {
-                    sameSegment = true;
-                    allPeriodograms[segment] = oldAllPeriodograms[segmentOld];
-                    if (state.parameters.beta.row(segment) == oldParameters.beta.row(segmentOld)) {
-                        allLogSegmentLikelihoods.col(segment) = oldAllLogSegmentLikelihoods.col(segmentOld);
-                        sameBeta = true;
-                    }
-                } else {
-                    allPeriodograms[segment].resize(state.periodogram[segment].rows(), x_.cols());
+                    // Has the same cutpoint and length
+                    hasMatchingSegment = true;
+                    matchingOldSegment = segmentOld;
+                    break;
                 }
             }
 
-            if (!sameSegment) {
+            bool mustUpdateLikelihoods = true;
+            if (hasMatchingSegment) {
+                allPeriodograms[segment] = oldAllPeriodograms[matchingOldSegment];
+
+                if (state.parameters.beta.row(segment) == oldParameters.beta.row(matchingOldSegment)) {
+                    // Same beta as well, so log likelihood is unchanged
+                    allLogSegmentLikelihoods.col(segment) = oldAllLogSegmentLikelihoods.col(matchingOldSegment);
+                    mustUpdateLikelihoods = false;
+                }
+            } else {
+                allPeriodograms[segment].resize(state.periodogram[segment].rows(), x_.cols());
+
                 unsigned int currentIndex = 0;
                 for (unsigned int series = 0; series < x_.cols(); ++series) {
                     if (isComponent[series]) {
@@ -108,7 +125,7 @@ public:
                 }
             }
 
-            if (!sameBeta) {
+            if (mustUpdateLikelihoods) {
                 allLogSegmentLikelihoods.col(segment) = logWhittleLikelihood(
                     state.nu[segment] * state.parameters.beta.row(segment).transpose(),
                     allPeriodograms[segment],
@@ -117,9 +134,6 @@ public:
             }
         }
     }
-
-private:
-    const Eigen::MatrixXd& x_;
 };
 
 }  // namespace bayespec

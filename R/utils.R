@@ -13,4 +13,7 @@
 diagnostics <- function(x, ...) UseMethod('diagnostics', x)
 
 #' @export
+diagnostic_plots <- function(x, ...) UseMethod('diagnostic_plots', x)
+
+#' @export
 diagnostic_warnings <- function(x, ...) UseMethod('diagnostic_warnings', x)

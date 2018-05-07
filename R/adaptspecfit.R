@@ -67,6 +67,30 @@ summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
 }
 
 #' @export
+diagnostic_plots.adaptspecfit <- function(fit, iterations_threshold = 0) {
+  n_iterations <- length(fit$n_segments)
+
+  data <- do.call(rbind, lapply(sort(unique(fit$n_segments)), function(n_segments) {
+    indices <- which(fit$n_segments == n_segments)
+
+    do.call(rbind, lapply(1 : n_segments, function(segment) {
+      value <- rep(NA, n_iterations)
+      value[indices] <- fit$beta[indices, segment, 1]
+      data.frame(
+        iteration = 1 : n_iterations,
+        n_segments = factor(n_segments),
+        segment = factor(segment),
+        value = value
+      )
+    }))
+  }))
+
+  ggplot2::ggplot(data, ggplot2::aes(iteration, value)) +
+    ggplot2::geom_line(na.rm = TRUE) +
+    ggplot2::facet_grid(segment ~ n_segments, scales = 'free', labeller = ggplot2::label_both)
+}
+
+#' @export
 diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
   cat(sprintf('Tuning parameters: var_inflate = %f, prob_mm1 = %f\n', fit$var_inflate, fit$prob_mm1))
   cat('Rejection rates for spline fit parameters\n')

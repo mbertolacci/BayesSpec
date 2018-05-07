@@ -11,7 +11,9 @@ Imports:
     Rcpp,
     RcppEigen,
     RSpectra,
-    tensor
+    tensor,
+    ggplot2,
+    gridExtra
 Depends:
     coda
 License: GPL-3

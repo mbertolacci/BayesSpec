@@ -29,6 +29,18 @@ diagnostics.adaptspecmixturefit <- function(fit, ...) {
 }
 
 #' @export
+diagnostic_plots.adaptspecmixturefit <- function(fit, top = NULL, ...) {
+  component_plots <- lapply(1 : fit$n_components, function(component) {
+    diagnostic_plots(fit$components[[component]], ...) +
+      ggplot2::ggtitle(sprintf('Component %d', component))
+  })
+  do.call(
+    gridExtra::grid.arrange,
+    c(component_plots, list(ncol = 1, top = top))
+  )
+}
+
+#' @export
 diagnostic_warnings.adaptspecmixturefit <- function(fit, ...) {
   for (component in 1 : fit$n_components) {
     diagnostic_warnings(

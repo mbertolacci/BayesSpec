@@ -24,6 +24,8 @@ Rcpp::List stickBreakingMixture(
     Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     double varInflate,
+    double burnInVarInflate,
+    bool firstCategoryFixed,
     unsigned int nSplineBases,
     bool showProgress = false
 ) {
@@ -57,8 +59,8 @@ Rcpp::List stickBreakingMixture(
 
     AdaptSpecStickBreakingMixtureSampler sampler(
         x, designMatrix,
-        probMM1, varInflate, starts,
-        initialCategories,
+        probMM1, burnInVarInflate, firstCategoryFixed,
+        starts, initialCategories,
         priors, priorMean, priorPrecision,
         tauPriorASquared, tauPriorNu,
         nSplineBases
@@ -75,6 +77,10 @@ Rcpp::List stickBreakingMixture(
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
+        if (iteration == nWarmUp) {
+            sampler.setVarInflate(varInflate);
+        }
+
         sampler.sample(rng);
 
         if (iteration % 100 == 0) {

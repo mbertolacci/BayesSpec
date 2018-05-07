@@ -54,6 +54,10 @@ public:
         initialise_();
     }
 
+    void setVarInflate(double newValue) {
+        varInflate_ = newValue;
+    }
+
     void updateLogPriorCutPoints() {
         logPriorCutPoints = 0;
         for (unsigned int segment = 0; segment < parameters.nSegments - 1; ++segment) {

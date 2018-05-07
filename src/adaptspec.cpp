@@ -16,6 +16,7 @@ Rcpp::List adaptspec(
     Rcpp::List priorList,
     double probMM1,
     double varInflate,
+    double burnInVarInflate,
     unsigned int nSegmentsStart = 1,
     bool showProgress = false
 ) {
@@ -24,12 +25,16 @@ Rcpp::List adaptspec(
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters start(prior, x.rows(), nSegmentsStart);
-    AdaptSpecSampler sampler(x, start, probMM1, varInflate, prior);
+    AdaptSpecSampler sampler(x, start, probMM1, burnInVarInflate, prior);
 
     AdaptSpecSamples samples(nLoop - nWarmUp, prior);
     Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
+        if (iteration == nWarmUp) {
+            sampler.setVarInflate(varInflate);
+        }
+
         sampler.sample(rng);
 
         if (iteration % 100 == 0) {

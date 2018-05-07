@@ -14,7 +14,9 @@ adaptspec_stick_breaking_mixture <- function(
   mixture_prior = base_mixture_prior,
   initial_categories = NULL,
   spline_prior = base_spline_prior,
-  prob_mm1 = 0.8, var_inflate = 1, n_freq_hat = 50,
+  prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
+  first_category_fixed = FALSE,
+  n_freq_hat = 50,
   plotting = FALSE, detrend = TRUE, show_progress = FALSE
 ) {
   x <- as.matrix(x)
@@ -49,6 +51,10 @@ adaptspec_stick_breaking_mixture <- function(
   } else if (initial_categories == 'random') {
     initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
   }
+  if (first_category_fixed) {
+    # The first time-series is fixed to always be in the first cluster
+    initial_categories[1] <- 0
+  }
 
   component_priors <- rep(list(component_model), n_components)
 
@@ -70,7 +76,9 @@ adaptspec_stick_breaking_mixture <- function(
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
     initial_categories,
-    prob_mm1, var_inflate, spline_prior$n_bases, show_progress
+    prob_mm1, var_inflate, burn_in_var_inflate,
+    first_category_fixed,
+    spline_prior$n_bases, show_progress
   )
   results$n_components <- n_components
   results$design_matrix <- design_matrix

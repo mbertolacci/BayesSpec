@@ -40,6 +40,10 @@ public:
         }
     }
 
+    void setVarInflate(double newValue) {
+        state.setVarInflate(newValue);
+    }
+
     template<typename RNG>
     void sample(const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent, unsigned int count, RNG& rng) {
         Eigen::MatrixXd thisX(x_.rows(), count);

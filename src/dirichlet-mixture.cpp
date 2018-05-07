@@ -22,6 +22,8 @@ Rcpp::List dirichletMixture(
     Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     double varInflate,
+    double burnInVarInflate,
+    bool firstCategoryFixed,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -51,8 +53,8 @@ Rcpp::List dirichletMixture(
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecDirichletMixtureSampler sampler(
-        x, probMM1, varInflate, starts,
-        initialCategories,
+        x, probMM1, burnInVarInflate, firstCategoryFixed,
+        starts, initialCategories,
         priors, alphaPriorShape, alphaPriorRate
     );
 
@@ -62,6 +64,10 @@ Rcpp::List dirichletMixture(
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
+        if (iteration == nWarmUp) {
+            sampler.setVarInflate(varInflate);
+        }
+
         sampler.sample(rng);
 
         if (iteration % 100 == 0) {

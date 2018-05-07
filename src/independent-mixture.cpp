@@ -21,6 +21,8 @@ Rcpp::List independentMixture(
     Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     double varInflate,
+    double burnInVarInflate,
+    bool firstCategoryFixed,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -51,7 +53,7 @@ Rcpp::List independentMixture(
     Eigen::VectorXd weightsPrior = Rcpp::as<Eigen::VectorXd>(weightsPriorR);
 
     AdaptSpecIndependentMixtureSampler sampler(
-        x, probMM1, varInflate,
+        x, probMM1, burnInVarInflate, firstCategoryFixed,
         starts,
         initialCategories,
         priors,
@@ -63,6 +65,10 @@ Rcpp::List independentMixture(
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
+        if (iteration == nWarmUp) {
+            sampler.setVarInflate(varInflate);
+        }
+
         sampler.sample(rng);
 
         if (iteration % 100 == 0) {

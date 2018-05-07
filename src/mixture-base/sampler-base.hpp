@@ -18,11 +18,13 @@ public:
         const Eigen::MatrixXd& x,
         double probMM1,
         double varInflate,
+        bool firstCategoryFixed,
         const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors
     ) : x_(x),
         nComponents_(componentPriors.size()),
+        firstCategoryFixed_(firstCategoryFixed),
         categories_(initialCategories),
         allWeights_(x.cols(), nComponents_),
         counts_(nComponents_) {
@@ -33,6 +35,12 @@ public:
             componentStates_.emplace_back(
                 x_, componentStart[component], componentPriors[component], probMM1, varInflate
             );
+        }
+    }
+
+    void setVarInflate(double newValue) {
+        for (unsigned int component = 0; component < nComponents_; ++component) {
+            componentStates_[component].setVarInflate(newValue);
         }
     }
 
@@ -59,6 +67,7 @@ public:
 protected:
     const Eigen::MatrixXd& x_;
     unsigned int nComponents_;
+    bool firstCategoryFixed_;
     std::vector<AdaptSpecMixtureComponentState> componentStates_;
 
     Eigen::VectorXi categories_;
@@ -81,7 +90,13 @@ private:
             categoryLogLikelihoods.array().exp() * allWeights_.array()
         ).matrix();
 
-        for (unsigned int series = 0; series < categories_.size(); ++series) {
+        unsigned int series = 0;
+        if (firstCategoryFixed_) {
+            // NOTE(mgnb): this starts at 1, as the first time-series is fixed
+            // to category zero
+            series = 1;
+        }
+        for (; series < categories_.size(); ++series) {
             double u = randUniform(rng) * categoryWeights.row(series).sum();
             for (unsigned int component = 0; component < nComponents_; ++component) {
                 u -= categoryWeights(series, component);

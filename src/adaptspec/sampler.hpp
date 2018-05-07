@@ -23,6 +23,10 @@ public:
         current_.sample(rng);
     }
 
+    void setVarInflate(double newValue) {
+        current_.setVarInflate(newValue);
+    }
+
     const AdaptSpecParameters& getCurrent() const {
         return current_.parameters;
     }

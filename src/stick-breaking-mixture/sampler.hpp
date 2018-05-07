@@ -19,6 +19,7 @@ public:
         const Eigen::MatrixXd& designMatrix,
         double probMM1,
         double varInflate,
+        bool firstCategoryFixed,
         const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
@@ -26,7 +27,7 @@ public:
         const Eigen::MatrixXd& priorPrecision,
         double tauPriorASquared, double tauPriorNu,
         unsigned int nSplineBases
-    ) : Base(x, probMM1, varInflate, componentStart, initialCategories, componentPriors),
+    ) : Base(x, probMM1, varInflate, firstCategoryFixed, componentStart, initialCategories, componentPriors),
         designMatrix_(designMatrix),
         priorMean_(priorMean),
         priorPrecision_(priorPrecision),

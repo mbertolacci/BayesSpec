@@ -3,7 +3,9 @@ adaptspec_independent_mixture <- function(
   n_loop, n_warm_up, x, n_components,
   component_model = adaptspec_model(),
   initial_categories = NULL,
-  prob_mm1 = 0.8, var_inflate = 1, n_freq_hat = 50,
+  prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
+  first_category_fixed = FALSE,
+  n_freq_hat = 50,
   plotting = FALSE, detrend = TRUE, show_progress = FALSE
 ) {
   x <- as.matrix(x)
@@ -21,6 +23,10 @@ adaptspec_independent_mixture <- function(
   } else if (is.character(initial_categories) && initial_categories == 'random') {
     initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
   }
+  if (first_category_fixed) {
+    # The first time-series is fixed to always be in the first cluster
+    initial_categories[1] <- 0
+  }
 
   component_priors <- rep(list(component_model), n_components)
   weight_prior <- rep(1, n_components)
@@ -31,7 +37,8 @@ adaptspec_independent_mixture <- function(
 
   results <- .independent_mixture(
     n_loop, n_warm_up, x, component_priors, weight_prior, initial_categories,
-    prob_mm1, var_inflate,
+    prob_mm1, var_inflate, burn_in_var_inflate,
+    first_category_fixed,
     show_progress
   )
   results$n_components <- n_components

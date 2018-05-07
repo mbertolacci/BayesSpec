@@ -71,6 +71,7 @@ adaptspec <- function(
   # Sampler control
   prob_mm1 = 0.8,
   var_inflate = 1,
+  burn_in_var_inflate = var_inflate,
   n_freq_hat = 50,
   n_segments_start = max(1, n_segments_min),
   show_progress = FALSE,
@@ -94,6 +95,7 @@ adaptspec <- function(
     detrend = detrend,
     prob_mm1 = prob_mm1,
     var_inflate = var_inflate,
+    burn_in_var_inflate = burn_in_var_inflate,
     n_freq_hat = n_freq_hat,
     n_segments_start = n_segments_start,
     show_progress = show_progress
@@ -140,6 +142,7 @@ adaptspec_sample <- function(
   detrend = TRUE,
   prob_mm1 = 0.8,
   var_inflate = 1,
+  burn_in_var_inflate = var_inflate,
   n_freq_hat = 50,
   n_segments_start = model$n_segments_min,
   show_progress = FALSE
@@ -162,7 +165,7 @@ adaptspec_sample <- function(
   }
 
   results <- .adaptspec(
-    n_loop, n_warm_up, data, model, prob_mm1, var_inflate,
+    n_loop, n_warm_up, data, model, prob_mm1, var_inflate, burn_in_var_inflate,
     n_segments_start, show_progress
   )
 

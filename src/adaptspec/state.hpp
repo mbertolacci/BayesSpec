@@ -51,7 +51,7 @@ public:
         prior_(&prior),
         probMM1_(probMM1),
         varInflate_(varInflate) {
-        initialise_(false);
+        initialise_();
     }
 
     void updateLogPriorCutPoints() {
@@ -175,7 +175,7 @@ private:
     double probMM1_;
     double varInflate_;
 
-    void initialise_(bool initialiseBetaToMle = false) {
+    void initialise_() {
         nu.resize(prior_->nSegmentsMax);
         periodogram.resize(prior_->nSegmentsMax);
 
@@ -200,11 +200,6 @@ private:
         for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
             segmentLengths[segment] = parameters.cutPoints[segment] - lastCutPoint;
             updateSegment(segment);
-            if (initialiseBetaToMle) {
-                // Initialise the parameters to the MLE
-                parameters.beta.row(segment) = betaMle.row(segment);
-                updateSegmentDensities(segment);
-            }
             lastCutPoint = parameters.cutPoints[segment];
         }
         if (parameters.nSegments > 0) {

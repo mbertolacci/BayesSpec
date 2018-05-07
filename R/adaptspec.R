@@ -183,3 +183,41 @@ adaptspec_sample <- function(
 
   return(results)
 }
+
+#' @export
+adaptspec_log_posterior <- function(
+  model,
+  data,
+  n_segments,
+  cut_points,
+  beta,
+  tau_squared,
+  detrend = TRUE
+) {
+  data <- as.matrix(data)
+  if (detrend && ncol(data) > 0) {
+    # Detrend the observations (nolint because lintr can't figure out this
+    # is used below)
+    data0 <- 1 : nrow(data)  # nolint
+    for (series in 1 : ncol(data)) {
+      data[, series] <- lm(data[, series] ~ data0)$res
+    }
+  }
+
+  result <- .get_sample_filled(
+    data, model,
+    list(
+      n_segments = n_segments,
+      beta = beta,
+      tau_squared = tau_squared,
+      cut_points = cut_points
+    )
+  )
+
+  sum(result$log_segment_likelihood + result$log_segment_prior + result$log_prior_cut_points)
+}
+
+#' @export
+adaptspec_nu <- function(n_freq, n_bases) {
+  splines_basis1d_demmler_reinsch(seq(0, 0.5, length.out = n_freq), n_bases)
+}

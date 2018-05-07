@@ -1,19 +1,19 @@
-adaptspecfit <- function(results, nfreq_hat = 0) {
+adaptspecfit <- function(results, n_freq_hat = 0) {
   results$n_segments <- coda::mcmc(results$n_segments)
   results$beta <- aperm(results$beta, c(3, 1, 2))
   results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
   results$cut_points <- coda::mcmc(aperm(results$cut_points, c(2, 1)))
   results$log_posterior <- coda::mcmc(results$log_posterior)
 
-  if (nfreq_hat > 0) {
+  if (n_freq_hat > 0) {
     # Compute fits of the spectra
-    freq_hat <- (0 : nfreq_hat) / (2 * nfreq_hat)
+    freq_hat <- (0 : (n_freq_hat - 1)) / (2 * (n_freq_hat - 1))
     nu_hat <- splines_basis1d_demmler_reinsch(freq_hat, results$prior$n_bases)
 
     spec_hat <- list()
     for (n_segments in unique(results$n_segments)) {
       spec_hat[[n_segments]] <- matrix(
-        0, nrow = nfreq_hat + 1, ncol = n_segments
+        0, nrow = n_freq_hat, ncol = n_segments
       )
       for (segment in 1 : n_segments) {
         beta <- results$beta[

@@ -10,6 +10,14 @@ adaptspecmixturefit <- function(results, component_priors, n_freq_hat) {
 }
 
 #' @export
+window.adaptspecmixturefit <- function(fit, ...) {
+  fit$components <- lapply(fit$components, window, ...)
+  fit$categories <- window(fit$categories, ...)
+  fit$log_posterior <- window(fit$log_posterior, ...)
+  fit
+}
+
+#' @export
 diagnostics.adaptspecmixturefit <- function(fit, ...) {
   cat(sprintf('Tuning parameters: var_inflate = %f, prob_mm1 = %f\n', fit$var_inflate, fit$prob_mm1))
 

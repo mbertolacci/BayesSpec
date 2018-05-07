@@ -8,11 +8,12 @@ Maintainer: Centre for Translational Data Science (CTDS)
 Description: Methods for spectral analysis using the Bayesian framework.
 Imports:
     assist,
-    coda,
     Rcpp,
     RcppEigen,
     RSpectra,
     tensor
+Depends:
+    coda
 License: GPL-3
 LazyLoad: TRUE
 LazyData: TRUE

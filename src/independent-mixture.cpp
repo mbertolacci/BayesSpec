@@ -62,6 +62,7 @@ Rcpp::List independentMixture(
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
     Rcpp::NumericMatrix weightsSamples(nComponents, nLoop - nWarmUp);
+    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -92,6 +93,7 @@ Rcpp::List independentMixture(
                 sampler.getWeights().data() + nComponents,
                 weightsSamples.begin() + sampleIndex * nComponents
             );
+            logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
         }
 
         if (showProgress) {
@@ -107,6 +109,7 @@ Rcpp::List independentMixture(
     results["components"] = components;
     results["weights"] = weightsSamples;
     results["categories"] = categoriesSamples;
+    results["log_posterior"] = logPosteriorSamples;
 
     return results;
 }

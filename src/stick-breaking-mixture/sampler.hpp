@@ -10,6 +10,14 @@
 
 namespace bayesspec {
 
+// log(1 + exp(x))
+double log1pexp(double x) {
+    // At this point, the difference between log(1 + exp(x)) and x is below
+    // machine precision, and this prevents overflow
+    if (x > 36.04365) return x;
+    return std::log1p(std::exp(x));
+}
+
 class AdaptSpecStickBreakingMixtureSampler : public MixtureSamplerBase<AdaptSpecStickBreakingMixtureSampler> {
 public:
     typedef MixtureSamplerBase<AdaptSpecStickBreakingMixtureSampler> Base;
@@ -37,6 +45,7 @@ public:
         tauSquared_(nComponents_ - 1),
         nSplineBases_(nSplineBases) {
         parameters_.fill(0);
+        tauSquared_.fill(1);
         updateWeights_();
     }
 
@@ -66,6 +75,10 @@ public:
 
     const Eigen::VectorXd& getTauSquared() const {
         return tauSquared_;
+    }
+
+    double getWeightsLogPrior_() const {
+        return 0;
     }
 
 private:
@@ -134,16 +147,17 @@ private:
     }
 
     void updateWeights_() {
-        Eigen::MatrixXd values = designMatrix_ * parameters_;
-        Eigen::MatrixXd beta = (1.0 / (1.0 + (-values).array().exp())).matrix();
+        Eigen::MatrixXd values = (designMatrix_ * parameters_).array().matrix();
 
         for (unsigned int series = 0; series < x_.cols(); ++series) {
-            double prodAccumulator = 1;
+            double sumAccumulator = 0;
             for (unsigned int component = 0; component < nComponents_ - 1; ++component) {
-                allWeights_(series, component) = beta(series, component) * prodAccumulator;
-                prodAccumulator = prodAccumulator * (1 - beta(series, component));
+                allLogWeights_(series, component) = (
+                    -log1pexp(-values(series, component)) + sumAccumulator
+                );
+                sumAccumulator = sumAccumulator - log1pexp(values(series, component));
             }
-            allWeights_(series, nComponents_ - 1) = prodAccumulator;
+            allLogWeights_(series, nComponents_ - 1) = sumAccumulator;
         }
     }
 };

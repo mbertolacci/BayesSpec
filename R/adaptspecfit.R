@@ -34,6 +34,20 @@ adaptspecfit <- function(results, n_freq_hat = 0) {
 }
 
 #' @export
+window.adaptspecfit <- function(fit, ...) {
+  time_before <- time(fit$n_segments)
+  fit$n_segments <- window(fit$n_segments, ...)
+  fit$tau_squared <- window(fit$tau_squared, ...)
+  fit$cut_points <- window(fit$cut_points, ...)
+  fit$log_posterior <- window(fit$log_posterior, ...)
+
+  time_after <- time(fit$n_segments)
+  fit$beta <- fit$beta[time_before %in% time_after, , ]
+
+  fit
+}
+
+#' @export
 summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
   cat('Posterior distribution of number of segments =')
   print(table(fit$n_segments) / length(fit$n_segments))

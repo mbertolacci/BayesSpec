@@ -38,12 +38,16 @@ public:
         updateWeights_();
     }
 
+    double getWeightsLogPrior_() const {
+        return ((weightsPrior_.array() - 1) * weights_.array().log()).sum();
+    }
+
 private:
     Eigen::VectorXd weightsPrior_;
     Eigen::VectorXd weights_;
 
     void updateWeights_() {
-        allWeights_.rowwise() = weights_.transpose();
+        allLogWeights_.rowwise() = weights_.array().log().matrix().transpose();
     }
 };
 

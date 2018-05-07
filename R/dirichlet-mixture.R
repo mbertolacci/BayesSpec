@@ -48,6 +48,7 @@ adaptspec_dirichlet_mixture <- function(
   results$log_beta1m <- coda::mcmc(aperm(results$log_beta1m, c(2, 1)))
   results$alpha <- coda::mcmc(results$alpha)
   results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))
+  results$log_posterior <- coda::mcmc(results$log_posterior)
 
   results$var_inflate <- var_inflate
   results$prob_mm1 <- prob_mm1
@@ -58,4 +59,12 @@ adaptspec_dirichlet_mixture <- function(
   if (run_diagnostics) diagnostic_warnings(results)
 
   return(results)
+}
+
+#' @export
+window.adaptspecdppmixturefit <- function(fit, ...) {
+  fit <- NextMethod()
+  fit$log_beta1m <- window(fit$log_beta1m, ...)
+  fit$alpha <- window(fit$log_beta1m, ...)
+  fit
 }

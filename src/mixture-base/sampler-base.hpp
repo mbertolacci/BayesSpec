@@ -26,7 +26,7 @@ public:
         nComponents_(componentPriors.size()),
         firstCategoryFixed_(firstCategoryFixed),
         categories_(initialCategories),
-        allWeights_(x.cols(), nComponents_),
+        allLogWeights_(x.cols(), nComponents_),
         counts_(nComponents_) {
         updateCounts_();
 
@@ -64,6 +64,24 @@ public:
         return componentStates_[component].state.parameters;
     }
 
+    double getLogPosterior() const {
+        double logPosterior = 0;
+        // Likelihood and prior for each component
+        for (unsigned int component = 0; component < nComponents_; ++component) {
+            logPosterior += componentStates_[component].state.getLogPosterior();
+        }
+
+        // Likelihood for categories
+        for (unsigned int series = 0; series < categories_.size(); ++series) {
+            logPosterior += allLogWeights_(series, categories_[series]);
+        }
+
+        // Prior for weights
+        logPosterior += static_cast<const Instantiation *>(this)->getWeightsLogPrior_();
+
+        return logPosterior;
+    }
+
 protected:
     const Eigen::MatrixXd& x_;
     unsigned int nComponents_;
@@ -71,7 +89,7 @@ protected:
     std::vector<AdaptSpecMixtureComponentState> componentStates_;
 
     Eigen::VectorXi categories_;
-    Eigen::MatrixXd allWeights_;
+    Eigen::MatrixXd allLogWeights_;
     Eigen::VectorXi counts_;
 
 private:
@@ -84,11 +102,13 @@ private:
                 .leftCols(componentStates_[component].state.parameters.nSegments)
                 .rowwise().sum();
         }
-        categoryLogLikelihoods.colwise() -= categoryLogLikelihoods.rowwise().maxCoeff();
 
-        Eigen::MatrixXd categoryWeights = (
-            categoryLogLikelihoods.array().exp() * allWeights_.array()
+        Eigen::MatrixXd categoryLogWeights = (
+            categoryLogLikelihoods.array() + allLogWeights_.array()
         ).matrix();
+        categoryLogWeights.colwise() -= categoryLogWeights.rowwise().maxCoeff();
+
+        Eigen::MatrixXd categoryWeights = categoryLogWeights.array().exp().matrix();
 
         unsigned int series = 0;
         if (firstCategoryFixed_) {

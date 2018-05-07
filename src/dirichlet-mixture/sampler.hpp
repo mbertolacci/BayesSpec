@@ -59,6 +59,16 @@ public:
         updateWeights_();
     }
 
+    double getWeightsLogPrior_() const {
+        return (
+            // beta prior
+            (nComponents_ - 1) * std::log(alpha_)
+            + (alpha_ - 1) * logBeta1m_.segment(0, nComponents_ - 1).sum()
+            // alpha prior
+            + (alphaPriorShape_ - 1) * std::log(alpha_) - alpha_ * alphaPriorRate_
+        );
+    }
+
 private:
     double alphaPriorShape_;
     double alphaPriorRate_;
@@ -69,8 +79,8 @@ private:
     void updateWeights_() {
         double sumAccumulator = 1;
         for (unsigned int component = 0; component < nComponents_; ++component) {
-            allWeights_.col(component).fill(
-                std::exp(std::log1p(-std::exp(logBeta1m_[component])) + sumAccumulator)
+            allLogWeights_.col(component).fill(
+                std::log1p(-std::exp(logBeta1m_[component])) + sumAccumulator
             );
             sumAccumulator = sumAccumulator + logBeta1m_[component];
         }

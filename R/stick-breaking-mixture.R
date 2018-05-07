@@ -86,6 +86,8 @@ adaptspec_stick_breaking_mixture <- function(
   results$beta <- aperm(results$beta, c(3, 1, 2))
   results$categories <- coda::mcmc(aperm(1 + results$categories, c(2, 1)))
   results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
+  results$log_posterior <- coda::mcmc(results$log_posterior)
+
   results$var_inflate <- var_inflate
   results$prob_mm1 <- prob_mm1
 

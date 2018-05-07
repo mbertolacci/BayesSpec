@@ -74,6 +74,7 @@ Rcpp::List stickBreakingMixture(
         nLoop - nWarmUp
     }));
     Rcpp::NumericMatrix tauSquaredSamples(nComponents - 1, nLoop - nWarmUp);
+    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -109,6 +110,7 @@ Rcpp::List stickBreakingMixture(
                 sampler.getTauSquared().data() + nComponents - 1,
                 tauSquaredSamples.begin() + sampleIndex * (nComponents - 1)
             );
+            logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
         }
 
         if (showProgress) {
@@ -125,6 +127,7 @@ Rcpp::List stickBreakingMixture(
     results["beta"] = betaSamples;
     results["categories"] = categoriesSamples;
     results["tau_squared"] = tauSquaredSamples;
+    results["log_posterior"] = logPosteriorSamples;
 
     return results;
 }

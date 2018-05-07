@@ -45,6 +45,8 @@ adaptspec_independent_mixture <- function(
   results$n_components <- n_components
   results$weights <- coda::mcmc(aperm(results$weights, c(2, 1)))
   results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))
+  results$log_posterior <- coda::mcmc(results$log_posterior)
+
   results$var_inflate <- var_inflate
   results$prob_mm1 <- prob_mm1
 
@@ -54,4 +56,11 @@ adaptspec_independent_mixture <- function(
   if (run_diagnostics) diagnostic_warnings(results)
 
   return(results)
+}
+
+#' @export
+window.adaptspecindependentmixturefit <- function(fit, ...) {
+  fit <- NextMethod()
+  fit$weights <- window(fit$weights, ...)
+  fit
 }

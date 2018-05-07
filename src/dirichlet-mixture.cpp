@@ -61,6 +61,7 @@ Rcpp::List dirichletMixture(
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
     Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
     Rcpp::NumericMatrix logBeta1mSamples(nComponents, nLoop - nWarmUp);
+    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -92,6 +93,7 @@ Rcpp::List dirichletMixture(
                 logBeta1mSamples.begin() + sampleIndex * nComponents
             );
             alphaSamples[sampleIndex] = sampler.getAlpha();
+            logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
         }
 
         if (showProgress) {
@@ -108,6 +110,7 @@ Rcpp::List dirichletMixture(
     results["log_beta1m"] = logBeta1mSamples;
     results["alpha"] = alphaSamples;
     results["categories"] = categoriesSamples;
+    results["log_posterior"] = logPosteriorSamples;
 
     return results;
 }

@@ -100,6 +100,16 @@ adaptspec_stick_breaking_mixture <- function(
 }
 
 #' @export
+window.adaptspeclsbpmixturefit <- function(fit, ...) {
+  fit <- NextMethod()
+  time_before <- time(fit$tau_squared)
+  fit$tau_squared <- window(fit$tau_squared, ...)
+  time_after <- time(fit$tau_squared)
+  fit$beta <- fit$beta[time_before %in% time_after, , ]
+  fit
+}
+
+#' @export
 component_probabilities <- function(results, thin = 1) {
   beta <- results$beta
   if (thin != 1) {

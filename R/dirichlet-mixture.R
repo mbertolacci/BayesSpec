@@ -45,7 +45,7 @@ adaptspec_dirichlet_mixture <- function(
     show_progress
   )
   results$n_components <- n_components
-  results$beta <- coda::mcmc(aperm(results$beta, c(2, 1)))
+  results$log_beta1m <- coda::mcmc(aperm(results$log_beta1m, c(2, 1)))
   results$alpha <- coda::mcmc(results$alpha)
   results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))
 

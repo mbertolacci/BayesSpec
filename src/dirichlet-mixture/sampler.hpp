@@ -3,7 +3,7 @@
 
 #include <RcppEigen.h>
 
-#include "../random/beta.hpp"
+#include "../random/log-beta.hpp"
 #include "../random/utils.hpp"
 #include "../mixture-base/sampler-base.hpp"
 
@@ -26,15 +26,15 @@ public:
     ) : Base(x, probMM1, varInflate, firstCategoryFixed, componentStart, initialCategories, componentPriors),
         alphaPriorShape_(alphaPriorShape),
         alphaPriorRate_(alphaPriorRate),
-        beta_(nComponents_),
+        logBeta1m_(nComponents_),
         alpha_(1.0) {
-        beta_.fill(0.5);
-        beta_[nComponents_ - 1] = 1;
+        logBeta1m_.fill(std::log(0.5));
+        logBeta1m_[nComponents_ - 1] = -std::numeric_limits<double>::infinity();
         updateWeights_();
     }
 
-    const Eigen::VectorXd& getBeta() const {
-        return beta_;
+    const Eigen::VectorXd& getLogBeta1m() const {
+        return logBeta1m_;
     }
 
     const double getAlpha() const {
@@ -46,12 +46,13 @@ public:
         unsigned int nRemaining = x_.cols();
         for (unsigned int component = 0; component < nComponents_ - 1; ++component) {
             nRemaining -= counts_[component];
-            beta_[component] = BetaDistribution(1 + counts_[component], nRemaining + alpha_)(rng);
+            // Uses the fact that 1 - Beta(a, b) = Beta(b, a)
+            logBeta1m_[component] = LogBetaDistribution(nRemaining + alpha_, 1 + counts_[component])(rng);
         }
 
         alpha_ = randGamma(
             alphaPriorShape_ + nComponents_ - 1,
-            alphaPriorRate_ - (1.0 - beta_.segment(0, nComponents_ - 1).array()).log().sum(),
+            1 / (alphaPriorRate_ - logBeta1m_.segment(0, nComponents_ - 1).sum()),
             rng
         );
 
@@ -62,14 +63,16 @@ private:
     double alphaPriorShape_;
     double alphaPriorRate_;
 
-    Eigen::VectorXd beta_;
+    Eigen::VectorXd logBeta1m_;
     double alpha_;
 
     void updateWeights_() {
-        double prodAccumulator = 1;
+        double sumAccumulator = 1;
         for (unsigned int component = 0; component < nComponents_; ++component) {
-            allWeights_.col(component).fill(beta_[component] * prodAccumulator);
-            prodAccumulator = prodAccumulator * (1 - beta_[component]);
+            allWeights_.col(component).fill(
+                std::exp(std::log1p(-std::exp(logBeta1m_[component])) + sumAccumulator)
+            );
+            sumAccumulator = sumAccumulator + logBeta1m_[component];
         }
     }
 };

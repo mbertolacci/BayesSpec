@@ -21,8 +21,8 @@ double randExponential(RNG& rng) {
 }
 
 template<typename RNG>
-double randGamma(double alpha, double beta, RNG& rng) {
-    return std::gamma_distribution<double>(alpha, beta)(rng);
+double randGamma(double shape, double scale, RNG& rng) {
+    return std::gamma_distribution<double>(shape, scale)(rng);
 }
 
 template<typename RNG>

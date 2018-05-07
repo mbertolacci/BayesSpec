@@ -60,7 +60,7 @@ Rcpp::List dirichletMixture(
 
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
     Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
-    Rcpp::NumericMatrix betaSamples(nComponents, nLoop - nWarmUp);
+    Rcpp::NumericMatrix logBeta1mSamples(nComponents, nLoop - nWarmUp);
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -87,9 +87,9 @@ Rcpp::List dirichletMixture(
                 categoriesSamples.begin() + sampleIndex * x.cols()
             );
             std::copy(
-                sampler.getBeta().data(),
-                sampler.getBeta().data() + nComponents,
-                betaSamples.begin() + sampleIndex * nComponents
+                sampler.getLogBeta1m().data(),
+                sampler.getLogBeta1m().data() + nComponents,
+                logBeta1mSamples.begin() + sampleIndex * nComponents
             );
             alphaSamples[sampleIndex] = sampler.getAlpha();
         }
@@ -105,7 +105,7 @@ Rcpp::List dirichletMixture(
         components.push_back(samples[component].asList());
     }
     results["components"] = components;
-    results["beta"] = betaSamples;
+    results["log_beta1m"] = logBeta1mSamples;
     results["alpha"] = alphaSamples;
     results["categories"] = categoriesSamples;
 

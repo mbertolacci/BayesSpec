@@ -25,6 +25,19 @@
     .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, showProgress)
 }
 
+.rand_gamma <- function(n, shape, scale) {
+    .Call('_BayesSpec_randGamma', PACKAGE = 'BayesSpec', n, shape, scale)
+}
+
+rlogbeta <- function(n, a, b) {
+    .Call('_BayesSpec_rlogbeta', PACKAGE = 'BayesSpec', n, a, b)
+}
+
+rloggamma <- function(n, shape, logScale) {
+    .Call('_BayesSpec_rloggamma', PACKAGE = 'BayesSpec', n, shape, logScale)
+}
+
+#' @export
 splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }

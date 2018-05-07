@@ -108,6 +108,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// randGamma
+Rcpp::NumericVector randGamma(int n, double shape, double scale);
+RcppExport SEXP _BayesSpec_randGamma(SEXP nSEXP, SEXP shapeSEXP, SEXP scaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type shape(shapeSEXP);
+    Rcpp::traits::input_parameter< double >::type scale(scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(randGamma(n, shape, scale));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rlogbeta
+Rcpp::NumericVector rlogbeta(int n, Rcpp::NumericVector a, Rcpp::NumericVector b);
+RcppExport SEXP _BayesSpec_rlogbeta(SEXP nSEXP, SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type a(aSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(rlogbeta(n, a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rloggamma
+Rcpp::NumericVector rloggamma(int n, Rcpp::NumericVector shape, Rcpp::NumericVector logScale);
+RcppExport SEXP _BayesSpec_rloggamma(SEXP nSEXP, SEXP shapeSEXP, SEXP logScaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type shape(shapeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type logScale(logScaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(rloggamma(n, shape, logScale));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -201,6 +237,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 4},
     {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 12},
     {"_BayesSpec_independentMixture", (DL_FUNC) &_BayesSpec_independentMixture, 11},
+    {"_BayesSpec_randGamma", (DL_FUNC) &_BayesSpec_randGamma, 3},
+    {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
+    {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
     {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
     {"_BayesSpec_stickBreakingMixture", (DL_FUNC) &_BayesSpec_stickBreakingMixture, 16},
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},

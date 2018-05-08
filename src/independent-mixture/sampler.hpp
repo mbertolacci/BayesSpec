@@ -17,11 +17,10 @@ public:
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
-        const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
         const Eigen::VectorXd& weightsPrior
-    ) : Base(x, probMM1, varInflate, firstCategoryFixed, componentStart, initialCategories, componentPriors),
+    ) : Base(x, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
         weightsPrior_(weightsPrior),
         weights_(nComponents_) {
         weights_.fill(1.0 / static_cast<double>(nComponents_));

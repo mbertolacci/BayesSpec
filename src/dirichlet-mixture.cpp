@@ -38,23 +38,16 @@ Rcpp::List dirichletMixture(
     unsigned int nComponents = priorsR.size();
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
 
-    std::vector<AdaptSpecParameters> starts;
-    std::vector<AdaptSpecPrior> priors;
-    // We reserve space in these so that pointers into them will last
-    starts.reserve(nComponents);
-    priors.reserve(nComponents);
-    std::vector<AdaptSpecSamples> samples;
-    for (unsigned int component = 0; component < nComponents; ++component) {
-        priors.push_back(AdaptSpecPrior::fromList(priorsR[component]));
-        starts.emplace_back(priors[component], x.rows());
-        samples.emplace_back(nLoop - nWarmUp, priors[component]);
-    }
-
+    std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
+    std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
+        nLoop - nWarmUp,
+        priors
+    );
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecDirichletMixtureSampler sampler(
         x, probMM1, burnInVarInflate, firstCategoryFixed,
-        starts, initialCategories,
+        initialCategories,
         priors, alphaPriorShape, alphaPriorRate
     );
 

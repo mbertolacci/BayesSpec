@@ -87,11 +87,16 @@ public:
             if (status != 1) {
                 Rcpp::stop("Optimiser failed");
             }
-            beta.row(segment) = segmentBeta;
+            beta.row(segment) = segmentBeta.transpose();
 
             lastCutPoint = cutPoints[segment];
         }
     }
+
+    AdaptSpecParameters(
+        const AdaptSpecPrior& prior,
+        const Eigen::MatrixXd& x
+    ) : AdaptSpecParameters(prior, x, prior.nSegmentsMin) {}
 };
 
 }  // namespace bayesspec

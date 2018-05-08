@@ -33,7 +33,7 @@ struct AdaptSpecPrior {
         tauUpperLimit(tauUpperLimit_),
         nBases(nBases_) {}
 
-    static AdaptSpecPrior fromList(Rcpp::List priorList) {
+    static AdaptSpecPrior fromList(const Rcpp::List& priorList) {
         return AdaptSpecPrior(
             priorList["n_segments_min"],
             priorList["n_segments_max"],
@@ -44,6 +44,14 @@ struct AdaptSpecPrior {
             priorList["tau_upper_limit"],
             priorList["n_bases"]
         );
+    }
+
+    static std::vector<AdaptSpecPrior> fromListOfLists(const Rcpp::List& priorsList) {
+        std::vector<AdaptSpecPrior> priors;
+        for (unsigned int i = 0; i < priorsList.size(); ++i) {
+            priors.push_back(fromList(priorsList[i]));
+        }
+        return priors;
     }
 };
 

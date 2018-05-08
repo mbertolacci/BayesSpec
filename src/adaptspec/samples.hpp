@@ -52,6 +52,17 @@ public:
         return output;
     }
 
+    static std::vector<AdaptSpecSamples> fromPriors(
+      unsigned int nSamples,
+      const std::vector<AdaptSpecPrior>& priors
+    ) {
+      std::vector<AdaptSpecSamples> output;
+      for (unsigned int i = 0; i < priors.size(); ++i) {
+        output.emplace_back(nSamples, priors[i]);
+      }
+      return output;
+    }
+
 private:
     Rcpp::IntegerVector nSegments_;
     Rcpp::NumericVector beta_;

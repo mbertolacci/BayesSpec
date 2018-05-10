@@ -52,6 +52,9 @@ public:
         const Eigen::MatrixXd& x,
         unsigned int nStartingSegments
     ) : AdaptSpecParameters(prior, x.rows(), nStartingSegments) {
+        // No data, so just take the defaults from an earlier constructor
+        if (x.cols() == 0) return;
+
         // Initialise the beta parameters from data using their conditional
         // modes
         unsigned int nBases = prior.nBases;

@@ -15,13 +15,17 @@ NumericVector timeVaryingSpectraSamples(
     IntegerVector nSegments,
     IntegerMatrix cutPoints,
     NumericVector beta,
-    unsigned int nFrequencies
+    unsigned int nFrequencies,
+    unsigned int timeStep
 ) {
     const NumericVector& betaDims = beta.attr("dim");
 
     unsigned int nIterations = nSegments.size();
     unsigned int nSegmentsMax = cutPoints.ncol();
-    unsigned int nTimes = *std::max_element(cutPoints.begin(), cutPoints.end());
+    unsigned int maxTime = *std::max_element(cutPoints.begin(), cutPoints.end());
+    unsigned int nTimes = std::ceil(
+        static_cast<double>(maxTime) / static_cast<double>(timeStep)
+    );
     unsigned int nBeta = betaDims[2];
     unsigned int nBases = nBeta - 1;
 
@@ -33,7 +37,7 @@ NumericVector timeVaryingSpectraSamples(
 
     NumericVector output(Rcpp::Dimension({ nIterations, nFrequencies, nTimes }));
     for (unsigned int iteration = 0; iteration < nIterations; ++iteration) {
-        unsigned int segmentStart = 0;
+        unsigned int time = 0;
         unsigned int iterationNSegments = static_cast<unsigned int>(nSegments[iteration]);
         for (unsigned int segment = 0; segment < iterationNSegments; ++segment) {
             for (unsigned int i = 0; i < nBeta; ++i) {
@@ -45,18 +49,16 @@ NumericVector timeVaryingSpectraSamples(
             }
             VectorXd segmentSpectra = nuHat * segmentBeta;
 
-            unsigned int maxTime = static_cast<unsigned int>(cutPoints(iteration, segment));
-            for (unsigned int time = segmentStart; time < maxTime; ++time) {
+            unsigned int segmentEnd = static_cast<unsigned int>(cutPoints(iteration, segment));
+            for (; time < segmentEnd; time += timeStep) {
                 for (unsigned int freq = 0; freq < nFrequencies; ++freq) {
                     output[
-                        time * nFrequencies * nIterations
+                        (time / timeStep) * nFrequencies * nIterations
                         + freq * nIterations
                         + iteration
                     ] = segmentSpectra[freq];
                 }
             }
-
-            segmentStart = cutPoints(iteration, segment);
         }
     }
     output.attr("frequencies") = Rcpp::wrap(frequencies);

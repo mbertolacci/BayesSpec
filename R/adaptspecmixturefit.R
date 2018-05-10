@@ -52,10 +52,10 @@ diagnostic_warnings.adaptspecmixturefit <- function(fit, ...) {
 }
 
 #' @export
-time_varying_spectra_mean.adaptspecmixturefit <- function(fit, n_frequencies) {
+time_varying_spectra_mean.adaptspecmixturefit <- function(fit, n_frequencies, time_step = 1) {
   n_iterations <- nrow(fit$categories)
   n_time_series <- ncol(fit$categories)
-  n_times <- max(fit$components[[1]]$cut_points)
+  n_times <- ceiling(max(fit$components[[1]]$cut_points) / time_step)
   n_components <- length(fit$components)
 
   component_samples <- array(0, dim = c(
@@ -67,12 +67,16 @@ time_varying_spectra_mean.adaptspecmixturefit <- function(fit, n_frequencies) {
   for (component in 1 : n_components) {
     component_samples[, , , component] <- time_varying_spectra_samples(
       fit$components[[component]],
-      n_frequencies
+      n_frequencies,
+      time_step
     )
   }
   output <- .time_varying_spectra_mixture_mean(component_samples, fit$categories)
   attr(output, 'frequencies') <- (
     (0 : (n_frequencies - 1)) / (2 * (n_frequencies - 1))
+  )
+  attr(output, 'times') <- (
+    1 + (0 : (n_times - 1)) * time_step
   )
   output
 }

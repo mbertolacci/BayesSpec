@@ -46,8 +46,8 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }
 
-.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies) {
-    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies)
+.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies, timeStep) {
+    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies, timeStep)
 }
 
 .time_varying_spectra_mixture_mean <- function(componentSamples, categories) {

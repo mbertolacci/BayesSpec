@@ -216,14 +216,21 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 }
 
 #' @export
-time_varying_spectra_samples.adaptspecfit <- function(fit, n_frequencies) {
-  .time_varying_spectra_samples(fit$n_segments, fit$cut_points, fit$beta, n_frequencies)
+time_varying_spectra_samples.adaptspecfit <- function(fit, n_frequencies, time_step = 1) {
+  output <- .time_varying_spectra_samples(fit$n_segments, fit$cut_points, fit$beta, n_frequencies, time_step)
+  attr(output, 'times') <- (
+    1 + (0 : (dim(output)[3] - 1)) * time_step
+  )
+  output
 }
 
 #' @export
-time_varying_spectra_mean.adaptspecfit <- function(fit, n_frequencies) {
-  samples <- time_varying_spectra_samples(fit, n_frequencies)
+time_varying_spectra_mean.adaptspecfit <- function(fit, n_frequencies, time_step = 1) {
+  samples <- time_varying_spectra_samples(fit, n_frequencies, time_step)
   output <- apply(samples, 2 : 3, mean)
   attr(output, 'frequencies') <- attr(samples, 'frequencies')
+  attr(output, 'times') <- (
+    1 + (0 : (dim(output)[2] - 1)) * time_step
+  )
   output
 }

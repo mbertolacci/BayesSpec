@@ -186,8 +186,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // timeVaryingSpectraSamples
-NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies);
-RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP) {
+NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -195,7 +195,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< IntegerMatrix >::type cutPoints(cutPointsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nFrequencies(nFrequenciesSEXP);
-    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies));
+    Rcpp::traits::input_parameter< unsigned int >::type timeStep(timeStepSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies, timeStep));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -265,7 +266,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
     {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
-    {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 4},
+    {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 5},
     {"_BayesSpec_timeVaryingSpectraMixtureMean", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMean, 2},
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},
     {"_BayesSpec_logWhittleLikelihoodBeta", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBeta, 4},

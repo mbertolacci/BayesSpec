@@ -10,6 +10,7 @@ base_spline_prior <- list(
 #' @export
 adaptspec_lsbp_mixture <- function(
   n_loop, n_warm_up, x, design_matrix, n_components,
+  spline_group = rep(1, ncol(design_matrix)),
   component_model = adaptspec_model(),
   mixture_prior = base_mixture_prior,
   initial_categories = NULL,
@@ -35,16 +36,26 @@ adaptspec_lsbp_mixture <- function(
   # Calculate the spline basis expansion
   spline_prior <- .extend_list(base_spline_prior, spline_prior)
   if (spline_prior$n_bases > 0) {
+    # TODO(mgnb): support additive splines; for now, we support just one spline
+    stopifnot(all(range(spline_group, na.rm = TRUE) == c(1, 1)))
+
+    non_spline_design_matrix <- design_matrix[, is.na(spline_group), drop = FALSE]
+    spline_design_matrix <- design_matrix[, which(spline_group == 1), drop = FALSE]
+
     if (is.null(spline_prior$type)) {
-      spline_prior$type <- ifelse(ncol(design_matrix) == 1, 'smoothing', 'thinplate')
+      spline_prior$type <- ifelse(ncol(spline_design_matrix) == 1, 'smoothing', 'thinplate')
     }
     stopifnot(spline_prior$type %in% c('smoothing', 'thinplate'))
 
-    design_matrix <- switch(
-      spline_prior$type,
-      smoothing = smoothing_spline_basis,
-      thinplate = thinplate_spline_basis
-    )(design_matrix, spline_prior$n_bases)
+    design_matrix <- cbind(
+      1,
+      non_spline_design_matrix,
+      switch(
+        spline_prior$type,
+        smoothing = smoothing_spline_basis,
+        thinplate = thinplate_spline_basis
+      )(spline_design_matrix, spline_prior$n_bases, omit_intercept = TRUE)
+    )
   }
 
   if (is.null(initial_categories)) {

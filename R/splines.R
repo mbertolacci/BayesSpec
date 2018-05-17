@@ -1,21 +1,23 @@
 .basis_expansion_design_matrix <- function(
-  covariates, omega, n_covariates, n_dimensions, n_bases, order
+  covariates, omega, n_covariates, n_dimensions, n_bases, order, omit_intercept
 ) {
   stopifnot(n_bases > 0)
   stopifnot(n_bases <= n_covariates)
+
+  intercept_offset <- if (omit_intercept) 0 else 1
 
   # Construct the design matrix
   n_polynomials <- (order - 1) * n_dimensions
   design_matrix <- matrix(
     1,
     nrow = n_covariates,
-    ncol = 1 + n_polynomials + n_bases
+    ncol = intercept_offset + n_polynomials + n_bases
   )
 
   # Null space polynomials
   for (k in 1 : (order - 1)) {
-    start <- 2 + (k - 1) * n_dimensions
-    end <- 1 + k * n_dimensions
+    start <- intercept_offset + 1 + (k - 1) * n_dimensions
+    end <- intercept_offset + k * n_dimensions
     design_matrix[, start : end] <- covariates ^ k
   }
 
@@ -30,7 +32,7 @@
     }
   }
   # This is equivalent to decomposition$u %*% diag(sqrt(decomposition$d))
-  design_matrix[, (2 + n_polynomials) : (1 + n_polynomials + n_bases)] <- t(
+  design_matrix[, (intercept_offset + 1 + n_polynomials) : (intercept_offset + n_polynomials + n_bases)] <- t(
     t(decomposition$vectors) * sqrt(decomposition$values)
   )
 
@@ -41,7 +43,8 @@
 smoothing_spline_basis <- function(
   covariates,
   n_bases = floor(length(covariates) / 10),
-  order = 2
+  order = 2,
+  omit_intercept = FALSE
 ) {
   stopifnot(order == 1 || order == 2)
   if (!is.vector(covariates)) {
@@ -68,7 +71,7 @@ smoothing_spline_basis <- function(
   }
 
   .basis_expansion_design_matrix(
-    covariates, omega, n_covariates, 1, n_bases, order
+    covariates, omega, n_covariates, 1, n_bases, order, omit_intercept
   )
 }
 
@@ -76,10 +79,11 @@ smoothing_spline_basis <- function(
 thinplate_spline_basis <- function(
   covariates,
   n_bases = floor(nrow(covariates) / 10),
-  order = 2
+  order = 2,
+  omit_intercept = FALSE
 ) {
   omega <- assist::tp(covariates, order = order)
   .basis_expansion_design_matrix(
-    covariates, omega, nrow(covariates), ncol(covariates), n_bases, order
+    covariates, omega, nrow(covariates), ncol(covariates), n_bases, order, omit_intercept
   )
 }

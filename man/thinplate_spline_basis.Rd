@@ -5,7 +5,7 @@
 \title{Thin plate splines}
 \usage{
 thinplate_spline_basis(covariates, n_bases = floor(nrow(covariates)/10),
-  order = 2)
+  order = 2, omit_intercept = FALSE)
 }
 \description{
 Thin plate splines

@@ -66,8 +66,8 @@ NumericVector timeVaryingSpectraSamples(
     return output;
 }
 
-// [[Rcpp::export(name=".time_varying_spectra_mixture_mean")]]
-NumericVector timeVaryingSpectraMixtureMean(NumericVector componentSamples, IntegerMatrix categories) {
+// [[Rcpp::export(name=".time_varying_spectra_mixture_mean_categories")]]
+NumericVector timeVaryingSpectraMixtureMeanCategories(NumericVector componentSamples, IntegerMatrix categories) {
     const NumericVector& componentSamplesDims = componentSamples.attr("dim");
     unsigned int nIterations = componentSamplesDims[0];
     unsigned int nFrequencies = componentSamplesDims[1];
@@ -88,6 +88,49 @@ NumericVector timeVaryingSpectraMixtureMean(NumericVector componentSamples, Inte
                         + freq * nIterations
                         + iteration
                     ];
+                }
+                output[
+                    timeSeries * nTimes * nFrequencies
+                    + time * nFrequencies
+                    + freq
+                ] = total / static_cast<double>(nIterations);
+            }
+        }
+    }
+
+    return output;
+}
+
+// [[Rcpp::export(name=".time_varying_spectra_mixture_mean_probabilities")]]
+NumericVector timeVaryingSpectraMixtureMeanProbabilities(NumericVector componentSamples, NumericVector probabilities) {
+    const NumericVector& componentSamplesDims = componentSamples.attr("dim");
+    unsigned int nIterations = componentSamplesDims[0];
+    unsigned int nFrequencies = componentSamplesDims[1];
+    unsigned int nTimes = componentSamplesDims[2];
+
+    const NumericVector& probabilitiesDims = probabilities.attr("dim");
+    unsigned int nTimeSeries = probabilitiesDims[1];
+    unsigned int nComponents = probabilitiesDims[2];
+
+    NumericVector output(Rcpp::Dimension({ nFrequencies, nTimes, nTimeSeries }));
+
+    for (unsigned int timeSeries = 0; timeSeries < nTimeSeries; ++timeSeries) {
+        for (unsigned int time = 0; time < nTimes; ++time) {
+            for (unsigned int freq = 0; freq < nFrequencies; ++freq) {
+                double total = 0;
+                for (unsigned int iteration = 0; iteration < nIterations; ++iteration) {
+                    for (unsigned int component = 0; component < nComponents; ++component) {
+                        total += probabilities[
+                            component * nTimeSeries * nIterations
+                            + timeSeries * nIterations
+                            + iteration
+                        ] * componentSamples[
+                            component * nTimes * nFrequencies * nIterations
+                            + time * nFrequencies * nIterations
+                            + freq * nIterations
+                            + iteration
+                        ];
+                    }
                 }
                 output[
                     timeSeries * nTimes * nFrequencies

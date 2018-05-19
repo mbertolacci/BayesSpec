@@ -121,11 +121,8 @@ window.adaptspeclsbpmixturefit <- function(fit, ...) {
 }
 
 #' @export
-component_probabilities <- function(results, thin = 1) {
+component_probabilities.adaptspeclsbpmixturefit <- function(results) {
   beta <- results$beta
-  if (thin != 1) {
-    beta <- beta[(1 : dim(beta)[1]) %% thin == 0, , ]
-  }
 
   n_components <- dim(beta)[3] + 1
   n_iterations <- dim(beta)[1]

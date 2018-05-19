@@ -23,3 +23,6 @@ time_varying_spectra_samples <- function(x, ...) UseMethod('time_varying_spectra
 
 #' @export
 time_varying_spectra_mean <- function(x, ...) UseMethod('time_varying_spectra_mean', x)
+
+#' @export
+component_probabilities <- function(x, ...) UseMethod('component_probabilities', x)

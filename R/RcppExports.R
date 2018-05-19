@@ -50,8 +50,12 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies, timeStep)
 }
 
-.time_varying_spectra_mixture_mean <- function(componentSamples, categories) {
-    .Call('_BayesSpec_timeVaryingSpectraMixtureMean', PACKAGE = 'BayesSpec', componentSamples, categories)
+.time_varying_spectra_mixture_mean_categories <- function(componentSamples, categories) {
+    .Call('_BayesSpec_timeVaryingSpectraMixtureMeanCategories', PACKAGE = 'BayesSpec', componentSamples, categories)
+}
+
+.time_varying_spectra_mixture_mean_probabilities <- function(componentSamples, probabilities) {
+    .Call('_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
 }
 
 .log_whittle_likelihood <- function(fHatR, periodogramR, n) {

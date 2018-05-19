@@ -200,15 +200,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// timeVaryingSpectraMixtureMean
-NumericVector timeVaryingSpectraMixtureMean(NumericVector componentSamples, IntegerMatrix categories);
-RcppExport SEXP _BayesSpec_timeVaryingSpectraMixtureMean(SEXP componentSamplesSEXP, SEXP categoriesSEXP) {
+// timeVaryingSpectraMixtureMeanCategories
+NumericVector timeVaryingSpectraMixtureMeanCategories(NumericVector componentSamples, IntegerMatrix categories);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraMixtureMeanCategories(SEXP componentSamplesSEXP, SEXP categoriesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
     Rcpp::traits::input_parameter< IntegerMatrix >::type categories(categoriesSEXP);
-    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraMixtureMean(componentSamples, categories));
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraMixtureMeanCategories(componentSamples, categories));
+    return rcpp_result_gen;
+END_RCPP
+}
+// timeVaryingSpectraMixtureMeanProbabilities
+NumericVector timeVaryingSpectraMixtureMeanProbabilities(NumericVector componentSamples, NumericVector probabilities);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraMixtureMeanProbabilities(SEXP componentSamplesSEXP, SEXP probabilitiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probabilities(probabilitiesSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraMixtureMeanProbabilities(componentSamples, probabilities));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -267,7 +279,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
     {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
     {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 5},
-    {"_BayesSpec_timeVaryingSpectraMixtureMean", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMean, 2},
+    {"_BayesSpec_timeVaryingSpectraMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanCategories, 2},
+    {"_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities, 2},
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},
     {"_BayesSpec_logWhittleLikelihoodBeta", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBeta, 4},
     {"_BayesSpec_logWhittleLikelihoodBetaDeriv", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBetaDeriv, 4},

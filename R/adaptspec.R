@@ -62,12 +62,13 @@ adaptspec <- function(
   # Model
   n_segments_min = 1,
   n_segments_max = 10,
-  t_min = 40,
+  t_min = time_step * floor(40 / time_step),
   sigma_squared_alpha = 100,
   tau_prior_a = -1,
   tau_prior_b = 0,
   tau_upper_limit = 10000,
   n_bases = 7,
+  time_step = 1,
   # Sampler control
   prob_mm1 = 0.8,
   var_inflate = 1,
@@ -88,7 +89,8 @@ adaptspec <- function(
       tau_prior_a = tau_prior_a,
       tau_prior_b = tau_prior_b,
       tau_upper_limit = tau_upper_limit,
-      n_bases = n_bases
+      n_bases = n_bases,
+      time_step = time_step
     ),
     n_loop = n_loop,
     n_warm_up = n_warm_up,
@@ -114,13 +116,15 @@ adaptspec <- function(
 adaptspec_model <- function(
   n_segments_min = 1,
   n_segments_max = 10,
-  t_min = 40,
+  t_min = time_step * floor(40 / time_step),
   sigma_squared_alpha = 100,
   tau_prior_a = -1,
   tau_prior_b = 0,
   tau_upper_limit = 10000,
-  n_bases = 7
+  n_bases = 7,
+  time_step = 1
 ) {
+  stopifnot(t_min %% time_step == 0)
   model <- list(
     n_segments_min = n_segments_min,
     n_segments_max = n_segments_max,
@@ -129,7 +133,8 @@ adaptspec_model <- function(
     tau_prior_a = tau_prior_a,
     tau_prior_b = tau_prior_b,
     tau_upper_limit = tau_upper_limit,
-    n_bases = n_bases
+    n_bases = n_bases,
+    time_step = time_step
   )
   class(model) <- 'adaptspecmodel'
   return(model)

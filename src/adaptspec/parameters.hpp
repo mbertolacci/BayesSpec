@@ -36,7 +36,9 @@ public:
         tauSquared.fill(1);
         // Split evenly
         for (unsigned int segment = 0; segment < nSegments; ++segment) {
-            cutPoints[segment] = (segment + 1) * nObservations / nSegments;
+            cutPoints[segment] = prior.timeStep * (
+                ((segment + 1) * nObservations) / (nSegments * prior.timeStep)
+            );
             tauSquared[segment] = prior.tauUpperLimit / 2;
         }
     }
@@ -100,6 +102,41 @@ public:
         const AdaptSpecPrior& prior,
         const Eigen::MatrixXd& x
     ) : AdaptSpecParameters(prior, x, prior.nSegmentsMin) {}
+
+    bool isValid(const AdaptSpecPrior& prior) {
+        // Check that nSegments is valid
+        if (nSegments > prior.nSegmentsMax) {
+            return false;
+        }
+
+        // Increasing sequence of cut points
+        for (unsigned int segment = 1; segment < prior.nSegmentsMax; ++segment) {
+            if (cutPoints[segment - 1] > cutPoints[segment]) {
+                return false;
+            }
+        }
+        unsigned int previousCutPoint = 0;
+        // Distance between cut points at least tMin
+        for (unsigned int segment = 0; segment < nSegments; ++segment) {
+            if (cutPoints[segment] - previousCutPoint < prior.tMin) {
+                return false;
+            }
+            previousCutPoint = cutPoints[segment];
+        }
+        // Cut points satisfy timeStep
+        for (unsigned int segment = 0; segment < nSegments - 1; ++segment) {
+            if (cutPoints[segment] % prior.timeStep != 0) {
+                return false;
+            }
+        }
+        // tauSquared satisfies upper limit
+        for (unsigned int segment = 0; segment < nSegments; ++segment) {
+            if (tauSquared[segment] >= prior.tauUpperLimit) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 }  // namespace bayesspec

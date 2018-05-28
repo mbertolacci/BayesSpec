@@ -22,6 +22,11 @@ unsigned int absDiff(unsigned int a, unsigned int b) {
     return b - a;
 }
 
+inline
+unsigned int ceilingDivision(unsigned int a, unsigned int b) {
+    return (a + b - 1) / b;
+}
+
 class AdaptSpecState {
 public:
     AdaptSpecParameters parameters;
@@ -61,12 +66,13 @@ public:
     void updateLogPriorCutPoints() {
         logPriorCutPoints = 0;
         for (unsigned int segment = 0; segment < parameters.nSegments - 1; ++segment) {
-            logPriorCutPoints -= std::log(
+            logPriorCutPoints -= std::log(ceilingDivision(
                 static_cast<double>(x->rows())
                 - (segment == 0 ? 0 : parameters.cutPoints[segment - 1])
                 - (static_cast<double>(parameters.nSegments) - static_cast<double>(segment)) * prior_->tMin
-                + 1
-            );
+                + 1,
+                prior_->timeStep
+            ));
         }
     }
 
@@ -179,6 +185,13 @@ private:
     double probMM1_;
     double varInflate_;
 
+    void checkParameterValidity_() {
+        if (!parameters.isValid(*prior_)) {
+            Rcpp::Rcout << "Current state:\n" << *this << "\n";
+            Rcpp::stop("Parameters are not valid");
+        }
+    }
+
     void initialise_() {
         nu.resize(prior_->nSegmentsMax);
         periodogram.resize(prior_->nSegmentsMax);
@@ -207,6 +220,7 @@ private:
             lastCutPoint = parameters.cutPoints[segment];
         }
         if (parameters.nSegments > 0) {
+            checkParameterValidity_();
             updateLogPriorCutPoints();
         }
     }
@@ -255,6 +269,7 @@ private:
                 unitNormals
             ).transpose();
 
+        checkParameterValidity_();
         updateSegmentDensities(segment);
     }
 
@@ -263,6 +278,7 @@ private:
         segmentLengths[segment] = segment == 0 ? newCutPoint : newCutPoint - parameters.cutPoints[segment - 1];
         segmentLengths[segment + 1] = parameters.cutPoints[segment + 1] - newCutPoint;
 
+        checkParameterValidity_();
         updateLogPriorCutPoints();
         updateSegment(segment);
         updateSegment(segment + 1);
@@ -299,6 +315,7 @@ private:
         parameters.tauSquared[segmentToCut + 1] = oldTauSquared * (1 - z) / z;
         parameters.tauSquared[segmentToCut] = oldTauSquared * z / (1 - z);
 
+        checkParameterValidity_();
         updateLogPriorCutPoints();
 
         updateSegment(segmentToCut);
@@ -337,6 +354,7 @@ private:
         parameters.tauSquared[parameters.nSegments] = 0;
         parameters.beta.row(parameters.nSegments).fill(0);
 
+        checkParameterValidity_();
         updateLogPriorCutPoints();
         updateSegment(segmentToRemove);
         sampleBetaProposal_(segmentToRemove, rng);
@@ -368,8 +386,9 @@ private:
             unsigned int segmentToCut = eligibleForCut[
                 randInteger(0, eligibleForCut.size() - 1, rng)
             ];
-            unsigned int nPossibleCuts = segmentLengths[segmentToCut] - 2 * prior_->tMin + 1;
-            unsigned int newCutPoint = parameters.cutPoints[segmentToCut] - prior_->tMin - randInteger(
+            unsigned int nPossibleCuts = ceilingDivision(segmentLengths[segmentToCut] - 2 * prior_->tMin + 1, prior_->timeStep);
+            unsigned int previousCutPoint = segmentToCut == 0 ? 0 : parameters.cutPoints[segmentToCut - 1];
+            unsigned int newCutPoint = previousCutPoint + prior_->tMin + prior_->timeStep * randInteger(
                 0, nPossibleCuts - 1, rng
             );
             proposal.insertCutPoint_(segmentToCut, newCutPoint, rng);
@@ -394,25 +413,29 @@ private:
         } else {
             // Pick a cutpoint to relocate
             unsigned int segment = randInteger(0, parameters.nSegments - 2, rng);
-            unsigned int nMoves = segmentLengths[segment] + segmentLengths[segment + 1] - 2 * prior_->tMin + 1;
+            unsigned int nMoves = ceilingDivision(
+                segmentLengths[segment] + segmentLengths[segment + 1] - 2 * prior_->tMin + 1,
+                prior_->timeStep
+            );
 
             if (nMoves > 1) {
                 unsigned int newCutPoint;
                 if (randUniform(rng) < probMM1_) {
                     // Make a small move
-                    if (segmentLengths[segment] == prior_->tMin) {
+                    if (segmentLengths[segment] - prior_->timeStep < prior_->tMin) {
                         // The only way is up (baby)
-                        newCutPoint = parameters.cutPoints[segment] + randInteger(0, 1, rng);
-                    } else if (segmentLengths[segment + 1] == prior_->tMin) {
+                        newCutPoint = parameters.cutPoints[segment] + prior_->timeStep * randInteger(0, 1, rng);
+                    } else if (segmentLengths[segment + 1] - prior_->timeStep < prior_->tMin) {
                         // The only way is down (sadly, no longer a song lyric)
-                        newCutPoint = parameters.cutPoints[segment] - randInteger(0, 1, rng);
+                        newCutPoint = parameters.cutPoints[segment] + prior_->timeStep * randInteger(-1, 0, rng);
                     } else {
                         // Go either way
-                        newCutPoint = parameters.cutPoints[segment] + randInteger(-1, 1, rng);
+                        newCutPoint = parameters.cutPoints[segment] + prior_->timeStep * randInteger(-1, 1, rng);
                     }
                 } else {
                     // Make a big move
-                    newCutPoint = parameters.cutPoints[segment + 1] - prior_->tMin - randInteger(0, nMoves - 1, rng);
+                    unsigned int previousCutPoint = segment == 0 ? 0 : parameters.cutPoints[segment - 1];
+                    newCutPoint = previousCutPoint + prior_->tMin + prior_->timeStep * randInteger(0, nMoves - 1, rng);
                 }
 
                 proposal.moveCutpoint_(segment, newCutPoint);
@@ -466,6 +489,7 @@ private:
                 Rcpp::stop("Sample of tauSquared failed");
             }
 
+            checkParameterValidity_();
             updateSegmentFit(segment);
         }
     }
@@ -492,7 +516,10 @@ private:
         double logSegmentChoiceCurrent = -std::log(static_cast<double>(proposal.parameters.nSegments - 1));
         double logSegmentChoiceProposal = -std::log(static_cast<double>(current.getEligibleCuts_().size()));
 
-        unsigned int nPossibleCuts = current.segmentLengths[segment] - 2 * current.prior_->tMin + 1;
+        unsigned int nPossibleCuts = ceilingDivision(
+            current.segmentLengths[segment] - 2 * current.prior_->tMin + 1,
+            current.prior_->timeStep
+        );
         double logCutProposal = -std::log(static_cast<double>(nPossibleCuts));
 
         double currentTauSquared = current.parameters.tauSquared[segment];
@@ -525,7 +552,10 @@ private:
         double logSegmentChoiceCurrent = -std::log(static_cast<double>(proposal.getEligibleCuts_().size()));
         double logSegmentChoiceProposal = -std::log(static_cast<double>(current.parameters.nSegments - 1));
 
-        unsigned int nPossibleCuts = proposal.segmentLengths[segment] - 2 * proposal.prior_->tMin + 1;
+        unsigned int nPossibleCuts = ceilingDivision(
+            proposal.segmentLengths[segment] - 2 * proposal.prior_->tMin + 1,
+            proposal.prior_->timeStep
+        );
         double logCutCurrent = -std::log(static_cast<double>(nPossibleCuts));
 
         double proposalTauSquared = proposal.parameters.tauSquared[segment];
@@ -556,11 +586,13 @@ private:
         // Find the segment that moved, if any
         unsigned int movedSegment = findChangedCutPoint_(current, proposal);
 
+        unsigned int timeStep = current.prior_->timeStep;
+
         double logMoveCurrent = 0;
         double logMoveProposal = 0;
         if (movedSegment != nSegments
             && current.probMM1_ > 0
-            && absDiff(current.parameters.cutPoints[movedSegment], proposal.parameters.cutPoints[movedSegment]) == 1) {
+            && absDiff(current.parameters.cutPoints[movedSegment], proposal.parameters.cutPoints[movedSegment]) == timeStep) {
             // Moved only one step, so the jump might not be symmetrical
 
             logMoveCurrent = -std::log(3);
@@ -568,10 +600,16 @@ private:
             int tMin = current.prior_->tMin;
             // We know only one or the other can be true, because otherwise
             // nothing would have moved
-            if (current.segmentLengths[movedSegment] == tMin || current.segmentLengths[movedSegment + 1] == tMin) {
+            if (
+                (current.segmentLengths[movedSegment] - timeStep < tMin)
+                || (current.segmentLengths[movedSegment + 1] - timeStep < tMin)
+            ) {
                 logMoveProposal = -std::log(2);
             }
-            if (proposal.segmentLengths[movedSegment] == tMin || proposal.segmentLengths[movedSegment + 1] == tMin) {
+            if (
+                (proposal.segmentLengths[movedSegment] - timeStep < tMin)
+                || (proposal.segmentLengths[movedSegment + 1] - timeStep < tMin)
+            ) {
                 logMoveCurrent = -std::log(2);
             }
         }

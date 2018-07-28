@@ -234,3 +234,32 @@ time_varying_spectra_mean.adaptspecfit <- function(fit, n_frequencies, time_step
   )
   output
 }
+
+#' @export
+cut_point_pmf <- function(fit, within_n_segments = FALSE) {
+  n_iterations <- length(fit$n_segments)
+  max_index <- max(fit$cut_points)
+  bind_rows(lapply(unique(fit$n_segments), function(n_segments) {
+    cut_points <- fit$cut_points[
+      fit$n_segments == n_segments,
+      ,
+      drop = FALSE
+    ]
+    n_normalise <- n_iterations
+    if (within_n_segments) {
+      n_normalise <- nrow(cut_points)
+    }
+
+    bind_rows(lapply(1 : n_segments, function(segment) {
+      counts <- tabulate(cut_points[, segment], max_index)
+      probabilities <- counts / n_normalise
+      non_zero <- probabilities > 0
+      data.frame(
+        n_segments = n_segments,
+        segment = segment,
+        cut_point = which(non_zero),
+        probability = probabilities[non_zero]
+      )
+    }))
+  }))
+}

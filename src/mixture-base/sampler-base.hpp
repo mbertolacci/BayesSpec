@@ -15,7 +15,8 @@ template<class Instantiation>
 class MixtureSamplerBase {
 public:
     MixtureSamplerBase(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
@@ -23,6 +24,7 @@ public:
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors
     ) : x_(x),
+        missingIndices_(missingIndices),
         nComponents_(componentPriors.size()),
         firstCategoryFixed_(firstCategoryFixed),
         categories_(initialCategories),
@@ -33,13 +35,14 @@ public:
         componentStates_.reserve(nComponents_);
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_.emplace_back(
-                x_, componentStart[component], componentPriors[component], probMM1, varInflate
+                x_, missingIndices_, componentStart[component], componentPriors[component], probMM1, varInflate
             );
         }
     }
 
     MixtureSamplerBase(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
@@ -47,6 +50,7 @@ public:
         const std::vector<AdaptSpecPrior>& componentPriors
     ) : MixtureSamplerBase(
             x,
+            missingIndices,
             probMM1,
             varInflate,
             firstCategoryFixed,
@@ -100,7 +104,8 @@ public:
     }
 
 protected:
-    const Eigen::MatrixXd& x_;
+    Eigen::MatrixXd& x_;
+    const std::vector<Eigen::VectorXi>& missingIndices_;
     unsigned int nComponents_;
     bool firstCategoryFixed_;
     std::vector<AdaptSpecMixtureComponentState> componentStates_;
@@ -149,7 +154,7 @@ private:
 
     template<typename RNG>
     void sampleComponents_(RNG& rng) {
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_[component].sample(
                 categories_.array() == static_cast<int>(component),

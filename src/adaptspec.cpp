@@ -13,6 +13,7 @@ Rcpp::List adaptspec(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
+    Rcpp::List missingIndicesR,
     Rcpp::List priorList,
     double probMM1,
     double varInflate,
@@ -23,12 +24,31 @@ Rcpp::List adaptspec(
     std::mt19937_64 rng(static_cast<uint_fast64_t>(UINT_FAST64_MAX * R::unif_rand()));
 
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
+
+    std::vector<Eigen::VectorXi> missingIndices;
+    for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
+        missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
+    }
+    // Initialise missing values to random normal draws
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        for (int j = 0; j < missingIndices[i].size(); ++j) {
+            x(missingIndices[i][j], i) = randNormal(rng);
+        }
+    }
+
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters start(prior, x, nSegmentsStart);
-    AdaptSpecSampler sampler(x, start, probMM1, burnInVarInflate, prior);
+    AdaptSpecSampler sampler(x, missingIndices, start, probMM1, burnInVarInflate, prior);
 
     AdaptSpecSamples samples(nLoop - nWarmUp, prior);
     Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
+    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        xMissingSamples.emplace_back(
+            nLoop - nWarmUp,
+            missingIndices[i].size()
+        );
+    }
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         if (iteration == nWarmUp) {
@@ -45,6 +65,12 @@ Rcpp::List adaptspec(
         if (iteration >= nWarmUp) {
             samples.save(sampler.getCurrent());
             logPosteriorSamples[iteration - nWarmUp] = sampler.getLogPosterior();
+            for (int i = 0; i < missingIndices.size(); ++i) {
+                if (missingIndices[i].size() == 0) continue;
+                for (int j = 0; j < missingIndices[i].size(); ++j) {
+                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                }
+            }
         }
 
         if (showProgress) {
@@ -52,8 +78,14 @@ Rcpp::List adaptspec(
         }
     }
 
+    Rcpp::List xMissingSamplesOutput;
+    for (Rcpp::NumericMatrix i : xMissingSamples) {
+        xMissingSamplesOutput.push_back(i);
+    }
+
     Rcpp::List output = samples.asList();
     output["log_posterior"] = logPosteriorSamples;
+    output["x_missing"] = xMissingSamplesOutput;
     return output;
 }
 
@@ -91,7 +123,7 @@ Rcpp::List wrapState(const AdaptSpecState& state) {
 }
 
 AdaptSpecState getStateFromList(
-    Rcpp::List parametersList, const Eigen::MatrixXd& x, const AdaptSpecPrior& prior
+    Rcpp::List parametersList, Eigen::MatrixXd& x, const AdaptSpecPrior& prior
 ) {
     AdaptSpecParameters parameters(prior);
     parameters.nSegments = parametersList["n_segments"];
@@ -110,7 +142,8 @@ Rcpp::List getSampleDefault(
 ) {
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters parameters(prior, xR.rows(), nStartingSegments);
-    AdaptSpecState state(parameters, Rcpp::as< Eigen::MatrixXd >(xR), prior, 0.8, 1);
+    Eigen::MatrixXd x(Rcpp::as< Eigen::MatrixXd >(xR));
+    AdaptSpecState state(parameters, x, prior, 0.8, 1);
 
     return wrapState(state);
 }

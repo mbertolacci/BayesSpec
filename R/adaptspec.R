@@ -167,21 +167,27 @@ adaptspec_sample <- function(
     data0 <- 1 : nrow(data)  # nolint
     detrend_fits <- list()
     for (series in 1 : ncol(data)) {
-      detrend_fits[[series]] <- lm(data[, series] ~ data0)
-      data[, series] <- detrend_fits[[series]]$res
+      detrend_fits[[series]] <- lm(data[, series] ~ data0, na.action = na.exclude)
+      data[, series] <- residuals(detrend_fits[[series]])
     }
   }
 
+  if (ncol(data) > 0) {
+    missing_indices <- lapply(1 : ncol(data), function(i) which(is.na(data[, i])) - 1)
+  } else {
+    missing_indices <- list()
+  }
   results <- .adaptspec(
-    n_loop, n_warm_up, data, model, prob_mm1, var_inflate, burn_in_var_inflate,
+    n_loop, n_warm_up, data, missing_indices, model, prob_mm1, var_inflate, burn_in_var_inflate,
     n_segments_start, show_progress
   )
 
+  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
   results$detrend <- detrend
+  results$detrend_fits <- detrend_fits
   results$prob_mm1 <- prob_mm1
   results$var_inflate <- var_inflate
   results$prior <- model
-  results$detrend_fits <- detrend_fits
   results <- adaptspecfit(results, n_freq_hat)
 
   if (run_diagnostics) diagnostic_warnings(results)

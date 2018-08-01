@@ -6,6 +6,7 @@
 #include "../random/utils.hpp"
 
 #include "../whittle-likelihood.hpp"
+#include "../whittle-missing.hpp"
 
 #include "parameters.hpp"
 #include "prior.hpp"
@@ -38,21 +39,42 @@ public:
     Eigen::MatrixXd betaMode;
     std::vector<Eigen::MatrixXd> precisionCholeskyMode;
 
+    std::vector<bool> missingDistributionsNeedUpdate;
+    std::vector< std::vector<WhittleMissingValuesDistribution> > missingDistributions;
+
     Eigen::VectorXd logSegmentProposal;
     Eigen::VectorXd logSegmentLikelihood;
     Eigen::VectorXd logSegmentPrior;
     double logPriorCutPoints;
 
-    const Eigen::MatrixXd *x;
+    Eigen::MatrixXd *x;
+    const std::vector<Eigen::VectorXi> *missingIndices;
 
     AdaptSpecState(
         const AdaptSpecParameters& parameters_,
-        const Eigen::MatrixXd& x_,
+        Eigen::MatrixXd& x_,
+        const std::vector<Eigen::VectorXi>& missingIndices_,
         const AdaptSpecPrior& prior,
         double probMM1,
         double varInflate
     ) : parameters(parameters_),
         x(&x_),
+        missingIndices(&missingIndices_),
+        prior_(&prior),
+        probMM1_(probMM1),
+        varInflate_(varInflate) {
+        initialise_();
+    }
+
+    AdaptSpecState(
+        const AdaptSpecParameters& parameters_,
+        Eigen::MatrixXd& x_,
+        const AdaptSpecPrior& prior,
+        double probMM1,
+        double varInflate
+    ) : parameters(parameters_),
+        x(&x_),
+        missingIndices(NULL),
         prior_(&prior),
         probMM1_(probMM1),
         varInflate_(varInflate) {
@@ -101,6 +123,30 @@ public:
         );
     }
 
+    void updateMissingValuesDistributions(unsigned int segment) {
+        int segmentUpper = parameters.cutPoints[segment];
+        int segmentLower = segmentUpper - segmentLengths[segment];
+
+        Eigen::VectorXd segmentSpectrum = (
+            nu[segment] * parameters.beta.row(segment).transpose()
+        ).array().exp().matrix();
+        for (unsigned int series = 0; series < x->cols(); ++series) {
+            std::vector<int> segmentMissingIndices;
+            for (int i = 0; i < (*missingIndices)[series].size(); ++i) {
+                int index = (*missingIndices)[series][i];
+                if (index >= segmentLower && index < segmentUpper) {
+                    segmentMissingIndices.push_back(index - segmentLower);
+                }
+            }
+
+            missingDistributions[segment][series].update(
+                x->col(series).segment(segmentLower, segmentLengths[segment]),
+                segmentMissingIndices,
+                segmentSpectrum
+            );
+        }
+    }
+
     void updateSegmentFit(unsigned int segment) {
         BetaOptimiser optimiser(
             segmentLengths[segment],
@@ -146,6 +192,7 @@ public:
         sampleBetween_(rng);
         sampleWithin_(rng);
         sampleTauSquared_(rng);
+        sampleMissing_(rng);
     }
 
     double getLogPosterior() const {
@@ -219,6 +266,18 @@ private:
             updateSegment(segment);
             lastCutPoint = parameters.cutPoints[segment];
         }
+
+        missingDistributionsNeedUpdate.resize(prior_->nSegmentsMax);
+        std::fill(
+            missingDistributionsNeedUpdate.begin(),
+            missingDistributionsNeedUpdate.end(),
+            true
+        );
+        missingDistributions.resize(prior_->nSegmentsMax);
+        for (unsigned int segment = 0; segment < prior_->nSegmentsMax; ++segment) {
+            missingDistributions[segment].resize(x->cols());
+        }
+
         if (parameters.nSegments > 0) {
             checkParameterValidity_();
             updateLogPriorCutPoints();
@@ -271,6 +330,7 @@ private:
 
         checkParameterValidity_();
         updateSegmentDensities(segment);
+        missingDistributionsNeedUpdate[segment] = true;
     }
 
     void moveCutpoint_(unsigned int segment, unsigned int newCutPoint) {
@@ -297,6 +357,8 @@ private:
             periodogram[segment] = periodogram[segment - 1];
             betaMode.row(segment) = betaMode.row(segment - 1);
             precisionCholeskyMode[segment] = precisionCholeskyMode[segment - 1];
+            missingDistributionsNeedUpdate[segment] = missingDistributionsNeedUpdate[segment - 1];
+            missingDistributions[segment] = missingDistributions[segment - 1];
             logSegmentProposal[segment] = logSegmentProposal[segment - 1];
             logSegmentLikelihood[segment] = logSegmentLikelihood[segment - 1];
             logSegmentPrior[segment] = logSegmentPrior[segment - 1];
@@ -346,6 +408,8 @@ private:
             periodogram[segment] = periodogram[segment + 1];
             betaMode.row(segment) = betaMode.row(segment + 1);
             precisionCholeskyMode[segment] = precisionCholeskyMode[segment + 1];
+            missingDistributionsNeedUpdate[segment] = missingDistributionsNeedUpdate[segment + 1];
+            missingDistributions[segment] = missingDistributions[segment + 1];
             logSegmentProposal[segment] = logSegmentProposal[segment + 1];
             logSegmentLikelihood[segment] = logSegmentLikelihood[segment + 1];
             logSegmentPrior[segment] = logSegmentPrior[segment + 1];
@@ -491,6 +555,49 @@ private:
 
             checkParameterValidity_();
             updateSegmentFit(segment);
+        }
+    }
+
+    template<typename RNG>
+    void sampleMissing_(RNG& rng) {
+        if (missingIndices == NULL) return;
+
+        for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
+            bool didUpdate = false;
+            if (missingDistributionsNeedUpdate[segment]) {
+                updateMissingValuesDistributions(segment);
+                didUpdate = true;
+                missingDistributionsNeedUpdate[segment] = false;
+            }
+
+            int segmentLower = parameters.cutPoints[segment] - segmentLengths[segment];
+            int nMissingTotal = 0;
+            for (unsigned int series = 0; series < x->cols(); ++series) {
+                const WhittleMissingValuesDistribution& d = missingDistributions[segment][series];
+                int nMissing = d.missingIndices().size();
+                nMissingTotal += nMissing;
+                if (nMissing == 0) continue;
+
+                Eigen::VectorXd missingSample = d(rng);
+                for (int i = 0; i < d.missingIndices().size(); ++i) {
+                    if (segmentLower + d.missingIndices()[i] >= x->rows()) {
+                        Rcpp::Rcout
+                            << "segment = " << segment << " "
+                            << "didUpdate = " << didUpdate << " "
+                            << "series = " << series << " "
+                            << "i = " << i << " "
+                            << "segmentLower = " << segmentLower << " "
+                            << "d.missingIndices()[i] = " << d.missingIndices()[i] << " "
+                            << "x->rows() = " << x->rows() << "\n";
+                        Rcpp::stop("Invalid value");
+                    }
+                    (*x)(segmentLower + d.missingIndices()[i], series) = missingSample[i];
+                }
+            }
+
+            if (nMissingTotal > 0) {
+                updateSegment(segment);
+            }
         }
     }
 

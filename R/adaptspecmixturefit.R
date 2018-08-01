@@ -5,6 +5,21 @@ adaptspecmixturefit <- function(results, component_priors, n_freq_hat) {
       results$components[[component]], n_freq_hat
     )
   }
+
+  if (results$detrend && length(results$x_missing) > 0) {
+    results$x_missing <- lapply(1 : length(results$x_missing), function(i) {
+      missing_indices <- results$missing_indices[[i]]
+      x_missing <- results$x_missing[[i]]
+      if (length(missing_indices) == 0) return(coda::mcmc(x_missing))
+
+      x_base <- predict(results$detrend_fits[[i]], data.frame(data0 = missing_indices))
+
+      coda::mcmc(x_missing + x_base)
+    })
+  } else {
+    results$x_missing <- lapply(results$x_missing, coda::mcmc)
+  }
+
   class(results) <- 'adaptspecmixturefit'
   return(results)
 }
@@ -14,6 +29,9 @@ window.adaptspecmixturefit <- function(fit, ...) {
   fit$components <- lapply(fit$components, window, ...)
   fit$categories <- window(fit$categories, ...)
   fit$log_posterior <- window(fit$log_posterior, ...)
+  fit$x_missing <- lapply(fit$x_missing, function(x_missing) {
+    window(x_missing, ...)
+  })
   fit
 }
 

@@ -11,12 +11,13 @@ namespace bayesspec {
 class AdaptSpecSampler {
 public:
     AdaptSpecSampler(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         const AdaptSpecParameters& start,
         double probMM1,
         double varInflate,
         const AdaptSpecPrior& prior
-    ) : current_(start, x, prior, probMM1, varInflate) {}
+    ) : current_(start, x, missingIndices, prior, probMM1, varInflate) {}
 
     template<typename RNG>
     void sample(RNG& rng) {

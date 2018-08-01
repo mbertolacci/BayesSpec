@@ -10,12 +10,15 @@ adaptspec_dirichlet_mixture <- function(
   run_diagnostics = TRUE
 ) {
   x <- as.matrix(x)
-  if (detrend) {
+  detrend_fits <- NULL
+  if (detrend && ncol(x) > 0) {
     # Detrend the observations (nolint because lintr can't figure out this
     # is used below)
-    x0 <- 1 : nrow(x)  # nolint
+    data0 <- 1 : nrow(x)  # nolint
+    detrend_fits <- list()
     for (series in 1 : ncol(x)) {
-      x[, series] <- lm(x[, series] ~ x0)$res
+      detrend_fits[[series]] <- lm(x[, series] ~ data0, na.action = na.exclude)
+      x[, series] <- residuals(detrend_fits[[series]])
     }
   }
 
@@ -37,13 +40,16 @@ adaptspec_dirichlet_mixture <- function(
   alpha_prior_shape <- 0.5
   alpha_prior_rate <- 0.5
 
+  missing_indices <- lapply(1 : ncol(x), function(i) which(is.na(x[, i])) - 1)
   results <- .dirichlet_mixture(
-    n_loop, n_warm_up, x, component_priors, alpha_prior_shape, alpha_prior_rate,
+    n_loop, n_warm_up, x, missing_indices, component_priors, alpha_prior_shape, alpha_prior_rate,
     initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed,
     show_progress
   )
+  results$detrend <- detrend
+  results$detrend_fits <- detrend_fits
   results$n_components <- n_components
   results$log_beta1m <- coda::mcmc(aperm(results$log_beta1m, c(2, 1)))
   results$alpha <- coda::mcmc(results$alpha)

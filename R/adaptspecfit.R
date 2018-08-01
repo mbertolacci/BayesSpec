@@ -30,6 +30,22 @@ adaptspecfit <- function(results, n_freq_hat = 0) {
     results$spec_hat <- spec_hat
   }
 
+  if (!is.null(results$detrend)) {
+    if (results$detrend && length(results$x_missing) > 0) {
+      results$x_missing <- lapply(1 : length(results$x_missing), function(i) {
+        missing_indices <- results$missing_indices[[i]]
+        x_missing <- results$x_missing[[i]]
+        if (length(missing_indices) == 0) return(coda::mcmc(x_missing))
+
+        x_base <- predict(results$detrend_fits[[i]], data.frame(data0 = missing_indices))
+
+        coda::mcmc(x_missing + x_base)
+      })
+    } else {
+      results$x_missing <- lapply(results$x_missing, coda::mcmc)
+    }
+  }
+
   class(results) <- 'adaptspecfit'
 
   return(results)
@@ -47,6 +63,10 @@ window.adaptspecfit <- function(fit, ...) {
 
   time_after <- time(fit$n_segments)
   fit$beta <- fit$beta[time_before %in% time_after, , ]
+
+  fit$x_missing <- lapply(fit$x_missing, function(x_missing) {
+    window(x_missing, ...)
+  })
 
   fit
 }

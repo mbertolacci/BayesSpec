@@ -11,19 +11,26 @@ namespace bayesspec {
 
 class AdaptSpecMixtureComponentState {
 public:
+    typedef Eigen::Array<bool, Eigen::Dynamic, 1> BoolArray;
+
     std::vector<Eigen::MatrixXd> allPeriodograms;
     Eigen::MatrixXd allLogSegmentLikelihoods;
 
     AdaptSpecState state;
 
     AdaptSpecMixtureComponentState(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         const AdaptSpecParameters& start,
         const AdaptSpecPrior& prior,
         double probMM1,
         double varInflate
-    ) : state(start, x, prior, probMM1, varInflate),
-        x_(x) {
+    ) : state(start, x, missingIndices, prior, probMM1, varInflate),
+        x_(x),
+        lastIsComponent_(x.cols()),
+        isFirstSample_(true),
+        missingIndices_(missingIndices),
+        nSegmentsMax_(prior.nSegmentsMax) {
         allPeriodograms.resize(prior.nSegmentsMax);
         allLogSegmentLikelihoods.resize(x.cols(), prior.nSegmentsMax);
 
@@ -45,36 +52,71 @@ public:
     }
 
     template<typename RNG>
-    void sample(const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent, unsigned int count, RNG& rng) {
-        Eigen::MatrixXd thisX(x_.rows(), count);
+    void sample(const BoolArray& isComponent, unsigned int count, RNG& rng) {
+        bool hasChanged = isFirstSample_ || !(lastIsComponent_ == isComponent).all();
+        isFirstSample_ = false;
+        lastIsComponent_ = isComponent;
 
-        for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-            state.periodogram[segment].resize(state.periodogram[segment].rows(), count);
+        Eigen::MatrixXd thisX(x_.rows(), count);
+        std::vector<Eigen::VectorXi> thisMissingIndices;
+
+        if (hasChanged) {
+            for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
+                state.periodogram[segment].resize(state.periodogram[segment].rows(), count);
+            }
+            for (unsigned int segment = 0; segment < nSegmentsMax_; ++segment) {
+                state.missingDistributions[segment].resize(count);
+            }
+            // NOTE(mgnb): this implies a bit of extra work than is strictly
+            // necessarily, in that probably only one or two of the series have
+            // changed. But this is easier.
+            std::fill(
+                state.missingDistributionsNeedUpdate.begin(),
+                state.missingDistributionsNeedUpdate.end(),
+                true
+            );
         }
 
         unsigned int currentIndex = 0;
         for (unsigned int series = 0; series < isComponent.size(); ++series) {
-            if (isComponent[series]) {
-                thisX.col(currentIndex) = x_.col(series);
-                for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-                    state.periodogram[segment].col(currentIndex) = allPeriodograms[segment].col(series);
-                }
-                ++currentIndex;
+            if (!isComponent[series]) continue;
+
+            thisX.col(currentIndex) = x_.col(series);
+            thisMissingIndices.emplace_back(missingIndices_[series]);
+            for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
+                state.periodogram[segment].col(currentIndex) = allPeriodograms[segment].col(series);
             }
+            ++currentIndex;
         }
         state.x = &thisX;
-        for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-            state.updateSegmentFit(segment);
+        state.missingIndices = &thisMissingIndices;
+        if (hasChanged) {
+            for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
+                state.updateSegmentFit(segment);
+            }
         }
 
         AdaptSpecParameters oldParameters = state.parameters;
         Eigen::VectorXd oldSegmentLengths = state.segmentLengths;
         state.sample(rng);
         updateInternals_(isComponent, oldParameters, oldSegmentLengths);
+
+        currentIndex = 0;
+        for (unsigned int series = 0; series < isComponent.size(); ++series) {
+            if (!isComponent[series]) continue;
+            for (unsigned int i = 0; i < thisMissingIndices[currentIndex].size(); ++i) {
+                x_(thisMissingIndices[currentIndex][i], series) = thisX(thisMissingIndices[currentIndex][i], currentIndex);
+            }
+            ++currentIndex;
+        }
     }
 
 private:
-    const Eigen::MatrixXd& x_;
+    Eigen::MatrixXd& x_;
+    BoolArray lastIsComponent_;
+    bool isFirstSample_;
+    const std::vector<Eigen::VectorXi>& missingIndices_;
+    unsigned int nSegmentsMax_;
 
     void updateInternals_(
         const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent,

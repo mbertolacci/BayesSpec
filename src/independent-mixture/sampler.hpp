@@ -13,14 +13,15 @@ public:
     typedef MixtureSamplerBase<AdaptSpecIndependentMixtureSampler> Base;
 
     AdaptSpecIndependentMixtureSampler(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
         const Eigen::VectorXd& weightsPrior
-    ) : Base(x, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
+    ) : Base(x, missingIndices, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
         weightsPrior_(weightsPrior),
         weights_(nComponents_) {
         weights_.fill(1.0 / static_cast<double>(nComponents_));

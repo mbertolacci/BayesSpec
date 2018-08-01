@@ -16,6 +16,7 @@ Rcpp::List independentMixture(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
+    Rcpp::List missingIndicesR,
     Rcpp::List priorsR,
     Rcpp::NumericVector weightsPriorR,
     Rcpp::IntegerVector initialCategoriesR,
@@ -37,6 +38,17 @@ Rcpp::List independentMixture(
     unsigned int nComponents = priorsR.size();
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
 
+    std::vector<Eigen::VectorXi> missingIndices;
+    for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
+        missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
+    }
+    // Initialise missing values to random normal draws
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        for (int j = 0; j < missingIndices[i].size(); ++j) {
+            x(missingIndices[i][j], i) = randNormal(rng);
+        }
+    }
+
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
@@ -46,7 +58,7 @@ Rcpp::List independentMixture(
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecIndependentMixtureSampler sampler(
-        x, probMM1, burnInVarInflate, firstCategoryFixed,
+        x, missingIndices, probMM1, burnInVarInflate, firstCategoryFixed,
         // starts,
         initialCategories,
         priors,
@@ -56,6 +68,13 @@ Rcpp::List independentMixture(
     Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
     Rcpp::NumericMatrix weightsSamples(nComponents, nLoop - nWarmUp);
     Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
+    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        xMissingSamples.emplace_back(
+            nLoop - nWarmUp,
+            missingIndices[i].size()
+        );
+    }
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -87,6 +106,12 @@ Rcpp::List independentMixture(
                 weightsSamples.begin() + sampleIndex * nComponents
             );
             logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
+            for (int i = 0; i < missingIndices.size(); ++i) {
+                if (missingIndices[i].size() == 0) continue;
+                for (int j = 0; j < missingIndices[i].size(); ++j) {
+                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                }
+            }
         }
 
         if (showProgress) {
@@ -103,6 +128,7 @@ Rcpp::List independentMixture(
     results["weights"] = weightsSamples;
     results["categories"] = categoriesSamples;
     results["log_posterior"] = logPosteriorSamples;
+    results["x_missing"] = xMissingSamples;
 
     return results;
 }

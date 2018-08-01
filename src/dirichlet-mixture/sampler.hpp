@@ -14,7 +14,8 @@ public:
     typedef MixtureSamplerBase<AdaptSpecDirichletMixtureSampler> Base;
 
     AdaptSpecDirichletMixtureSampler(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
@@ -22,7 +23,7 @@ public:
         const std::vector<AdaptSpecPrior>& componentPriors,
         double alphaPriorShape,
         double alphaPriorRate
-    ) : Base(x, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
+    ) : Base(x, missingIndices, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
         alphaPriorShape_(alphaPriorShape),
         alphaPriorRate_(alphaPriorRate),
         logBeta1m_(nComponents_),

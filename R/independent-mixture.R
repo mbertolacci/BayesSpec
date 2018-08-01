@@ -10,12 +10,15 @@ adaptspec_independent_mixture <- function(
   run_diagnostics = TRUE
 ) {
   x <- as.matrix(x)
-  if (detrend) {
+  detrend_fits <- NULL
+  if (detrend && ncol(x) > 0) {
     # Detrend the observations (nolint because lintr can't figure out this
     # is used below)
-    x0 <- 1 : nrow(x)  # nolint
+    data0 <- 1 : nrow(x)  # nolint
+    detrend_fits <- list()
     for (series in 1 : ncol(x)) {
-      x[, series] <- lm(x[, series] ~ x0)$res
+      detrend_fits[[series]] <- lm(x[, series] ~ data0, na.action = na.exclude)
+      x[, series] <- residuals(detrend_fits[[series]])
     }
   }
 
@@ -36,12 +39,15 @@ adaptspec_independent_mixture <- function(
   # Cannot allow too many segments
   stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
+  missing_indices <- lapply(1 : ncol(x), function(i) which(is.na(x[, i])) - 1)
   results <- .independent_mixture(
-    n_loop, n_warm_up, x, component_priors, weight_prior, initial_categories,
+    n_loop, n_warm_up, x, missing_indices, component_priors, weight_prior, initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed,
     show_progress
   )
+  results$detrend <- detrend
+  results$detrend_fits <- detrend_fits
   results$n_components <- n_components
   results$weights <- coda::mcmc(aperm(results$weights, c(2, 1)))
   results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))

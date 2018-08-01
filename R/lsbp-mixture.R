@@ -23,13 +23,15 @@ adaptspec_lsbp_mixture <- function(
 ) {
   x <- as.matrix(x)
   design_matrix <- as.matrix(design_matrix)
-
-  if (detrend) {
+  detrend_fits <- NULL
+  if (detrend && ncol(x) > 0) {
     # Detrend the observations (nolint because lintr can't figure out this
     # is used below)
-    x0 <- 1 : nrow(x)  # nolint
+    data0 <- 1 : nrow(x)  # nolint
+    detrend_fits <- list()
     for (series in 1 : ncol(x)) {
-      x[, series] <- lm(x[, series] ~ x0)$res
+      detrend_fits[[series]] <- lm(x[, series] ~ data0, na.action = na.exclude)
+      x[, series] <- residuals(detrend_fits[[series]])
     }
   }
 
@@ -83,8 +85,9 @@ adaptspec_lsbp_mixture <- function(
   # Cannot allow too many segments
   stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
+  missing_indices <- lapply(1 : ncol(x), function(i) which(is.na(x[, i])) - 1)
   results <- .lsbp_mixture(
-    n_loop, n_warm_up, x, design_matrix, component_priors,
+    n_loop, n_warm_up, x, missing_indices, design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
     initial_categories,
@@ -92,6 +95,8 @@ adaptspec_lsbp_mixture <- function(
     first_category_fixed,
     spline_prior$n_bases, show_progress
   )
+  results$detrend <- detrend
+  results$detrend_fits <- detrend_fits
   results$n_components <- n_components
   results$design_matrix <- design_matrix
   results$beta <- aperm(results$beta, c(3, 1, 2))

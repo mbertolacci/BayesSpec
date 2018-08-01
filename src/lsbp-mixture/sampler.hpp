@@ -23,7 +23,8 @@ public:
     typedef MixtureSamplerBase<AdaptSpecLogisticStickBreakingPriorMixtureSampler> Base;
 
     AdaptSpecLogisticStickBreakingPriorMixtureSampler(
-        const Eigen::MatrixXd& x,
+        Eigen::MatrixXd& x,
+        const std::vector<Eigen::VectorXi>& missingIndices,
         const Eigen::MatrixXd& designMatrix,
         double probMM1,
         double varInflate,
@@ -34,7 +35,7 @@ public:
         const Eigen::MatrixXd& priorPrecision,
         double tauPriorASquared, double tauPriorNu,
         unsigned int nSplineBases
-    ) : Base(x, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
+    ) : Base(x, missingIndices, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
         designMatrix_(designMatrix),
         priorMean_(priorMean),
         priorPrecision_(priorPrecision),

@@ -7,21 +7,22 @@
 using namespace Rcpp;
 
 // adaptspec
-Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorList, double probMM1, double varInflate, double burnInVarInflate, unsigned int nSegmentsStart, bool showProgress);
-RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP nSegmentsStartSEXP, SEXP showProgressSEXP) {
+Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, double probMM1, double varInflate, double burnInVarInflate, unsigned int nSegmentsStart, bool showProgress);
+RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP nSegmentsStartSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< unsigned int >::type nLoop(nLoopSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nWarmUp(nWarmUpSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type missingIndicesR(missingIndicesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
     Rcpp::traits::input_parameter< double >::type varInflate(varInflateSEXP);
     Rcpp::traits::input_parameter< double >::type burnInVarInflate(burnInVarInflateSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nSegmentsStart(nSegmentsStartSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, priorList, probMM1, varInflate, burnInVarInflate, nSegmentsStart, showProgress));
+    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, probMM1, varInflate, burnInVarInflate, nSegmentsStart, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,14 +67,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // dirichletMixture
-Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, bool showProgress);
-RcppExport SEXP _BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP showProgressSEXP) {
+Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, bool showProgress);
+RcppExport SEXP _BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< unsigned int >::type nLoop(nLoopSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nWarmUp(nWarmUpSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type missingIndicesR(missingIndicesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< double >::type alphaPriorShape(alphaPriorShapeSEXP);
     Rcpp::traits::input_parameter< double >::type alphaPriorRate(alphaPriorRateSEXP);
@@ -83,19 +85,42 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type burnInVarInflate(burnInVarInflateSEXP);
     Rcpp::traits::input_parameter< bool >::type firstCategoryFixed(firstCategoryFixedSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(dirichletMixture(nLoop, nWarmUp, xR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, showProgress));
+    rcpp_result_gen = Rcpp::wrap(dirichletMixture(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, showProgress));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fftForwardR2C
+Rcpp::ComplexVector fftForwardR2C(Rcpp::NumericVector inputR);
+RcppExport SEXP _BayesSpec_fftForwardR2C(SEXP inputRSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type inputR(inputRSEXP);
+    rcpp_result_gen = Rcpp::wrap(fftForwardR2C(inputR));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fftForwardC2C
+Rcpp::ComplexVector fftForwardC2C(Rcpp::ComplexVector inputR);
+RcppExport SEXP _BayesSpec_fftForwardC2C(SEXP inputRSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::ComplexVector >::type inputR(inputRSEXP);
+    rcpp_result_gen = Rcpp::wrap(fftForwardC2C(inputR));
     return rcpp_result_gen;
 END_RCPP
 }
 // independentMixture
-Rcpp::List independentMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List priorsR, Rcpp::NumericVector weightsPriorR, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, bool showProgress);
-RcppExport SEXP _BayesSpec_independentMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP priorsRSEXP, SEXP weightsPriorRSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP showProgressSEXP) {
+Rcpp::List independentMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorsR, Rcpp::NumericVector weightsPriorR, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, bool showProgress);
+RcppExport SEXP _BayesSpec_independentMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorsRSEXP, SEXP weightsPriorRSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< unsigned int >::type nLoop(nLoopSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nWarmUp(nWarmUpSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type missingIndicesR(missingIndicesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type weightsPriorR(weightsPriorRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type initialCategoriesR(initialCategoriesRSEXP);
@@ -104,19 +129,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type burnInVarInflate(burnInVarInflateSEXP);
     Rcpp::traits::input_parameter< bool >::type firstCategoryFixed(firstCategoryFixedSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(independentMixture(nLoop, nWarmUp, xR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, showProgress));
+    rcpp_result_gen = Rcpp::wrap(independentMixture(nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }
 // logisticStickBreakingMixture
-Rcpp::List logisticStickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, unsigned int nSplineBases, bool showProgress);
-RcppExport SEXP _BayesSpec_logisticStickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP nSplineBasesSEXP, SEXP showProgressSEXP) {
+Rcpp::List logisticStickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, unsigned int nSplineBases, bool showProgress);
+RcppExport SEXP _BayesSpec_logisticStickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP nSplineBasesSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< unsigned int >::type nLoop(nLoopSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nWarmUp(nWarmUpSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type missingIndicesR(missingIndicesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type designMatrixR(designMatrixRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type priorMeanR(priorMeanRSEXP);
@@ -130,7 +156,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type firstCategoryFixed(firstCategoryFixedSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nSplineBases(nSplineBasesSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(logisticStickBreakingMixture(nLoop, nWarmUp, xR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress));
+    rcpp_result_gen = Rcpp::wrap(logisticStickBreakingMixture(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -265,15 +291,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sampleWhittleMissingR
+Rcpp::NumericVector sampleWhittleMissingR(Rcpp::NumericVector xR, Rcpp::IntegerVector missingIndicesR, Rcpp::NumericVector halfSpectrumR);
+RcppExport SEXP _BayesSpec_sampleWhittleMissingR(SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP halfSpectrumRSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type missingIndicesR(missingIndicesRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type halfSpectrumR(halfSpectrumRSEXP);
+    rcpp_result_gen = Rcpp::wrap(sampleWhittleMissingR(xR, missingIndicesR, halfSpectrumR));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 9},
+    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 10},
     {"_BayesSpec_getSampleDefault", (DL_FUNC) &_BayesSpec_getSampleDefault, 3},
     {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 3},
     {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 4},
-    {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 12},
-    {"_BayesSpec_independentMixture", (DL_FUNC) &_BayesSpec_independentMixture, 11},
-    {"_BayesSpec_logisticStickBreakingMixture", (DL_FUNC) &_BayesSpec_logisticStickBreakingMixture, 16},
+    {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 13},
+    {"_BayesSpec_fftForwardR2C", (DL_FUNC) &_BayesSpec_fftForwardR2C, 1},
+    {"_BayesSpec_fftForwardC2C", (DL_FUNC) &_BayesSpec_fftForwardC2C, 1},
+    {"_BayesSpec_independentMixture", (DL_FUNC) &_BayesSpec_independentMixture, 12},
+    {"_BayesSpec_logisticStickBreakingMixture", (DL_FUNC) &_BayesSpec_logisticStickBreakingMixture, 17},
     {"_BayesSpec_randGamma", (DL_FUNC) &_BayesSpec_randGamma, 3},
     {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
@@ -284,6 +325,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},
     {"_BayesSpec_logWhittleLikelihoodBeta", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBeta, 4},
     {"_BayesSpec_logWhittleLikelihoodBetaDeriv", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBetaDeriv, 4},
+    {"_BayesSpec_sampleWhittleMissingR", (DL_FUNC) &_BayesSpec_sampleWhittleMissingR, 3},
     {NULL, NULL, 0}
 };
 

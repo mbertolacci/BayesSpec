@@ -16,6 +16,7 @@ Rcpp::List dirichletMixture(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
+    Rcpp::List missingIndicesR,
     Rcpp::List priorsR,
     double alphaPriorShape,
     double alphaPriorRate,
@@ -38,6 +39,17 @@ Rcpp::List dirichletMixture(
     unsigned int nComponents = priorsR.size();
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
 
+    std::vector<Eigen::VectorXi> missingIndices;
+    for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
+        missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
+    }
+    // Initialise missing values to random normal draws
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        for (int j = 0; j < missingIndices[i].size(); ++j) {
+            x(missingIndices[i][j], i) = randNormal(rng);
+        }
+    }
+
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
@@ -46,7 +58,7 @@ Rcpp::List dirichletMixture(
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecDirichletMixtureSampler sampler(
-        x, probMM1, burnInVarInflate, firstCategoryFixed,
+        x, missingIndices, probMM1, burnInVarInflate, firstCategoryFixed,
         initialCategories,
         priors, alphaPriorShape, alphaPriorRate
     );
@@ -55,6 +67,13 @@ Rcpp::List dirichletMixture(
     Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
     Rcpp::NumericMatrix logBeta1mSamples(nComponents, nLoop - nWarmUp);
     Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
+    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        xMissingSamples.emplace_back(
+            nLoop - nWarmUp,
+            missingIndices[i].size()
+        );
+    }
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -87,6 +106,12 @@ Rcpp::List dirichletMixture(
             );
             alphaSamples[sampleIndex] = sampler.getAlpha();
             logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
+            for (int i = 0; i < missingIndices.size(); ++i) {
+                if (missingIndices[i].size() == 0) continue;
+                for (int j = 0; j < missingIndices[i].size(); ++j) {
+                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                }
+            }
         }
 
         if (showProgress) {
@@ -104,6 +129,7 @@ Rcpp::List dirichletMixture(
     results["alpha"] = alphaSamples;
     results["categories"] = categoriesSamples;
     results["log_posterior"] = logPosteriorSamples;
+    results["x_missing"] = xMissingSamples;
 
     return results;
 }

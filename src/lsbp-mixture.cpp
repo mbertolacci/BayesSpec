@@ -16,6 +16,7 @@ Rcpp::List logisticStickBreakingMixture(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
+    Rcpp::List missingIndicesR,
     Rcpp::NumericMatrix designMatrixR,
     Rcpp::List priorsR,
     Rcpp::NumericMatrix priorMeanR,
@@ -40,6 +41,18 @@ Rcpp::List logisticStickBreakingMixture(
 
     unsigned int nComponents = priorsR.size();
     Eigen::MatrixXd x = Rcpp::as<Eigen::MatrixXd>(xR);
+
+    std::vector<Eigen::VectorXi> missingIndices;
+    for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
+        missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
+    }
+    // Initialise missing values to random normal draws
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        for (int j = 0; j < missingIndices[i].size(); ++j) {
+            x(missingIndices[i][j], i) = randNormal(rng);
+        }
+    }
+
     Eigen::MatrixXd designMatrix = Rcpp::as<Eigen::MatrixXd>(designMatrixR);
     Eigen::MatrixXd priorMean = Rcpp::as<Eigen::MatrixXd>(priorMeanR);
     Eigen::MatrixXd priorPrecision = Rcpp::as<Eigen::MatrixXd>(priorPrecisionR);
@@ -52,7 +65,7 @@ Rcpp::List logisticStickBreakingMixture(
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
 
     AdaptSpecLogisticStickBreakingPriorMixtureSampler sampler(
-        x, designMatrix,
+        x, missingIndices, designMatrix,
         probMM1, burnInVarInflate, firstCategoryFixed,
         initialCategories,
         priors, priorMean, priorPrecision,
@@ -69,6 +82,13 @@ Rcpp::List logisticStickBreakingMixture(
     }));
     Rcpp::NumericMatrix tauSquaredSamples(nComponents - 1, nLoop - nWarmUp);
     Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
+    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    for (int i = 0; i < missingIndices.size(); ++i) {
+        xMissingSamples.emplace_back(
+            nLoop - nWarmUp,
+            missingIndices[i].size()
+        );
+    }
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -105,6 +125,12 @@ Rcpp::List logisticStickBreakingMixture(
                 tauSquaredSamples.begin() + sampleIndex * (nComponents - 1)
             );
             logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
+            for (int i = 0; i < missingIndices.size(); ++i) {
+                if (missingIndices[i].size() == 0) continue;
+                for (int j = 0; j < missingIndices[i].size(); ++j) {
+                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                }
+            }
         }
 
         if (showProgress) {
@@ -122,6 +148,7 @@ Rcpp::List logisticStickBreakingMixture(
     results["categories"] = categoriesSamples;
     results["tau_squared"] = tauSquaredSamples;
     results["log_posterior"] = logPosteriorSamples;
+    results["x_missing"] = xMissingSamples;
 
     return results;
 }

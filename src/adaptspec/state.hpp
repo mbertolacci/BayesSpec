@@ -10,6 +10,7 @@
 
 #include "parameters.hpp"
 #include "prior.hpp"
+#include "beta-hmc.hpp"
 #include "beta-optimiser.hpp"
 #include "utils.hpp"
 
@@ -191,6 +192,7 @@ public:
     void sample(RNG& rng) {
         sampleBetween_(rng);
         sampleWithin_(rng);
+        sampleHmcWithin_(rng);
         sampleTauSquared_(rng);
         sampleMissing_(rng);
     }
@@ -513,6 +515,27 @@ private:
         if (randUniform(rng) < alpha) {
             *this = proposal;
         }
+    }
+
+    template<typename RNG>
+    void sampleHmcWithin_(RNG& rng) {
+        unsigned int segment = randInteger(0, parameters.nSegments - 1, rng);
+
+        Eigen::VectorXd betaCurrent = parameters.beta.row(segment).transpose();
+        Eigen::VectorXd betaNew = sampleBetaHmc(
+            betaCurrent,
+            segmentLengths[segment],
+            periodogram[segment],
+            nu[segment],
+            prior_->sigmaSquaredAlpha,
+            parameters.tauSquared[segment],
+            rng
+        );
+
+        if (betaCurrent == betaNew) return;
+
+        parameters.beta.row(segment) = betaNew.transpose();
+        updateSegmentDensities(segment);
     }
 
     template<typename RNG>

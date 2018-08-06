@@ -9,11 +9,10 @@ base_spline_prior <- list(
 
 #' @export
 adaptspec_lsbp_mixture <- function(
-  n_loop, n_warm_up, x, design_matrix, n_components,
+  n_loop, n_warm_up, data, design_matrix, n_components,
   spline_group = rep(1, ncol(design_matrix)),
   component_model = adaptspec_model(),
   mixture_prior = base_mixture_prior,
-  initial_categories = NULL,
   spline_prior = base_spline_prior,
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
   first_category_fixed = FALSE,
@@ -41,19 +40,11 @@ adaptspec_lsbp_mixture <- function(
 ) {
   thin <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$thin), thin)
 
-  x <- as.matrix(x)
+  prepared_data <- .prepare_data(data, detrend)
+  data <- prepared_data$data
+  detrend_fits <- prepared_data$detrend_fits
+  missing_indices <- prepared_data$missing_indices
   design_matrix <- as.matrix(design_matrix)
-  detrend_fits <- NULL
-  if (detrend && ncol(x) > 0) {
-    # Detrend the observations (nolint because lintr can't figure out this
-    # is used below)
-    data0 <- 1 : nrow(x)  # nolint
-    detrend_fits <- list()
-    for (series in 1 : ncol(x)) {
-      detrend_fits[[series]] <- lm(x[, series] ~ data0, na.action = na.exclude)
-      x[, series] <- residuals(detrend_fits[[series]])
-    }
-  }
 
   ## Prior set up
   # Mixture components
@@ -91,15 +82,15 @@ adaptspec_lsbp_mixture <- function(
     mixture_prior$precision <- matrix(1 / 100, nrow = ncol(design_matrix), ncol = n_components - 1)
   }
   # Validate prior
-  .validate_mixture_component_priors(component_priors, n_components, x)
-  stopifnot(nrow(design_matrix) == ncol(x))
+  .validate_mixture_component_priors(component_priors, n_components, data)
+  stopifnot(nrow(design_matrix) == ncol(data))
   stopifnot(nrow(mixture_prior$mean) == ncol(design_matrix))
   stopifnot(ncol(mixture_prior$mean) == n_components - 1)
   stopifnot(nrow(mixture_prior$precision) == ncol(design_matrix))
   stopifnot(ncol(mixture_prior$precision) == n_components - 1)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, x, first_category_fixed)
+  start <- .mixture_start(start, component_priors, data, first_category_fixed)
   if (is.null(start$beta)) {
     start$beta <- matrix(
       rnorm(ncol(design_matrix) * (n_components - 1)),
@@ -114,15 +105,14 @@ adaptspec_lsbp_mixture <- function(
     ))
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, x)
+  .validate_mixture_start(start, n_components, data)
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)
 
   # Run sampler
-  missing_indices <- .missing_indices(x)
   results <- .lsbp_mixture(
-    n_loop, n_warm_up, x,
+    n_loop, n_warm_up, data,
     .zero_index_missing_indices(missing_indices),
     design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,

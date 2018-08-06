@@ -52,6 +52,27 @@ component_probabilities <- function(x, ...) UseMethod('component_probabilities',
   lapply(missing_indices, `-`, 1)
 }
 
+.prepare_data <- function(data, detrend) {
+  data <- as.matrix(data)
+  detrend_fits <- NULL
+  if (detrend && ncol(data) > 0) {
+    # Detrend the observations (nolint because lintr can't figure out this
+    # is used below)
+    data0 <- 1 : nrow(data)  # nolint
+    detrend_fits <- list()
+    for (series in 1 : ncol(data)) {
+      detrend_fits[[series]] <- lm(data[, series] ~ data0, na.action = na.exclude)
+      data[, series] <- residuals(detrend_fits[[series]])
+    }
+  }
+
+  list(
+    data = data,
+    detrend_fits = detrend_fits,
+    missing_indices = .missing_indices(data)
+  )
+}
+
 .x_missing_start <- function(start, missing_indices) {
   if (is.null(start$x_missing)) {
     start$x_missing <- lapply(missing_indices, function(x) {

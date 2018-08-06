@@ -176,24 +176,14 @@ adaptspec_sample <- function(
 ) {
   thin <- .extend_list(eval(formals(adaptspec_sample)$thin), thin)
 
-  data <- as.matrix(data)
+  prepared_data <- .prepare_data(data, detrend)
+  data <- prepared_data$data
+  detrend_fits <- prepared_data$detrend_fits
+  missing_indices <- prepared_data$missing_indices
 
   # Cannot allow too many segments
   stopifnot(nrow(data) >= (model$n_segments_max * model$t_min))
 
-  detrend_fits <- NULL
-  if (detrend && ncol(data) > 0) {
-    # Detrend the observations (nolint because lintr can't figure out this
-    # is used below)
-    data0 <- 1 : nrow(data)  # nolint
-    detrend_fits <- list()
-    for (series in 1 : ncol(data)) {
-      detrend_fits[[series]] <- lm(data[, series] ~ data0, na.action = na.exclude)
-      data[, series] <- residuals(detrend_fits[[series]])
-    }
-  }
-
-  missing_indices <- .missing_indices(data)
   start <- .adaptspec_start(start, model, data)
   start <- .x_missing_start(start, missing_indices)
 

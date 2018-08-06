@@ -1,6 +1,6 @@
 #' @export
 adaptspec_dirichlet_mixture <- function(
-  n_loop, n_warm_up, x, n_components,
+  n_loop, n_warm_up, data, n_components,
   component_model = adaptspec_model(),
   initial_categories = NULL,
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
@@ -31,27 +31,19 @@ adaptspec_dirichlet_mixture <- function(
 ) {
   thin <- .extend_list(eval(formals(adaptspec_dirichlet_mixture)$thin), thin)
 
-  x <- as.matrix(x)
-  detrend_fits <- NULL
-  if (detrend && ncol(x) > 0) {
-    # Detrend the observations (nolint because lintr can't figure out this
-    # is used below)
-    data0 <- 1 : nrow(x)  # nolint
-    detrend_fits <- list()
-    for (series in 1 : ncol(x)) {
-      detrend_fits[[series]] <- lm(x[, series] ~ data0, na.action = na.exclude)
-      x[, series] <- residuals(detrend_fits[[series]])
-    }
-  }
+  prepared_data <- .prepare_data(data, detrend)
+  data <- prepared_data$data
+  detrend_fits <- prepared_data$detrend_fits
+  missing_indices <- prepared_data$missing_indices
 
   ## Prior set up
   # Mixture components
   component_priors <- .mixture_component_priors(component_model, n_components)
   # Validate prior
-  .validate_mixture_component_priors(component_priors, n_components, x)
+  .validate_mixture_component_priors(component_priors, n_components, data)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, x, first_category_fixed)
+  start <- .mixture_start(start, component_priors, data, first_category_fixed)
   if (is.null(start$log_beta1m)) {
     start$log_beta1m <- log(runif(n_components))
     start$log_beta1m[n_components] <- -Inf
@@ -60,13 +52,12 @@ adaptspec_dirichlet_mixture <- function(
     start$alpha <- rgamma(1, shape = alpha_prior_shape, rate = alpha_prior_rate)
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, x)
+  .validate_mixture_start(start, n_components, data)
   stopifnot(length(start$log_beta1m) == n_components)
 
   # Run sampler
-  missing_indices <- .missing_indices(x)
   results <- .dirichlet_mixture(
-    n_loop, n_warm_up, x,
+    n_loop, n_warm_up, data,
     .zero_index_missing_indices(missing_indices),
     component_priors, alpha_prior_shape, alpha_prior_rate,
     prob_mm1, var_inflate, burn_in_var_inflate,

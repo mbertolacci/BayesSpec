@@ -1,6 +1,6 @@
 #' @export
 adaptspec_independent_mixture <- function(
-  n_loop, n_warm_up, x, n_components,
+  n_loop, n_warm_up, data, n_components,
   component_model = adaptspec_model(),
   initial_categories = NULL,
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
@@ -28,40 +28,31 @@ adaptspec_independent_mixture <- function(
 ) {
   thin <- .extend_list(eval(formals(adaptspec_independent_mixture)$thin), thin)
 
-  x <- as.matrix(x)
-  detrend_fits <- NULL
-  if (detrend && ncol(x) > 0) {
-    # Detrend the observations (nolint because lintr can't figure out this
-    # is used below)
-    data0 <- 1 : nrow(x)  # nolint
-    detrend_fits <- list()
-    for (series in 1 : ncol(x)) {
-      detrend_fits[[series]] <- lm(x[, series] ~ data0, na.action = na.exclude)
-      x[, series] <- residuals(detrend_fits[[series]])
-    }
-  }
+  prepared_data <- .prepare_data(data, detrend)
+  data <- prepared_data$data
+  detrend_fits <- prepared_data$detrend_fits
+  missing_indices <- prepared_data$missing_indices
 
   ## Prior set up
   # Mixture components
   component_priors <- .mixture_component_priors(component_model, n_components)
   # Validate prior
-  .validate_mixture_component_priors(component_priors, n_components, x)
+  .validate_mixture_component_priors(component_priors, n_components, data)
   stopifnot(length(weights_prior) == n_components)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, x, first_category_fixed)
+  start <- .mixture_start(start, component_priors, data, first_category_fixed)
   if (is.null(start$weights)) {
     start$weights <- runif(n_components)
     start$weights[n_components] <- 1 - sum(start$weights[1 : (n_components - 1)])
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, x)
+  .validate_mixture_start(start, n_components, data)
   stopifnot(length(start$weights) == n_components)
 
   # Run sampler
-  missing_indices <- .missing_indices(x)
   results <- .independent_mixture(
-    n_loop, n_warm_up, x,
+    n_loop, n_warm_up, data,
     .zero_index_missing_indices(missing_indices),
     component_priors, weights_prior,
     prob_mm1, var_inflate, burn_in_var_inflate,

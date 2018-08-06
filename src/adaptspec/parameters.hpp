@@ -138,6 +138,15 @@ public:
         return true;
     }
 
+    Rcpp::List asList() const {
+        Rcpp::List output;
+        output["n_segments"] = nSegments;
+        output["beta"] = Rcpp::wrap(beta);
+        output["cut_points"] = Rcpp::wrap(cutPoints);
+        output["tau_squared"] = Rcpp::wrap(tauSquared);
+        return output;
+    }
+
     static AdaptSpecParameters fromList(
         const Rcpp::List& startList,
         const AdaptSpecPrior& prior

@@ -184,8 +184,13 @@ adaptspec_sample <- function(
   # Cannot allow too many segments
   stopifnot(nrow(data) >= (model$n_segments_max * model$t_min))
 
-  start <- .adaptspec_start(start, model, data)
-  start <- .x_missing_start(start, missing_indices)
+  if (class(start) == 'adaptspecfit') {
+    # If provided a chain, continue it
+    start <- start$final_values
+  } else {
+    start <- .adaptspec_start(start, model, data)
+    start <- .x_missing_start(start, missing_indices)
+  }
   .validate_adaptspec_start(start, model, data)
   .validate_x_missing_start(start, missing_indices)
 

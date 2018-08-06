@@ -51,15 +51,17 @@ adaptspec_independent_mixture <- function(
   # Cannot allow too many segments
   stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
-  missing_indices <- lapply(1 : ncol(x), function(i) which(is.na(x[, i])) - 1)
+  missing_indices <- .missing_indices(x)
   results <- .independent_mixture(
-    n_loop, n_warm_up, x, missing_indices, component_priors, weight_prior, initial_categories,
+    n_loop, n_warm_up, x,
+    .zero_index_missing_indices(missing_indices),
+    component_priors, weight_prior, initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed,
     thin,
     show_progress
   )
-  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
+  results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components

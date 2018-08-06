@@ -53,15 +53,17 @@ adaptspec_dirichlet_mixture <- function(
   alpha_prior_shape <- 0.5
   alpha_prior_rate <- 0.5
 
-  missing_indices <- lapply(1 : ncol(x), function(i) which(is.na(x[, i])) - 1)
+  missing_indices <- .missing_indices(x)
   results <- .dirichlet_mixture(
-    n_loop, n_warm_up, x, missing_indices, component_priors, alpha_prior_shape, alpha_prior_rate,
+    n_loop, n_warm_up, x,
+    .zero_index_missing_indices(missing_indices),
+    component_priors, alpha_prior_shape, alpha_prior_rate,
     initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed, thin,
     show_progress
   )
-  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
+  results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components

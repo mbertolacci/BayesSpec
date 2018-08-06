@@ -98,9 +98,11 @@ adaptspec_lsbp_mixture <- function(
   # Cannot allow too many segments
   stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
 
-  missing_indices <- lapply(1 : ncol(x), function(i) which(is.na(x[, i])) - 1)
+  missing_indices <- .missing_indices(x)
   results <- .lsbp_mixture(
-    n_loop, n_warm_up, x, missing_indices, design_matrix, component_priors,
+    n_loop, n_warm_up, x,
+    .zero_index_missing_indices(missing_indices),
+    design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
     initial_categories,
@@ -110,7 +112,7 @@ adaptspec_lsbp_mixture <- function(
     thin,
     show_progress
   )
-  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
+  results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components

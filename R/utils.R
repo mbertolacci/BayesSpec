@@ -39,3 +39,15 @@ component_probabilities <- function(x, ...) UseMethod('component_probabilities',
 .lcm <- function(a, b) {
   as.integer((a * b) / .gcd(a, b))
 }
+
+.missing_indices <- function(data) {
+  if (ncol(data) > 0) {
+    lapply(1 : ncol(data), function(i) which(is.na(data[, i])))
+  } else {
+    list()
+  }
+}
+
+.zero_index_missing_indices <- function(missing_indices) {
+  lapply(missing_indices, `-`, 1)
+}

@@ -181,16 +181,12 @@ adaptspec_sample <- function(
     }
   }
 
-  if (ncol(data) > 0) {
-    missing_indices <- lapply(1 : ncol(data), function(i) which(is.na(data[, i])) - 1)
-  } else {
-    missing_indices <- list()
-  }
+  missing_indices <- .missing_indices(data)
   results <- .adaptspec(
     n_loop,
     n_warm_up,
     data,
-    missing_indices,
+    .zero_index_missing_indices(missing_indices),
     model,
     prob_mm1,
     var_inflate,
@@ -200,7 +196,7 @@ adaptspec_sample <- function(
     show_progress
   )
 
-  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
+  results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$prob_mm1 <- prob_mm1

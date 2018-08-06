@@ -20,13 +20,13 @@ public:
         bool firstCategoryFixed,
         const Eigen::VectorXd& weightsStart,
         const std::vector<AdaptSpecParameters>& componentStart,
-        const Eigen::VectorXi& initialCategories,
+        const Eigen::VectorXi& categoriesStart,
         const std::vector<AdaptSpecPrior>& componentPriors,
         const Eigen::VectorXd& weightsPrior
     ) : Base(
             x, missingIndices,
             probMM1, varInflate, firstCategoryFixed,
-            componentStart, initialCategories,
+            componentStart, categoriesStart,
             componentPriors
         ),
         weightsPrior_(weightsPrior),

@@ -18,6 +18,13 @@ adaptspec_lsbp_mixture <- function(
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,
+  start = list(
+    beta = NULL,
+    tau_squared = NULL,
+    categories = NULL,
+    components = NULL,
+    x_missing = NULL
+  ),
   thin = list(
     beta_lsbp = 1,
     tau_squared_lsbp = 1,
@@ -48,6 +55,9 @@ adaptspec_lsbp_mixture <- function(
     }
   }
 
+  ## Prior set up
+  # Mixture components
+  component_priors <- .mixture_component_priors(component_model, n_components)
   # Calculate the spline basis expansion
   spline_prior <- .extend_list(base_spline_prior, spline_prior)
   if (spline_prior$n_bases > 0) {
@@ -72,19 +82,6 @@ adaptspec_lsbp_mixture <- function(
       )(spline_design_matrix, spline_prior$n_bases, omit_intercept = TRUE)
     )
   }
-
-  if (is.null(initial_categories)) {
-    initial_categories <- (0 : (ncol(x) - 1)) %% n_components
-  } else if (initial_categories == 'random') {
-    initial_categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
-  }
-  if (first_category_fixed) {
-    # The first time-series is fixed to always be in the first cluster
-    initial_categories[1] <- 0
-  }
-
-  component_priors <- rep(list(component_model), n_components)
-
   mixture_prior <- .extend_list(base_mixture_prior, mixture_prior)
   if (is.null(mixture_prior$mean)) {
     mixture_prior$mean <- matrix(0, nrow = ncol(design_matrix), ncol = n_components - 1)
@@ -93,11 +90,36 @@ adaptspec_lsbp_mixture <- function(
     # For spline fits, these will later be overwritten by estimated of tau
     mixture_prior$precision <- matrix(1 / 100, nrow = ncol(design_matrix), ncol = n_components - 1)
   }
+  # Validate prior
+  .validate_mixture_component_priors(component_priors, n_components, x)
+  stopifnot(nrow(design_matrix) == ncol(x))
+  stopifnot(nrow(mixture_prior$mean) == ncol(design_matrix))
+  stopifnot(ncol(mixture_prior$mean) == n_components - 1)
+  stopifnot(nrow(mixture_prior$precision) == ncol(design_matrix))
+  stopifnot(ncol(mixture_prior$precision) == n_components - 1)
 
-  stopifnot(length(initial_categories) == ncol(x))
-  # Cannot allow too many segments
-  stopifnot(nrow(x) >= (component_model$n_segments_max * component_model$t_min))
+  ## Starting value set up
+  start <- .mixture_start(start, component_priors, x, first_category_fixed)
+  if (is.null(start$beta)) {
+    start$beta <- matrix(
+      rnorm(ncol(design_matrix) * (n_components - 1)),
+      nrow = ncol(design_matrix),
+      ncol = n_components - 1
+    )
+  }
+  if (is.null(start$tau_squared)) {
+    start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
+      n_components - 1,
+      mixture_prior$tau_prior_nu
+    ))
+  }
+  # Validate starting values
+  .validate_mixture_start(start, n_components, x)
+  stopifnot(nrow(start$beta) == ncol(design_matrix))
+  stopifnot(ncol(start$beta) == n_components - 1)
+  stopifnot(length(start$tau_squared) == n_components - 1)
 
+  # Run sampler
   missing_indices <- .missing_indices(x)
   results <- .lsbp_mixture(
     n_loop, n_warm_up, x,
@@ -105,10 +127,10 @@ adaptspec_lsbp_mixture <- function(
     design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
-    initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed,
     spline_prior$n_bases,
+    start,
     thin,
     show_progress
   )

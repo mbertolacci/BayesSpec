@@ -29,23 +29,29 @@ public:
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
-        const Eigen::VectorXi& initialCategories,
+        const Eigen::MatrixXd& betaStart,
+        const Eigen::VectorXd& tauSquaredStart,
+        const std::vector<AdaptSpecParameters>& componentStart,
+        const Eigen::VectorXi& categoriesStart,
         const std::vector<AdaptSpecPrior>& componentPriors,
         const Eigen::MatrixXd& priorMean,
         const Eigen::MatrixXd& priorPrecision,
         double tauPriorASquared, double tauPriorNu,
         unsigned int nSplineBases
-    ) : Base(x, missingIndices, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
+    ) : Base(
+            x, missingIndices,
+            probMM1, varInflate, firstCategoryFixed,
+            componentStart, categoriesStart,
+            componentPriors
+        ),
         designMatrix_(designMatrix),
         priorMean_(priorMean),
         priorPrecision_(priorPrecision),
         tauPriorASquared_(tauPriorASquared),
         tauPriorNu_(tauPriorNu),
-        parameters_(designMatrix_.cols(), nComponents_ - 1),
-        tauSquared_(nComponents_ - 1),
+        parameters_(betaStart),
+        tauSquared_(tauSquaredStart),
         nSplineBases_(nSplineBases) {
-        parameters_.fill(0);
-        tauSquared_.fill(1);
         updateWeights_();
     }
 

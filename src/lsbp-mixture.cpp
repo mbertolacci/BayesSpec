@@ -22,12 +22,12 @@ Rcpp::List logisticStickBreakingMixture(
     Rcpp::NumericMatrix priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
     double tauPriorASquared, double tauPriorNu,
-    Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     double varInflate,
     double burnInVarInflate,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
+    Rcpp::List startR,
     Rcpp::List thin,
     bool showProgress = false
 ) {
@@ -47,18 +47,36 @@ Rcpp::List logisticStickBreakingMixture(
     for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
         missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
     }
-    // Initialise missing values to random normal draws
+    Rcpp::List xMissingStart = startR["x_missing"];
     for (int i = 0; i < missingIndices.size(); ++i) {
+        Rcpp::NumericVector xMissingStartI = xMissingStart[i];
         for (int j = 0; j < missingIndices[i].size(); ++j) {
-            x(missingIndices[i][j], i) = randNormal(rng);
+            x(missingIndices[i][j], i) = xMissingStartI[j];
         }
     }
 
     Eigen::MatrixXd designMatrix = Rcpp::as<Eigen::MatrixXd>(designMatrixR);
     Eigen::MatrixXd priorMean = Rcpp::as<Eigen::MatrixXd>(priorMeanR);
     Eigen::MatrixXd priorPrecision = Rcpp::as<Eigen::MatrixXd>(priorPrecisionR);
-
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
+
+    std::vector<AdaptSpecParameters> componentStarts = AdaptSpecParameters::fromListOfLists(
+        startR["components"],
+        priors
+    );
+
+    AdaptSpecLogisticStickBreakingPriorMixtureSampler sampler(
+        x, missingIndices, designMatrix,
+        probMM1, burnInVarInflate, firstCategoryFixed,
+        Rcpp::as<Eigen::MatrixXd>(startR["beta"]),
+        Rcpp::as<Eigen::VectorXd>(startR["tau_squared"]),
+        componentStarts,
+        Rcpp::as<Eigen::VectorXi>(startR["categories"]),
+        priors, priorMean, priorPrecision,
+        tauPriorASquared, tauPriorNu,
+        nSplineBases
+    );
+
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
         thin["n_segments"],
@@ -67,17 +85,6 @@ Rcpp::List logisticStickBreakingMixture(
         thin["cut_points"],
         priors
     );
-    Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
-
-    AdaptSpecLogisticStickBreakingPriorMixtureSampler sampler(
-        x, missingIndices, designMatrix,
-        probMM1, burnInVarInflate, firstCategoryFixed,
-        initialCategories,
-        priors, priorMean, priorPrecision,
-        tauPriorASquared, tauPriorNu,
-        nSplineBases
-    );
-
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],

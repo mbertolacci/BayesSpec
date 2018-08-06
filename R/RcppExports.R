@@ -33,8 +33,8 @@
     .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, startR, thin, showProgress)
 }
 
-.lsbp_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, thin, showProgress = FALSE) {
-    .Call('_BayesSpec_logisticStickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, thin, showProgress)
+.lsbp_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, startR, thin, showProgress = FALSE) {
+    .Call('_BayesSpec_logisticStickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, startR, thin, showProgress)
 }
 
 .rand_gamma <- function(n, shape, scale) {

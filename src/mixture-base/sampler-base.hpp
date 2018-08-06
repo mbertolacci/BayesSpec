@@ -21,13 +21,13 @@ public:
         double varInflate,
         bool firstCategoryFixed,
         const std::vector<AdaptSpecParameters>& componentStart,
-        const Eigen::VectorXi& initialCategories,
+        const Eigen::VectorXi& categoriesStart,
         const std::vector<AdaptSpecPrior>& componentPriors
     ) : x_(x),
         missingIndices_(missingIndices),
         nComponents_(componentPriors.size()),
         firstCategoryFixed_(firstCategoryFixed),
-        categories_(initialCategories),
+        categories_(categoriesStart),
         allLogWeights_(x.cols(), nComponents_),
         counts_(nComponents_) {
         updateCounts_();
@@ -46,7 +46,7 @@ public:
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
-        const Eigen::VectorXi& initialCategories,
+        const Eigen::VectorXi& categoriesStart,
         const std::vector<AdaptSpecPrior>& componentPriors
     ) : MixtureSamplerBase(
             x,
@@ -54,8 +54,8 @@ public:
             probMM1,
             varInflate,
             firstCategoryFixed,
-            startsFromData_(x, initialCategories, componentPriors),
-            initialCategories,
+            startsFromData_(x, categoriesStart, componentPriors),
+            categoriesStart,
             componentPriors
         ) {}
 

@@ -22,14 +22,14 @@ public:
         const Eigen::VectorXd& logBeta1mStart,
         double alphaStart,
         const std::vector<AdaptSpecParameters>& componentStart,
-        const Eigen::VectorXi& initialCategories,
+        const Eigen::VectorXi& categoriesStart,
         const std::vector<AdaptSpecPrior>& componentPriors,
         double alphaPriorShape,
         double alphaPriorRate
     ) : Base(
             x, missingIndices,
             probMM1, varInflate, firstCategoryFixed,
-            componentStart, initialCategories,
+            componentStart, categoriesStart,
             componentPriors
         ),
         alphaPriorShape_(alphaPriorShape),

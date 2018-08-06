@@ -150,21 +150,22 @@ Rcpp::List logisticStickBreakingMixture(
         }
     }
 
-    Rcpp::List results;
     Rcpp::List components;
     for (unsigned int component = 0; component < nComponents; ++component) {
         components.push_back(samples[component].asList());
     }
-    results["components"] = components;
-    results["beta"] = Rcpp::wrap(betaSamples);
-    results["categories"] = Rcpp::wrap(categoriesSamples);
-    results["tau_squared"] = Rcpp::wrap(tauSquaredSamples);
-    results["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
     Rcpp::List xMissingSamplesOutput;
     for (Samples<double> samples : xMissingSamples) {
         xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
     }
-    results["x_missing"] = xMissingSamplesOutput;
+    Rcpp::List output;
+    output["components"] = components;
+    output["beta"] = Rcpp::wrap(betaSamples);
+    output["categories"] = Rcpp::wrap(categoriesSamples);
+    output["tau_squared"] = Rcpp::wrap(tauSquaredSamples);
+    output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
+    output["x_missing"] = xMissingSamplesOutput;
+    output["final_values"] = sampler.getParametersAsList();
 
-    return results;
+    return output;
 }

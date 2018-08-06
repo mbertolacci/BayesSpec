@@ -48,6 +48,12 @@ public:
         return ((weightsPrior_.array() - 1) * weights_.array().log()).sum();
     }
 
+    Rcpp::List getWeightsParametersAsList() const {
+        Rcpp::List output;
+        output["weights"] = Rcpp::wrap(weights_);
+        return output;
+    }
+
 private:
     Eigen::VectorXd weightsPrior_;
     Eigen::VectorXd weights_;

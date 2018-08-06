@@ -136,22 +136,24 @@ Rcpp::List dirichletMixture(
         }
     }
 
-    Rcpp::List results;
     Rcpp::List components;
     for (unsigned int component = 0; component < nComponents; ++component) {
         components.push_back(samples[component].asList());
     }
-    results["components"] = components;
-    results["log_beta1m"] = Rcpp::wrap(logBeta1mSamples);
-    results["alpha"] = Rcpp::wrap(alphaSamples);
-    results["categories"] = Rcpp::wrap(categoriesSamples);
-    results["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
 
     Rcpp::List xMissingSamplesOutput;
     for (Samples<double> samples : xMissingSamples) {
         xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
     }
-    results["x_missing"] = xMissingSamplesOutput;
 
-    return results;
+    Rcpp::List output;
+    output["components"] = components;
+    output["log_beta1m"] = Rcpp::wrap(logBeta1mSamples);
+    output["alpha"] = Rcpp::wrap(alphaSamples);
+    output["categories"] = Rcpp::wrap(categoriesSamples);
+    output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
+    output["x_missing"] = xMissingSamplesOutput;
+    output["final_values"] = sampler.getParametersAsList();
+
+    return output;
 }

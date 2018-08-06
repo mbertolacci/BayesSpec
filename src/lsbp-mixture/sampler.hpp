@@ -91,6 +91,13 @@ public:
         );
     }
 
+    Rcpp::List getWeightsParametersAsList() const {
+        Rcpp::List output;
+        output["beta"] = Rcpp::wrap(parameters_);
+        output["tau_squared"] = Rcpp::wrap(tauSquared_);
+        return output;
+    }
+
 private:
     Eigen::MatrixXd designMatrix_;
 

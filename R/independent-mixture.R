@@ -41,10 +41,15 @@ adaptspec_independent_mixture <- function(
   stopifnot(length(weights_prior) == n_components)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, data, first_category_fixed)
-  if (is.null(start$weights)) {
-    start$weights <- runif(n_components)
-    start$weights[n_components] <- 1 - sum(start$weights[1 : (n_components - 1)])
+  if (inherits(start, 'adaptspecindependentmixturefit')) {
+    # If provided a chain, continue it
+    start <- start$final_values
+  } else {
+    start <- .mixture_start(start, component_priors, data, first_category_fixed)
+    if (is.null(start$weights)) {
+      start$weights <- runif(n_components)
+      start$weights[n_components] <- 1 - sum(start$weights[1 : (n_components - 1)])
+    }
   }
   # Validate starting values
   .validate_mixture_start(start, n_components, component_priors, data)

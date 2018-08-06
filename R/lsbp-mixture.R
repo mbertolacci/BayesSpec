@@ -90,19 +90,24 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(ncol(mixture_prior$precision) == n_components - 1)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, data, first_category_fixed)
-  if (is.null(start$beta)) {
-    start$beta <- matrix(
-      rnorm(ncol(design_matrix) * (n_components - 1)),
-      nrow = ncol(design_matrix),
-      ncol = n_components - 1
-    )
-  }
-  if (is.null(start$tau_squared)) {
-    start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
-      n_components - 1,
-      mixture_prior$tau_prior_nu
-    ))
+  if (inherits(start, 'adaptspeclsbpmixturefit')) {
+    # If provided a chain, continue it
+    start <- start$final_values
+  } else {
+    start <- .mixture_start(start, component_priors, data, first_category_fixed)
+    if (is.null(start$beta)) {
+      start$beta <- matrix(
+        rnorm(ncol(design_matrix) * (n_components - 1)),
+        nrow = ncol(design_matrix),
+        ncol = n_components - 1
+      )
+    }
+    if (is.null(start$tau_squared)) {
+      start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
+        n_components - 1,
+        mixture_prior$tau_prior_nu
+      ))
+    }
   }
   # Validate starting values
   .validate_mixture_start(start, n_components, component_priors, data)

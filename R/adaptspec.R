@@ -184,7 +184,7 @@ adaptspec_sample <- function(
   # Cannot allow too many segments
   stopifnot(nrow(data) >= (model$n_segments_max * model$t_min))
 
-  if (class(start) == 'adaptspecfit') {
+  if (inherits(start, 'adaptspecfit')) {
     # If provided a chain, continue it
     start <- start$final_values
   } else {

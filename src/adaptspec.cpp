@@ -6,6 +6,7 @@
 #include "adaptspec/samples.hpp"
 #include "progress.hpp"
 #include "samples.hpp"
+#include "utils.hpp"
 
 using namespace bayesspec;
 
@@ -101,16 +102,8 @@ Rcpp::List adaptspec(
         xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
     }
 
-    Rcpp::List xMissingFinal;
-    for (int i = 0; i < missingIndices.size(); ++i) {
-        Rcpp::NumericVector xMissing(missingIndices[i].size());
-        for (int j = 0; j < missingIndices[i].size(); ++j) {
-            xMissing[j] = x(missingIndices[i][j], i);
-        }
-        xMissingFinal.push_back(xMissing);
-    }
     Rcpp::List finalValues = sampler.getCurrent().asList();
-    finalValues["x_missing"] = xMissingFinal;
+    finalValues["x_missing"] = missingValuesAsList(x, missingIndices);
 
     Rcpp::List output = samples.asList();
     output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);

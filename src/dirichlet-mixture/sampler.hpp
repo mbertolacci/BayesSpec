@@ -75,6 +75,13 @@ public:
         );
     }
 
+    Rcpp::List getWeightsParametersAsList() const {
+        Rcpp::List output;
+        output["log_beta1m"] = Rcpp::wrap(logBeta1m_);
+        output["alpha"] = alpha_;
+        return output;
+    }
+
 private:
     double alphaPriorShape_;
     double alphaPriorRate_;

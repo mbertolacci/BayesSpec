@@ -43,13 +43,18 @@ adaptspec_dirichlet_mixture <- function(
   .validate_mixture_component_priors(component_priors, n_components, data)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, data, first_category_fixed)
-  if (is.null(start$log_beta1m)) {
-    start$log_beta1m <- log(runif(n_components))
-    start$log_beta1m[n_components] <- -Inf
-  }
-  if (is.null(start$alpha)) {
-    start$alpha <- rgamma(1, shape = alpha_prior_shape, rate = alpha_prior_rate)
+  if (inherits(start, 'adaptspecdppmixturefit')) {
+    # If provided a chain, continue it
+    start <- start$final_values
+  } else {
+    start <- .mixture_start(start, component_priors, data, first_category_fixed)
+    if (is.null(start$log_beta1m)) {
+      start$log_beta1m <- log(runif(n_components))
+      start$log_beta1m[n_components] <- -Inf
+    }
+    if (is.null(start$alpha)) {
+      start$alpha <- rgamma(1, shape = alpha_prior_shape, rate = alpha_prior_rate)
+    }
   }
   # Validate starting values
   .validate_mixture_start(start, n_components, component_priors, data)

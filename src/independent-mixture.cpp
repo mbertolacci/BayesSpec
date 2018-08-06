@@ -131,20 +131,21 @@ Rcpp::List independentMixture(
         }
     }
 
-    Rcpp::List results;
     Rcpp::List components;
     for (unsigned int component = 0; component < nComponents; ++component) {
         components.push_back(samples[component].asList());
     }
-    results["components"] = components;
-    results["weights"] = Rcpp::wrap(weightsSamples);
-    results["categories"] = Rcpp::wrap(categoriesSamples);
-    results["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
     Rcpp::List xMissingSamplesOutput;
     for (Samples<double> samples : xMissingSamples) {
         xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
     }
-    results["x_missing"] = xMissingSamplesOutput;
+    Rcpp::List output;
+    output["components"] = components;
+    output["weights"] = Rcpp::wrap(weightsSamples);
+    output["categories"] = Rcpp::wrap(categoriesSamples);
+    output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
+    output["x_missing"] = xMissingSamplesOutput;
+    output["final_values"] = sampler.getParametersAsList();
 
-    return results;
+    return output;
 }

@@ -3,6 +3,7 @@
 
 #include <RcppEigen.h>
 
+#include "../utils.hpp"
 #include "../random/utils.hpp"
 #include "../adaptspec/parameters.hpp"
 #include "../adaptspec/prior.hpp"
@@ -101,6 +102,18 @@ public:
         logPosterior += static_cast<const Instantiation *>(this)->getWeightsLogPrior_();
 
         return logPosterior;
+    }
+
+    Rcpp::List getParametersAsList() const {
+        Rcpp::List componentParameters;
+        for (unsigned int i = 0; i < nComponents_; ++i) {
+            componentParameters.push_back(getParameters(i).asList());
+        }
+        Rcpp::List output = static_cast<const Instantiation *>(this)->getWeightsParametersAsList();
+        output["components"] = componentParameters;
+        output["categories"] = Rcpp::wrap(categories_);
+        output["x_missing"] = missingValuesAsList(x_, missingIndices_);
+        return output;
     }
 
 protected:

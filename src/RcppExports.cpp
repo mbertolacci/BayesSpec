@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // adaptspec
-Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, double probMM1, double varInflate, double burnInVarInflate, unsigned int nSegmentsStart, Rcpp::List thin, bool showProgress);
-RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP nSegmentsStartSEXP, SEXP thinSEXP, SEXP showProgressSEXP) {
+Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, double probMM1, double varInflate, double burnInVarInflate, Rcpp::List startR, Rcpp::List thin, bool showProgress);
+RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,10 +20,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
     Rcpp::traits::input_parameter< double >::type varInflate(varInflateSEXP);
     Rcpp::traits::input_parameter< double >::type burnInVarInflate(burnInVarInflateSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nSegmentsStart(nSegmentsStartSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type startR(startRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, probMM1, varInflate, burnInVarInflate, nSegmentsStart, thin, showProgress));
+    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, probMM1, varInflate, burnInVarInflate, startR, thin, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }

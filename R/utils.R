@@ -51,3 +51,12 @@ component_probabilities <- function(x, ...) UseMethod('component_probabilities',
 .zero_index_missing_indices <- function(missing_indices) {
   lapply(missing_indices, `-`, 1)
 }
+
+.x_missing_start <- function(start, missing_indices) {
+  if (is.null(start$x_missing)) {
+    start$x_missing <- lapply(missing_indices, function(x) {
+      rnorm(length(x))
+    })
+  }
+  start
+}

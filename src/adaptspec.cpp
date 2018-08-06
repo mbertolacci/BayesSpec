@@ -19,7 +19,7 @@ Rcpp::List adaptspec(
     double probMM1,
     double varInflate,
     double burnInVarInflate,
-    unsigned int nSegmentsStart,
+    Rcpp::List startR,
     Rcpp::List thin,
     bool showProgress
 ) {
@@ -31,15 +31,17 @@ Rcpp::List adaptspec(
     for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
         missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
     }
-    // Initialise missing values to random normal draws
+
+    Rcpp::List xMissingStart = startR["x_missing"];
     for (int i = 0; i < missingIndices.size(); ++i) {
+        Rcpp::NumericVector xMissingStartI = xMissingStart[i];
         for (int j = 0; j < missingIndices[i].size(); ++j) {
-            x(missingIndices[i][j], i) = randNormal(rng);
+            x(missingIndices[i][j], i) = xMissingStartI[j];
         }
     }
 
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
-    AdaptSpecParameters start(prior, x, nSegmentsStart);
+    AdaptSpecParameters start = AdaptSpecParameters::fromList(startR, prior);
     AdaptSpecSampler sampler(x, missingIndices, start, probMM1, burnInVarInflate, prior);
 
     AdaptSpecSamples samples(

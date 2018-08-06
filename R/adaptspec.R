@@ -73,7 +73,13 @@ adaptspec <- function(
   prob_mm1 = 0.8,
   var_inflate = 1,
   burn_in_var_inflate = var_inflate,
-  n_segments_start = max(1, n_segments_min),
+  start = list(
+    n_segments = NULL,
+    cut_points = NULL,
+    beta = NULL,
+    tau_squared = NULL,
+    x_missing = NULL
+  ),
   thin = list(
     n_segments = 1,
     beta = 1,
@@ -105,7 +111,7 @@ adaptspec <- function(
     prob_mm1 = prob_mm1,
     var_inflate = var_inflate,
     burn_in_var_inflate = burn_in_var_inflate,
-    n_segments_start = n_segments_start,
+    start = start,
     thin = thin,
     show_progress = show_progress,
     run_diagnostics = run_diagnostics
@@ -150,7 +156,13 @@ adaptspec_sample <- function(
   prob_mm1 = 0.8,
   var_inflate = 1,
   burn_in_var_inflate = var_inflate,
-  n_segments_start = model$n_segments_min,
+  start = list(
+    n_segments = NULL,
+    cut_points = NULL,
+    beta = NULL,
+    tau_squared = NULL,
+    x_missing = NULL
+  ),
   thin = list(
     n_segments = 1,
     beta = 1,
@@ -182,6 +194,9 @@ adaptspec_sample <- function(
   }
 
   missing_indices <- .missing_indices(data)
+  start <- .adaptspec_start(start, model, data)
+  start <- .x_missing_start(start, missing_indices)
+
   results <- .adaptspec(
     n_loop,
     n_warm_up,
@@ -191,7 +206,7 @@ adaptspec_sample <- function(
     prob_mm1,
     var_inflate,
     burn_in_var_inflate,
-    n_segments_start,
+    start,
     thin,
     show_progress
   )
@@ -212,4 +227,28 @@ adaptspec_sample <- function(
 #' @export
 adaptspec_nu <- function(n_freq, n_bases) {
   splines_basis1d_demmler_reinsch(seq(0, 0.5, length.out = n_freq), n_bases)
+}
+
+.adaptspec_start <- function(start, model, data) {
+  if (is.null(start$n_segments)) {
+    start$n_segments <- sample(model$n_segments_min : model$n_segments_max, 1)
+  }
+  if (is.null(start$cut_points)) {
+    start$cut_points <- rep(nrow(data), model$n_segments_max)
+    start$cut_points[1 : start$n_segments] <- model$time_step * floor(
+      ((1 : start$n_segments) * nrow(data)) / (start$n_segments * model$time_step)
+    )
+  }
+  if (is.null(start$beta)) {
+    start$beta <- matrix(
+      rnorm(model$n_segments_max * (1 + model$n_bases)),
+      nrow = model$n_segments_max,
+      ncol = 1 + model$n_bases
+    )
+  }
+  if (is.null(start$tau_squared)) {
+    start$tau_squared <- runif(model$n_segments_max, 0, model$tau_upper_limit)
+  }
+
+  start
 }

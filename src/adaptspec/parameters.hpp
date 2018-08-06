@@ -137,6 +137,22 @@ public:
         }
         return true;
     }
+
+    static AdaptSpecParameters fromList(
+        const Rcpp::List& startList,
+        const AdaptSpecPrior& prior
+    ) {
+        AdaptSpecParameters start(prior);
+        start.nSegments = startList["n_segments"];
+        start.beta = Rcpp::as<Eigen::MatrixXd>(startList["beta"]);
+        start.cutPoints = Rcpp::as<Eigen::VectorXi>(startList["cut_points"]);
+        start.tauSquared = Rcpp::as<Eigen::VectorXd>(startList["tau_squared"]);
+
+        if (!start.isValid(prior)) {
+            throw std::runtime_error("Invalid starting values");
+        }
+        return start;
+    }
 };
 
 }  // namespace bayesspec

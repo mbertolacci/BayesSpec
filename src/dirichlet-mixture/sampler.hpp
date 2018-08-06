@@ -19,6 +19,9 @@ public:
         double probMM1,
         double varInflate,
         bool firstCategoryFixed,
+        const Eigen::VectorXd& logBeta1mStart,
+        double alphaStart,
+        const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& initialCategories,
         const std::vector<AdaptSpecPrior>& componentPriors,
         double alphaPriorShape,
@@ -26,10 +29,8 @@ public:
     ) : Base(x, missingIndices, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
         alphaPriorShape_(alphaPriorShape),
         alphaPriorRate_(alphaPriorRate),
-        logBeta1m_(nComponents_),
-        alpha_(1.0) {
-        logBeta1m_.fill(std::log(0.5));
-        logBeta1m_[nComponents_ - 1] = -std::numeric_limits<double>::infinity();
+        logBeta1m_(logBeta1mStart),
+        alpha_(alphaStart) {
         updateWeights_();
     }
 

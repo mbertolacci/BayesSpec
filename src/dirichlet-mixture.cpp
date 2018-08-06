@@ -20,11 +20,11 @@ Rcpp::List dirichletMixture(
     Rcpp::List priorsR,
     double alphaPriorShape,
     double alphaPriorRate,
-    Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     double varInflate,
     double burnInVarInflate,
     bool firstCategoryFixed,
+    Rcpp::List startR,
     Rcpp::List thin,
     bool showProgress = false
 ) {
@@ -44,14 +44,29 @@ Rcpp::List dirichletMixture(
     for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
         missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
     }
-    // Initialise missing values to random normal draws
+    Rcpp::List xMissingStart = startR["x_missing"];
     for (int i = 0; i < missingIndices.size(); ++i) {
+        Rcpp::NumericVector xMissingStartI = xMissingStart[i];
         for (int j = 0; j < missingIndices[i].size(); ++j) {
-            x(missingIndices[i][j], i) = randNormal(rng);
+            x(missingIndices[i][j], i) = xMissingStartI[j];
         }
     }
 
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
+    std::vector<AdaptSpecParameters> componentStarts = AdaptSpecParameters::fromListOfLists(
+        startR["components"],
+        priors
+    );
+    AdaptSpecDirichletMixtureSampler sampler(
+        x, missingIndices, probMM1, burnInVarInflate, firstCategoryFixed,
+        Rcpp::as<Eigen::VectorXd>(startR["log_beta1m"]),
+        startR["alpha"],
+        componentStarts,
+        Rcpp::as<Eigen::VectorXi>(startR["categories"]),
+        priors, alphaPriorShape, alphaPriorRate
+    );
+
+    // Make space for samples
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
         thin["n_segments"],
@@ -60,14 +75,6 @@ Rcpp::List dirichletMixture(
         thin["cut_points"],
         priors
     );
-    Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
-
-    AdaptSpecDirichletMixtureSampler sampler(
-        x, missingIndices, probMM1, burnInVarInflate, firstCategoryFixed,
-        initialCategories,
-        priors, alphaPriorShape, alphaPriorRate
-    );
-
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],

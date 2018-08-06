@@ -17,8 +17,8 @@
     .Call('_BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList)
 }
 
-.dirichlet_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, thin, showProgress = FALSE) {
-    .Call('_BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, thin, showProgress)
+.dirichlet_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, startR, thin, showProgress = FALSE) {
+    .Call('_BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, startR, thin, showProgress)
 }
 
 .fft_forward_r2c <- function(inputR) {

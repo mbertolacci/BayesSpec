@@ -68,8 +68,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dirichletMixture
-Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, Rcpp::IntegerVector initialCategoriesR, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, Rcpp::List thin, bool showProgress);
-RcppExport SEXP _BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP initialCategoriesRSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP thinSEXP, SEXP showProgressSEXP) {
+Rcpp::List dirichletMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorsR, double alphaPriorShape, double alphaPriorRate, double probMM1, double varInflate, double burnInVarInflate, bool firstCategoryFixed, Rcpp::List startR, Rcpp::List thin, bool showProgress);
+RcppExport SEXP _BayesSpec_dirichletMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorsRSEXP, SEXP alphaPriorShapeSEXP, SEXP alphaPriorRateSEXP, SEXP probMM1SEXP, SEXP varInflateSEXP, SEXP burnInVarInflateSEXP, SEXP firstCategoryFixedSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -80,14 +80,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type priorsR(priorsRSEXP);
     Rcpp::traits::input_parameter< double >::type alphaPriorShape(alphaPriorShapeSEXP);
     Rcpp::traits::input_parameter< double >::type alphaPriorRate(alphaPriorRateSEXP);
-    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type initialCategoriesR(initialCategoriesRSEXP);
     Rcpp::traits::input_parameter< double >::type probMM1(probMM1SEXP);
     Rcpp::traits::input_parameter< double >::type varInflate(varInflateSEXP);
     Rcpp::traits::input_parameter< double >::type burnInVarInflate(burnInVarInflateSEXP);
     Rcpp::traits::input_parameter< bool >::type firstCategoryFixed(firstCategoryFixedSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type startR(startRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(dirichletMixture(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, thin, showProgress));
+    rcpp_result_gen = Rcpp::wrap(dirichletMixture(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, startR, thin, showProgress));
     return rcpp_result_gen;
 END_RCPP
 }

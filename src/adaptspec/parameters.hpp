@@ -153,6 +153,17 @@ public:
         }
         return start;
     }
+
+    static std::vector<AdaptSpecParameters> fromListOfLists(
+        const Rcpp::List& startsList,
+        const std::vector<AdaptSpecPrior>& priors
+    ) {
+        std::vector<AdaptSpecParameters> starts;
+        for (unsigned int i = 0; i < startsList.size(); ++i) {
+            starts.push_back(fromList(startsList[i], priors[i]));
+        }
+        return starts;
+    }
 };
 
 }  // namespace bayesspec

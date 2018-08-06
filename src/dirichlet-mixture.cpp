@@ -25,6 +25,7 @@ Rcpp::List dirichletMixture(
     double varInflate,
     double burnInVarInflate,
     bool firstCategoryFixed,
+    Rcpp::List thin,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -53,6 +54,10 @@ Rcpp::List dirichletMixture(
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
+        thin["n_segments"],
+        thin["beta"],
+        thin["tau_squared"],
+        thin["cut_points"],
         priors
     );
     Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
@@ -63,14 +68,26 @@ Rcpp::List dirichletMixture(
         priors, alphaPriorShape, alphaPriorRate
     );
 
-    Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
-    Rcpp::NumericVector alphaSamples(nLoop - nWarmUp);
-    Rcpp::NumericMatrix logBeta1mSamples(nComponents, nLoop - nWarmUp);
-    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
-    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    Samples<unsigned int> categoriesSamples(
+        nLoop - nWarmUp,
+        thin["categories"],
+        x.cols()
+    );
+    Samples<double> alphaSamples(
+        nLoop - nWarmUp,
+        thin["alpha"]
+    );
+    Samples<double> logBeta1mSamples(
+        nLoop - nWarmUp,
+        thin["log_beta1m"],
+        nComponents
+    );
+    Samples<double> logPosteriorSamples(nLoop - nWarmUp, thin["log_posterior"]);
+    std::vector< Samples<double> > xMissingSamples;
     for (int i = 0; i < missingIndices.size(); ++i) {
         xMissingSamples.emplace_back(
             nLoop - nWarmUp,
+            thin["x_missing"],
             missingIndices[i].size()
         );
     }
@@ -93,24 +110,17 @@ Rcpp::List dirichletMixture(
                 samples[component].save(sampler.getParameters(component));
             }
 
-            unsigned int sampleIndex = iteration - nWarmUp;
-            std::copy(
-                sampler.getCategories().data(),
-                sampler.getCategories().data() + x.cols(),
-                categoriesSamples.begin() + sampleIndex * x.cols()
-            );
-            std::copy(
-                sampler.getLogBeta1m().data(),
-                sampler.getLogBeta1m().data() + nComponents,
-                logBeta1mSamples.begin() + sampleIndex * nComponents
-            );
-            alphaSamples[sampleIndex] = sampler.getAlpha();
-            logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
+            categoriesSamples.save(sampler.getCategories());
+            logBeta1mSamples.save(sampler.getLogBeta1m());
+            alphaSamples.save(sampler.getAlpha());
+            logPosteriorSamples.save(sampler.getLogPosterior());
             for (int i = 0; i < missingIndices.size(); ++i) {
                 if (missingIndices[i].size() == 0) continue;
+                std::vector<double> xMissing(missingIndices[i].size());
                 for (int j = 0; j < missingIndices[i].size(); ++j) {
-                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                    xMissing[j] = x(missingIndices[i][j], i);
                 }
+                xMissingSamples[i].save(xMissing);
             }
         }
 
@@ -125,11 +135,16 @@ Rcpp::List dirichletMixture(
         components.push_back(samples[component].asList());
     }
     results["components"] = components;
-    results["log_beta1m"] = logBeta1mSamples;
-    results["alpha"] = alphaSamples;
-    results["categories"] = categoriesSamples;
-    results["log_posterior"] = logPosteriorSamples;
-    results["x_missing"] = xMissingSamples;
+    results["log_beta1m"] = Rcpp::wrap(logBeta1mSamples);
+    results["alpha"] = Rcpp::wrap(alphaSamples);
+    results["categories"] = Rcpp::wrap(categoriesSamples);
+    results["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
+
+    Rcpp::List xMissingSamplesOutput;
+    for (Samples<double> samples : xMissingSamples) {
+        xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
+    }
+    results["x_missing"] = xMissingSamplesOutput;
 
     return results;
 }

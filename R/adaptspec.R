@@ -75,6 +75,14 @@ adaptspec <- function(
   burn_in_var_inflate = var_inflate,
   n_freq_hat = 50,
   n_segments_start = max(1, n_segments_min),
+  thin = list(
+    n_segments = 1,
+    beta = 1,
+    tau_squared = 1,
+    cut_points = 1,
+    log_posterior = 1,
+    x_missing = 1
+  ),
   show_progress = FALSE,
   # Extra
   plotting = FALSE,
@@ -101,6 +109,7 @@ adaptspec <- function(
     burn_in_var_inflate = burn_in_var_inflate,
     n_freq_hat = n_freq_hat,
     n_segments_start = n_segments_start,
+    thin = thin,
     show_progress = show_progress,
     run_diagnostics = run_diagnostics
   )
@@ -152,9 +161,19 @@ adaptspec_sample <- function(
   burn_in_var_inflate = var_inflate,
   n_freq_hat = 50,
   n_segments_start = model$n_segments_min,
+  thin = list(
+    n_segments = 1,
+    beta = 1,
+    tau_squared = 1,
+    cut_points = 1,
+    log_posterior = 1,
+    x_missing = 1
+  ),
   show_progress = FALSE,
   run_diagnostics = TRUE
 ) {
+  thin <- .extend_list(eval(formals(adaptspec_sample)$thin), thin)
+
   data <- as.matrix(data)
 
   # Cannot allow too many segments
@@ -178,8 +197,17 @@ adaptspec_sample <- function(
     missing_indices <- list()
   }
   results <- .adaptspec(
-    n_loop, n_warm_up, data, missing_indices, model, prob_mm1, var_inflate, burn_in_var_inflate,
-    n_segments_start, show_progress
+    n_loop,
+    n_warm_up,
+    data,
+    missing_indices,
+    model,
+    prob_mm1,
+    var_inflate,
+    burn_in_var_inflate,
+    n_segments_start,
+    thin,
+    show_progress
   )
 
   results$missing_indices <- lapply(missing_indices, function(x) x + 1)

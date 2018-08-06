@@ -4,75 +4,86 @@
 #include <RcppEigen.h>
 #include "parameters.hpp"
 #include "prior.hpp"
+#include "../samples.hpp"
 
 namespace bayesspec {
 
 class AdaptSpecSamples {
 public:
-    AdaptSpecSamples(unsigned int nSamples, const AdaptSpecPrior& prior)
-        : nSegments_(nSamples),
-          beta_(Rcpp::Dimension({
-              prior.nSegmentsMax,
-              1 + prior.nBases,
-              nSamples
-          })),
-          tauSquared_(prior.nSegmentsMax, nSamples),
-          cutPoints_(prior.nSegmentsMax, nSamples),
-          currentIndex_(0),
-          nBetas_(prior.nSegmentsMax * (1 + prior.nBases)),
-          nSegmentsMax_(prior.nSegmentsMax) {}
+    AdaptSpecSamples(
+      unsigned int nSamples,
+      unsigned int nSegmentsThin,
+      unsigned int betaThin,
+      unsigned int tauSquaredThin,
+      unsigned int cutPointsThin,
+      const AdaptSpecPrior& prior
+    ) : nSegments_(nSamples, nSegmentsThin),
+        beta_(nSamples, betaThin, {
+            prior.nSegmentsMax,
+            1 + prior.nBases
+        }),
+        tauSquared_(nSamples, tauSquaredThin, prior.nSegmentsMax),
+        cutPoints_(nSamples, cutPointsThin, prior.nSegmentsMax) {}
+
+    AdaptSpecSamples(
+      unsigned int nSamples,
+      const AdaptSpecPrior& prior
+    ) : AdaptSpecSamples(nSamples, 1, 1, 1, 1, prior) {}
 
     void save(const AdaptSpecParameters& parameters) {
-        nSegments_[currentIndex_] = parameters.nSegments;
-        std::copy(
-            parameters.beta.data(),
-            parameters.beta.data() + nBetas_,
-            beta_.begin() + currentIndex_ * nBetas_
-        );
-        std::copy(
-            parameters.tauSquared.data(),
-            parameters.tauSquared.data() + nSegmentsMax_,
-            tauSquared_.begin() + currentIndex_ * nSegmentsMax_
-        );
-        std::copy(
-            parameters.cutPoints.data(),
-            parameters.cutPoints.data() + nSegmentsMax_,
-            cutPoints_.begin() + currentIndex_ * nSegmentsMax_
-        );
-
-        ++currentIndex_;
+        nSegments_.save(parameters.nSegments);
+        beta_.save(parameters.beta);
+        tauSquared_.save(parameters.tauSquared);
+        cutPoints_.save(parameters.cutPoints);
     }
 
     Rcpp::List asList() const {
         Rcpp::List output;
-        output["n_segments"] = nSegments_;
-        output["beta"] = beta_;
-        output["tau_squared"] = tauSquared_;
-        output["cut_points"] = cutPoints_;
+        output["n_segments"] = Rcpp::wrap(nSegments_);
+        output["beta"] = Rcpp::wrap(beta_);
+        output["tau_squared"] = Rcpp::wrap(tauSquared_);
+        output["cut_points"] = Rcpp::wrap(cutPoints_);
         return output;
     }
 
     static std::vector<AdaptSpecSamples> fromPriors(
-      unsigned int nSamples,
-      const std::vector<AdaptSpecPrior>& priors
+        unsigned int nSamples,
+        unsigned int nSegmentsThin,
+        unsigned int betaThin,
+        unsigned int tauSquaredThin,
+        unsigned int cutPointsThin,
+        const std::vector<AdaptSpecPrior>& priors
     ) {
-      std::vector<AdaptSpecSamples> output;
-      for (unsigned int i = 0; i < priors.size(); ++i) {
-        output.emplace_back(nSamples, priors[i]);
-      }
-      return output;
+        std::vector<AdaptSpecSamples> output;
+        for (unsigned int i = 0; i < priors.size(); ++i) {
+            output.emplace_back(
+                nSamples,
+                nSegmentsThin,
+                betaThin,
+                tauSquaredThin,
+                cutPointsThin,
+                priors[i]
+            );
+        }
+        return output;
+    }
+
+    static std::vector<AdaptSpecSamples> fromPriors(
+        unsigned int nSamples,
+        const std::vector<AdaptSpecPrior>& priors
+    ) {
+        std::vector<AdaptSpecSamples> output;
+        for (unsigned int i = 0; i < priors.size(); ++i) {
+            output.emplace_back(nSamples, priors[i]);
+        }
+        return output;
     }
 
 private:
-    Rcpp::IntegerVector nSegments_;
-    Rcpp::NumericVector beta_;
-    Rcpp::NumericMatrix tauSquared_;
-    Rcpp::IntegerMatrix cutPoints_;
-
-    unsigned int currentIndex_;
-
-    unsigned int nBetas_;
-    unsigned int nSegmentsMax_;
+    Samples<unsigned int> nSegments_;
+    Samples<double> beta_;
+    Samples<double> tauSquared_;
+    Samples<unsigned int> cutPoints_;
 };
 
 }  // namespace bayesspec

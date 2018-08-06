@@ -24,6 +24,7 @@ Rcpp::List independentMixture(
     double varInflate,
     double burnInVarInflate,
     bool firstCategoryFixed,
+    Rcpp::List thin,
     bool showProgress = false
 ) {
     #if defined(omp_get_num_threads)
@@ -52,6 +53,10 @@ Rcpp::List independentMixture(
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
+        thin["n_segments"],
+        thin["beta"],
+        thin["tau_squared"],
+        thin["cut_points"],
         priors
     );
     Eigen::VectorXd weightsPrior = Rcpp::as<Eigen::VectorXd>(weightsPriorR);
@@ -65,13 +70,22 @@ Rcpp::List independentMixture(
         weightsPrior
     );
 
-    Rcpp::IntegerMatrix categoriesSamples(x.cols(), nLoop - nWarmUp);
-    Rcpp::NumericMatrix weightsSamples(nComponents, nLoop - nWarmUp);
-    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
-    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    Samples<unsigned int> categoriesSamples(
+        nLoop - nWarmUp,
+        thin["categories"],
+        x.cols()
+    );
+    Samples<double> weightsSamples(
+        nLoop - nWarmUp,
+        thin["weights"],
+        nComponents
+    );
+    Samples<double> logPosteriorSamples(nLoop - nWarmUp, thin["log_posterior"]);
+    std::vector< Samples<double> > xMissingSamples;
     for (int i = 0; i < missingIndices.size(); ++i) {
         xMissingSamples.emplace_back(
             nLoop - nWarmUp,
+            thin["x_missing"],
             missingIndices[i].size()
         );
     }
@@ -94,23 +108,16 @@ Rcpp::List independentMixture(
                 samples[component].save(sampler.getParameters(component));
             }
 
-            unsigned int sampleIndex = iteration - nWarmUp;
-            std::copy(
-                sampler.getCategories().data(),
-                sampler.getCategories().data() + x.cols(),
-                categoriesSamples.begin() + sampleIndex * x.cols()
-            );
-            std::copy(
-                sampler.getWeights().data(),
-                sampler.getWeights().data() + nComponents,
-                weightsSamples.begin() + sampleIndex * nComponents
-            );
-            logPosteriorSamples[sampleIndex] = sampler.getLogPosterior();
+            categoriesSamples.save(sampler.getCategories());
+            weightsSamples.save(sampler.getWeights());
+            logPosteriorSamples.save(sampler.getLogPosterior());
             for (int i = 0; i < missingIndices.size(); ++i) {
                 if (missingIndices[i].size() == 0) continue;
+                std::vector<double> xMissing(missingIndices[i].size());
                 for (int j = 0; j < missingIndices[i].size(); ++j) {
-                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                    xMissing[j] = x(missingIndices[i][j], i);
                 }
+                xMissingSamples[i].save(xMissing);
             }
         }
 
@@ -125,10 +132,14 @@ Rcpp::List independentMixture(
         components.push_back(samples[component].asList());
     }
     results["components"] = components;
-    results["weights"] = weightsSamples;
-    results["categories"] = categoriesSamples;
-    results["log_posterior"] = logPosteriorSamples;
-    results["x_missing"] = xMissingSamples;
+    results["weights"] = Rcpp::wrap(weightsSamples);
+    results["categories"] = Rcpp::wrap(categoriesSamples);
+    results["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
+    Rcpp::List xMissingSamplesOutput;
+    for (Samples<double> samples : xMissingSamples) {
+        xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
+    }
+    results["x_missing"] = xMissingSamplesOutput;
 
     return results;
 }

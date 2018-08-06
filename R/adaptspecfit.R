@@ -1,25 +1,23 @@
 adaptspecfit <- function(results, n_freq_hat = 0) {
-  results$n_segments <- coda::mcmc(results$n_segments)
-  results$beta <- aperm(results$beta, c(3, 1, 2))
-  results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
-  results$cut_points <- coda::mcmc(aperm(results$cut_points, c(2, 1)))
-  if (!is.null(results$log_posterior)) {
-    results$log_posterior <- coda::mcmc(results$log_posterior)
-  }
-
-  if (n_freq_hat > 0) {
+  if (
+    n_freq_hat > 0 &&
+    !is.null(results$n_segments) &&
+    !is.null(results$beta)
+  ) {
     # Compute fits of the spectra
     freq_hat <- (0 : (n_freq_hat - 1)) / (2 * (n_freq_hat - 1))
     nu_hat <- splines_basis1d_demmler_reinsch(freq_hat, results$prior$n_bases)
 
+    fit_lcm <- .thin_to_lcm(results, c('beta', 'n_segments'))
+
     spec_hat <- list()
-    for (n_segments in unique(results$n_segments)) {
+    for (n_segments in unique(fit_lcm$n_segments)) {
       spec_hat[[n_segments]] <- matrix(
         0, nrow = n_freq_hat, ncol = n_segments
       )
       for (segment in 1 : n_segments) {
-        beta <- results$beta[
-          results$n_segments == n_segments,
+        beta <- fit_lcm$beta[
+          fit_lcm$n_segments == n_segments,
           segment, , drop = FALSE  # nolint
         ]
         dim(beta) <- dim(beta)[c(1, 3)]
@@ -33,16 +31,14 @@ adaptspecfit <- function(results, n_freq_hat = 0) {
   if (!is.null(results$detrend)) {
     if (results$detrend && length(results$x_missing) > 0) {
       results$x_missing <- lapply(1 : length(results$x_missing), function(i) {
-        missing_indices <- results$missing_indices[[i]]
         x_missing <- results$x_missing[[i]]
-        if (length(missing_indices) == 0) return(coda::mcmc(x_missing))
+        if (is.null(x_missing)) return(x_missing)
 
+        missing_indices <- results$missing_indices[[i]]
         x_base <- predict(results$detrend_fits[[i]], data.frame(data0 = missing_indices))
 
-        coda::mcmc(x_missing + x_base)
+        x_missing + x_base
       })
-    } else {
-      results$x_missing <- lapply(results$x_missing, coda::mcmc)
     }
   }
 
@@ -53,16 +49,13 @@ adaptspecfit <- function(results, n_freq_hat = 0) {
 
 #' @export
 window.adaptspecfit <- function(fit, ...) {
-  time_before <- time(fit$n_segments)
   fit$n_segments <- window(fit$n_segments, ...)
   fit$tau_squared <- window(fit$tau_squared, ...)
   fit$cut_points <- window(fit$cut_points, ...)
   if (!is.null(fit$log_posterior)) {
     fit$log_posterior <- window(fit$log_posterior, ...)
   }
-
-  time_after <- time(fit$n_segments)
-  fit$beta <- fit$beta[time_before %in% time_after, , ]
+  fit$beta <- window(fit$beta, ...)
 
   fit$x_missing <- lapply(fit$x_missing, function(x_missing) {
     window(x_missing, ...)
@@ -71,20 +64,32 @@ window.adaptspecfit <- function(fit, ...) {
   fit
 }
 
+.thin_to_lcm <- function(fit, var_names) {
+  var_lcm <- Reduce(function(lcm, var_name) {
+    .lcm(thin(fit[[var_name]]), lcm)
+  }, var_names, 1)
+  for (var_name in var_names) {
+    fit[[var_name]] <- window(fit[[var_name]], thin = var_lcm)
+  }
+  fit
+}
+
 #' @export
 summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
   cat('Posterior distribution of number of segments =')
   print(table(fit$n_segments) / length(fit$n_segments))
 
-  for (n_segments in sort(unique(fit$n_segments))) {
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points'))
+
+  for (n_segments in sort(unique(fit_lcm$n_segments))) {
     if (n_segments == 1) next
-    n_iterations <- sum(fit$n_segments == n_segments)
+    n_iterations <- sum(fit_lcm$n_segments == n_segments)
     if (n_iterations < iterations_threshold) next
     cat(sprintf('--- For n_segments = %d, number of iterations = %d\n', n_segments, n_iterations))
     for (segment in 1 : (n_segments - 1)) {
       cat('Posterior distribution of cut point', segment, '\n')
       print(table(
-        fit$cut_points[fit$n_segments == n_segments, segment]
+        fit_lcm$cut_points[fit_lcm$n_segments == n_segments, segment]
       ) / n_iterations)
     }
   }
@@ -92,14 +97,15 @@ summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
 
 #' @export
 diagnostic_plots.adaptspecfit <- function(fit, iterations_threshold = 0) {
-  n_iterations <- length(fit$n_segments)
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'beta'))
+  n_iterations <- length(fit_lcm$n_segments)
 
-  data <- do.call(rbind, lapply(sort(unique(fit$n_segments)), function(n_segments) {
-    indices <- which(fit$n_segments == n_segments)
+  data <- do.call(rbind, lapply(sort(unique(fit_lcm$n_segments)), function(n_segments) {
+    indices <- which(fit_lcm$n_segments == n_segments)
 
     do.call(rbind, lapply(1 : n_segments, function(segment) {
       value <- rep(NA, n_iterations)
-      value[indices] <- fit$beta[indices, segment, 1]
+      value[indices] <- fit_lcm$beta[indices, segment, 1]
       data.frame(
         iteration = 1 : n_iterations,
         n_segments = factor(n_segments),
@@ -118,14 +124,17 @@ diagnostic_plots.adaptspecfit <- function(fit, iterations_threshold = 0) {
 diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
   cat(sprintf('Tuning parameters: var_inflate = %f, prob_mm1 = %f\n', fit$var_inflate, fit$prob_mm1))
   cat('Rejection rates for spline fit parameters\n')
-  for (n_segments in sort(unique(fit$n_segments))) {
-    n_iterations <- sum(fit$n_segments == n_segments)
+
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'beta'))
+
+  for (n_segments in sort(unique(fit_lcm$n_segments))) {
+    n_iterations <- sum(fit_lcm$n_segments == n_segments)
     if (n_iterations < iterations_threshold) next
     cat(sprintf('--- For n_segments = %d, number of iterations = %d\n', n_segments, n_iterations))
     if (n_iterations == 1) next
 
     rejection_rates <- sapply(1 : n_segments, function(segment) {
-      coda::rejectionRate(coda::mcmc(fit$beta[fit$n_segments == n_segments, segment, 1]))
+      coda::rejectionRate(coda::mcmc(fit_lcm$beta[fit_lcm$n_segments == n_segments, segment, 1]))
     })
     names(rejection_rates) <- 1 : n_segments
     print(rejection_rates)
@@ -139,17 +148,19 @@ diagnostic_warnings.adaptspecfit <- function(
   iterations_proportion_threshold = 0.01,
   prefix = ''
 ) {
-  n_iterations_total <- length(fit$n_segments)
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'beta', 'tau_squared'))
 
-  for (n_segments in as.integer(sort(unique(fit$n_segments)))) {
-    n_iterations <- sum(fit$n_segments == n_segments)
+  n_iterations_total <- length(fit_lcm$n_segments)
+
+  for (n_segments in as.integer(sort(unique(fit_lcm$n_segments)))) {
+    n_iterations <- sum(fit_lcm$n_segments == n_segments)
 
     if (n_iterations / n_iterations_total < iterations_proportion_threshold) next
 
     for (segment in 1 : n_segments) {
-      if (sum(fit$n_segments == n_segments) == 1) next
+      if (sum(fit_lcm$n_segments == n_segments) == 1) next
       beta_worst_neff <- min(coda::effectiveSize(coda::mcmc(
-        fit$beta[fit$n_segments == n_segments, segment, ]
+        fit_lcm$beta[fit_lcm$n_segments == n_segments, segment, ]
       )))
       if (beta_worst_neff <= effective_size_threshold) {
         warning(sprintf(
@@ -159,7 +170,7 @@ diagnostic_warnings.adaptspecfit <- function(
       }
 
       tau_squared_neff <- coda::effectiveSize(
-        fit$tau_squared[fit$n_segments == n_segments, segment]
+        fit_lcm$tau_squared[fit_lcm$n_segments == n_segments, segment]
       )
       if (tau_squared_neff <= effective_size_threshold) {
         warning(sprintf(
@@ -205,9 +216,11 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
     ylim = c(0, 1)
   )
 
-  for (n_segments in unique(fit$n_segments)) {
-    cut_points <- fit$cut_points[
-      fit$n_segments == n_segments,
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points'))
+
+  for (n_segments in unique(fit_lcm$n_segments)) {
+    cut_points <- fit_lcm$cut_points[
+      fit_lcm$n_segments == n_segments,
       1 : n_segments,
       drop = FALSE
     ]
@@ -237,7 +250,8 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 
 #' @export
 time_varying_spectra_samples.adaptspecfit <- function(fit, n_frequencies, time_step = 1) {
-  output <- .time_varying_spectra_samples(fit$n_segments, fit$cut_points, fit$beta, n_frequencies, time_step)
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'beta'))
+  output <- .time_varying_spectra_samples(fit_lcm$n_segments, fit_lcm$cut_points, fit_lcm$beta, n_frequencies, time_step)
   attr(output, 'times') <- (
     1 + (0 : (dim(output)[3] - 1)) * time_step
   )
@@ -257,11 +271,12 @@ time_varying_spectra_mean.adaptspecfit <- function(fit, n_frequencies, time_step
 
 #' @export
 cut_point_pmf <- function(fit, within_n_segments = FALSE) {
-  n_iterations <- length(fit$n_segments)
-  max_index <- max(fit$cut_points)
-  bind_rows(lapply(unique(fit$n_segments), function(n_segments) {
-    cut_points <- fit$cut_points[
-      fit$n_segments == n_segments,
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points'))
+  n_iterations <- length(fit_lcm$n_segments)
+  max_index <- max(fit_lcm$cut_points)
+  bind_rows(lapply(unique(fit_lcm$n_segments), function(n_segments) {
+    cut_points <- fit_lcm$cut_points[
+      fit_lcm$n_segments == n_segments,
       ,
       drop = FALSE
     ]

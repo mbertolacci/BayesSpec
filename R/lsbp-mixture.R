@@ -18,9 +18,23 @@ adaptspec_lsbp_mixture <- function(
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
   first_category_fixed = FALSE,
   n_freq_hat = 50,
-  plotting = FALSE, detrend = TRUE, show_progress = FALSE,
+  plotting = FALSE, detrend = TRUE,
+  thin = list(
+    beta_lsbp = 1,
+    tau_squared_lsbp = 1,
+    categories = 1,
+    n_segments = 1,
+    beta = 1,
+    tau_squared = 1,
+    cut_points = 1,
+    log_posterior = 1,
+    x_missing = 1
+  ),
+  show_progress = FALSE,
   run_diagnostics = TRUE
 ) {
+  thin <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$thin), thin)
+
   x <- as.matrix(x)
   design_matrix <- as.matrix(design_matrix)
   detrend_fits <- NULL
@@ -93,16 +107,15 @@ adaptspec_lsbp_mixture <- function(
     initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed,
-    spline_prior$n_bases, show_progress
+    spline_prior$n_bases,
+    thin,
+    show_progress
   )
+  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components
   results$design_matrix <- design_matrix
-  results$beta <- aperm(results$beta, c(3, 1, 2))
-  results$categories <- coda::mcmc(aperm(1 + results$categories, c(2, 1)))
-  results$tau_squared <- coda::mcmc(aperm(results$tau_squared, c(2, 1)))
-  results$log_posterior <- coda::mcmc(results$log_posterior)
 
   results$var_inflate <- var_inflate
   results$prob_mm1 <- prob_mm1

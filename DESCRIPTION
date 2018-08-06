@@ -15,6 +15,7 @@ Imports:
     ggplot2,
     gridExtra
 Depends:
+    acoda,
     coda
 License: GPL-3
 LazyLoad: TRUE

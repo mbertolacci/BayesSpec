@@ -5,6 +5,7 @@
 #include "adaptspec/sampler.hpp"
 #include "adaptspec/samples.hpp"
 #include "progress.hpp"
+#include "samples.hpp"
 
 using namespace bayesspec;
 
@@ -18,8 +19,9 @@ Rcpp::List adaptspec(
     double probMM1,
     double varInflate,
     double burnInVarInflate,
-    unsigned int nSegmentsStart = 1,
-    bool showProgress = false
+    unsigned int nSegmentsStart,
+    Rcpp::List thin,
+    bool showProgress
 ) {
     std::mt19937_64 rng(static_cast<uint_fast64_t>(UINT_FAST64_MAX * R::unif_rand()));
 
@@ -40,12 +42,24 @@ Rcpp::List adaptspec(
     AdaptSpecParameters start(prior, x, nSegmentsStart);
     AdaptSpecSampler sampler(x, missingIndices, start, probMM1, burnInVarInflate, prior);
 
-    AdaptSpecSamples samples(nLoop - nWarmUp, prior);
-    Rcpp::NumericVector logPosteriorSamples(nLoop - nWarmUp);
-    std::vector<Rcpp::NumericMatrix> xMissingSamples;
+    AdaptSpecSamples samples(
+        nLoop - nWarmUp,
+        thin["n_segments"],
+        thin["beta"],
+        thin["tau_squared"],
+        thin["cut_points"],
+        prior
+    );
+    Samples<double> logPosteriorSamples(
+        nLoop - nWarmUp,
+        thin["log_posterior"]
+    );
+
+    std::vector< Samples<double> > xMissingSamples;
     for (int i = 0; i < missingIndices.size(); ++i) {
         xMissingSamples.emplace_back(
             nLoop - nWarmUp,
+            thin["x_missing"],
             missingIndices[i].size()
         );
     }
@@ -64,12 +78,14 @@ Rcpp::List adaptspec(
 
         if (iteration >= nWarmUp) {
             samples.save(sampler.getCurrent());
-            logPosteriorSamples[iteration - nWarmUp] = sampler.getLogPosterior();
+            logPosteriorSamples.save(sampler.getLogPosterior());
             for (int i = 0; i < missingIndices.size(); ++i) {
                 if (missingIndices[i].size() == 0) continue;
+                std::vector<double> xMissing(missingIndices[i].size());
                 for (int j = 0; j < missingIndices[i].size(); ++j) {
-                    xMissingSamples[i](iteration - nWarmUp, j) = x(missingIndices[i][j], i);
+                    xMissing[j] = x(missingIndices[i][j], i);
                 }
+                xMissingSamples[i].save(xMissing);
             }
         }
 
@@ -79,12 +95,12 @@ Rcpp::List adaptspec(
     }
 
     Rcpp::List xMissingSamplesOutput;
-    for (Rcpp::NumericMatrix i : xMissingSamples) {
-        xMissingSamplesOutput.push_back(i);
+    for (Samples<double> samples : xMissingSamples) {
+        xMissingSamplesOutput.push_back(Rcpp::wrap(samples));
     }
 
     Rcpp::List output = samples.asList();
-    output["log_posterior"] = logPosteriorSamples;
+    output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
     output["x_missing"] = xMissingSamplesOutput;
     return output;
 }

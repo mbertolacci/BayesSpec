@@ -6,9 +6,22 @@ adaptspec_independent_mixture <- function(
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
   first_category_fixed = FALSE,
   n_freq_hat = 50,
-  plotting = FALSE, detrend = TRUE, show_progress = FALSE,
+  plotting = FALSE, detrend = TRUE,
+  thin = list(
+    weights = 1,
+    categories = 1,
+    n_segments = 1,
+    beta = 1,
+    tau_squared = 1,
+    cut_points = 1,
+    log_posterior = 1,
+    x_missing = 1
+  ),
+  show_progress = FALSE,
   run_diagnostics = TRUE
 ) {
+  thin <- .extend_list(eval(formals(adaptspec_independent_mixture)$thin), thin)
+
   x <- as.matrix(x)
   detrend_fits <- NULL
   if (detrend && ncol(x) > 0) {
@@ -44,14 +57,13 @@ adaptspec_independent_mixture <- function(
     n_loop, n_warm_up, x, missing_indices, component_priors, weight_prior, initial_categories,
     prob_mm1, var_inflate, burn_in_var_inflate,
     first_category_fixed,
+    thin,
     show_progress
   )
+  results$missing_indices <- lapply(missing_indices, function(x) x + 1)
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components
-  results$weights <- coda::mcmc(aperm(results$weights, c(2, 1)))
-  results$categories <- coda::mcmc(aperm(results$categories + 1, c(2, 1)))
-  results$log_posterior <- coda::mcmc(results$log_posterior)
 
   results$var_inflate <- var_inflate
   results$prob_mm1 <- prob_mm1

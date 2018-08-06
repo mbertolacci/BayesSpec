@@ -26,3 +26,16 @@ time_varying_spectra_mean <- function(x, ...) UseMethod('time_varying_spectra_me
 
 #' @export
 component_probabilities <- function(x, ...) UseMethod('component_probabilities', x)
+
+.gcd <- function(a, b) {
+  while (b != 0) {
+    t <- b
+    b <- a %% b
+    a <- t
+  }
+  a
+}
+
+.lcm <- function(a, b) {
+  as.integer((a * b) / .gcd(a, b))
+}

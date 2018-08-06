@@ -41,25 +41,6 @@ public:
         }
     }
 
-    MixtureSamplerBase(
-        Eigen::MatrixXd& x,
-        const std::vector<Eigen::VectorXi>& missingIndices,
-        double probMM1,
-        double varInflate,
-        bool firstCategoryFixed,
-        const Eigen::VectorXi& categoriesStart,
-        const std::vector<AdaptSpecPrior>& componentPriors
-    ) : MixtureSamplerBase(
-            x,
-            missingIndices,
-            probMM1,
-            varInflate,
-            firstCategoryFixed,
-            startsFromData_(x, categoriesStart, componentPriors),
-            categoriesStart,
-            componentPriors
-        ) {}
-
     void setVarInflate(double newValue) {
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_[component].setVarInflate(newValue);
@@ -182,44 +163,6 @@ private:
         for (unsigned int series = 0; series < categories_.size(); ++series) {
             ++counts_[categories_[series]];
         }
-    }
-
-    static Eigen::MatrixXd dataFromCategories_(
-        const Eigen::MatrixXd& full,
-        const Eigen::VectorXi& categories,
-        int component
-    ) {
-        unsigned int nColumns = 0;
-        for (unsigned int i = 0; i < categories.size(); ++i) {
-            if (categories[i] == component) {
-                ++nColumns;
-            }
-        }
-        Eigen::MatrixXd output(full.rows(), nColumns);
-        unsigned int k = 0;
-        for (unsigned int i = 0; i < full.cols(); ++i) {
-            if (categories[i] == component) {
-                output.col(k) = full.col(i);
-                ++k;
-            }
-        }
-        return output;
-    }
-
-    static std::vector<AdaptSpecParameters> startsFromData_(
-        const Eigen::MatrixXd& x,
-        const Eigen::VectorXi& categories,
-        const std::vector<AdaptSpecPrior>& priors
-    ) {
-        std::vector<AdaptSpecParameters> starts;
-        for (unsigned int component = 0; component < priors.size(); ++component) {
-            starts.emplace_back(priors[component], dataFromCategories_(
-                x,
-                categories,
-                component
-            ));
-        }
-        return starts;
     }
 };
 

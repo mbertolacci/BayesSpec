@@ -48,61 +48,6 @@ public:
         unsigned int nObservations
     ) : AdaptSpecParameters(prior, nObservations, prior.nSegmentsMin) {}
 
-    // Initialise given prior, data, and starting number of segments
-    AdaptSpecParameters(
-        const AdaptSpecPrior& prior,
-        const Eigen::MatrixXd& x,
-        unsigned int nStartingSegments
-    ) : AdaptSpecParameters(prior, x.rows(), nStartingSegments) {
-        // No data, so just take the defaults from an earlier constructor
-        if (x.cols() == 0) return;
-
-        // Initialise the beta parameters from data using their conditional
-        // modes
-        unsigned int nBases = prior.nBases;
-        unsigned int lastCutPoint = 0;
-        for (unsigned int segment = 0; segment < nSegments; ++segment) {
-            unsigned int segmentLength = cutPoints[segment] - lastCutPoint;
-            Eigen::MatrixXd segmentPeriodogram = AdaptSpecUtils::calculatePeriodogram(
-                x,
-                cutPoints[segment],
-                segmentLength
-            );
-            Eigen::MatrixXd segmentNu = AdaptSpecUtils::calculateNu(
-                segmentLength,
-                nBases
-            );
-
-            BetaOptimiser optimiser(
-                segmentLength,
-                segmentPeriodogram,
-                segmentNu,
-                prior.sigmaSquaredAlpha,
-                tauSquared[segment]
-            );
-
-            Eigen::VectorXd segmentBeta(beta.row(segment).transpose());
-            Eigen::VectorXd segmentGradient(nBases + 1);
-            Eigen::MatrixXd segmentHessian(nBases + 1, nBases + 1);
-            int status = optimiser.run(
-                segmentBeta,
-                segmentGradient,
-                segmentHessian
-            );
-            if (status != 1) {
-                Rcpp::stop("Optimiser failed");
-            }
-            beta.row(segment) = segmentBeta.transpose();
-
-            lastCutPoint = cutPoints[segment];
-        }
-    }
-
-    AdaptSpecParameters(
-        const AdaptSpecPrior& prior,
-        const Eigen::MatrixXd& x
-    ) : AdaptSpecParameters(prior, x, prior.nSegmentsMin) {}
-
     bool isValid(const AdaptSpecPrior& prior) {
         // Check that nSegments is valid
         if (nSegments > prior.nSegmentsMax) {

@@ -1,5 +1,7 @@
 AC_INIT()
 
+PKG_PROG_PKG_CONFIG
+
 : ${R_HOME=`R RHOME`}
 if test -z "${R_HOME}"; then
   echo "could not determine R_HOME"
@@ -15,14 +17,10 @@ CXXFLAGS=`${R_HOME}/bin/R CMD config CXXFLAGS`
 AC_PROG_CC
 AC_PROG_CPP
 
-AC_CHECK_LIB(fftw3, fftw_free,
-  [
-    PKG_CXXFLAGS="-DBAYESSPEC_FFTW ${PKG_CXXFLAGS}"
-    LIBS="-lfftw3 ${LIBS}"
-  ],
-  ,
-  [-lm]
-)
+PKG_CHECK_MODULES(FFTW3, fftw3, [
+    PKG_CXXFLAGS="-DBAYESSPEC_FFTW ${FFTW3_CFLAGS} ${PKG_CXXFLAGS}"
+    LIBS="-lfftw3 ${FFTW3_LIBS} ${LIBS}"
+])
 
 PKG_CXXFLAGS="-DEIGEN_DONT_PARALLELIZE ${PKG_CXXFLAGS}"
 

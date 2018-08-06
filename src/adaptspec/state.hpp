@@ -163,9 +163,14 @@ public:
         Eigen::MatrixXd hessian(prior_->nBases + 1, prior_->nBases + 1);
         int status = optimiser.run(beta, gradient, hessian);
         if (status != 1) {
-            Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
-            Rcpp::Rcout << "Current state =\n" << *this << "\n";
-            Rcpp::stop("Optimiser failed");
+            // Reattempt optimisation from a zero start
+            beta.fill(0);
+            status = optimiser.run(beta, gradient, hessian);
+            if (status != 1) {
+                Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
+                Rcpp::Rcout << "Current state =\n" << *this << "\n";
+                Rcpp::stop("Optimiser failed");
+            }
         }
 
         betaMode.row(segment) = beta.transpose();

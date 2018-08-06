@@ -41,11 +41,7 @@ component_probabilities <- function(x, ...) UseMethod('component_probabilities',
 }
 
 .missing_indices <- function(data) {
-  if (ncol(data) > 0) {
-    lapply(1 : ncol(data), function(i) which(is.na(data[, i])))
-  } else {
-    list()
-  }
+  lapply(seq_len(ncol(data)), function(i) which(is.na(data[, i])))
 }
 
 .zero_index_missing_indices <- function(missing_indices) {
@@ -80,4 +76,10 @@ component_probabilities <- function(x, ...) UseMethod('component_probabilities',
     })
   }
   start
+}
+
+.validate_x_missing_start <- function(start, missing_indices) {
+  for (i in seq_len(length(missing_indices))) {
+    stopifnot(length(missing_indices[[i]]) == length(start$x_missing[[i]]))
+  }
 }

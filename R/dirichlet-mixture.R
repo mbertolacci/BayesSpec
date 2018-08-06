@@ -52,7 +52,7 @@ adaptspec_dirichlet_mixture <- function(
     start$alpha <- rgamma(1, shape = alpha_prior_shape, rate = alpha_prior_rate)
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, data)
+  .validate_mixture_start(start, n_components, component_priors, data)
   stopifnot(length(start$log_beta1m) == n_components)
 
   # Run sampler

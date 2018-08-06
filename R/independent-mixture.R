@@ -47,7 +47,7 @@ adaptspec_independent_mixture <- function(
     start$weights[n_components] <- 1 - sum(start$weights[1 : (n_components - 1)])
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, data)
+  .validate_mixture_start(start, n_components, component_priors, data)
   stopifnot(length(start$weights) == n_components)
 
   # Run sampler

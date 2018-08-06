@@ -186,6 +186,8 @@ adaptspec_sample <- function(
 
   start <- .adaptspec_start(start, model, data)
   start <- .x_missing_start(start, missing_indices)
+  .validate_adaptspec_start(start, model, data)
+  .validate_x_missing_start(start, missing_indices)
 
   results <- .adaptspec(
     n_loop,
@@ -241,4 +243,25 @@ adaptspec_nu <- function(n_freq, n_bases) {
   }
 
   start
+}
+
+.validate_adaptspec_start <- function(start, model, data) {
+  stopifnot(length(start$n_segments) == 1)
+  stopifnot(start$n_segments >= model$n_segments_min)
+  stopifnot(start$n_segments <= model$n_segments_max)
+
+  stopifnot(length(start$cut_points) == model$n_segments_max)
+  stopifnot(min(start$cut_points) >= model$t_min)
+  stopifnot(max(start$cut_points) <= nrow(data))
+  stopifnot(all(order(start$cut_points) == (1 : model$n_segments_max)))
+
+  stopifnot(is.matrix(start$beta))
+  stopifnot(nrow(start$beta) == model$n_segments_max)
+  stopifnot(ncol(start$beta) == 1 + model$n_bases)
+  stopifnot(!anyNA(start$beta))
+
+  stopifnot(is.numeric(start$tau_squared))
+  stopifnot(length(start$tau_squared) == model$n_segments_max)
+  stopifnot(min(start$tau_squared) > 0)
+  stopifnot(max(start$tau_squared) < model$tau_upper_limit)
 }

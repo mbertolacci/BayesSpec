@@ -37,11 +37,11 @@
   start
 }
 
-.validate_mixture_start <- function(start, n_components, data) {
+.validate_mixture_start <- function(start, n_components, component_priors, data) {
   stopifnot(length(start$categories) == ncol(data))
   stopifnot(length(start$components) == n_components)
-  missing_indices <- .missing_indices(data)
-  for (i in seq_len(ncol(data))) {
-    stopifnot(length(missing_indices[[i]]) == length(start$x_missing[[i]]))
+  for (i in 1 : length(start$components)) {
+    .validate_adaptspec_start(start$components[[i]], component_priors[[i]], data)
   }
+  .validate_x_missing_start(start, .missing_indices(data))
 }

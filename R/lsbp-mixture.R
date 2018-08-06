@@ -105,7 +105,7 @@ adaptspec_lsbp_mixture <- function(
     ))
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, data)
+  .validate_mixture_start(start, n_components, component_priors, data)
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)

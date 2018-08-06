@@ -233,13 +233,21 @@ adaptspec_nu <- function(n_freq, n_bases) {
   }
   if (is.null(start$beta)) {
     start$beta <- matrix(
-      rnorm(model$n_segments_max * (1 + model$n_bases)),
+      0,
       nrow = model$n_segments_max,
       ncol = 1 + model$n_bases
     )
+    for (n_segments in model$n_segments_min : start$n_segments) {
+      start$beta[n_segments, ] <- rnorm(1 + model$n_bases)
+    }
   }
   if (is.null(start$tau_squared)) {
-    start$tau_squared <- runif(model$n_segments_max, 0, model$tau_upper_limit)
+    start$tau_squared <- rep(0, model$n_segments_max)
+    start$tau_squared[model$n_segments_min : start$n_segments] <- runif(
+      length(model$n_segments_min : start$n_segments),
+      0,
+      model$tau_upper_limit
+    )
   }
 
   start
@@ -262,6 +270,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
 
   stopifnot(is.numeric(start$tau_squared))
   stopifnot(length(start$tau_squared) == model$n_segments_max)
-  stopifnot(min(start$tau_squared) > 0)
+  stopifnot(min(start$tau_squared) >= 0)
+  stopifnot(min(start$tau_squared[model$n_segments_min : start$n_segments]) > 0)
   stopifnot(max(start$tau_squared) < model$tau_upper_limit)
 }

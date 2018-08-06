@@ -29,8 +29,8 @@
     .Call('_BayesSpec_fftForwardC2C', PACKAGE = 'BayesSpec', inputR)
 }
 
-.independent_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, thin, showProgress = FALSE) {
-    .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, thin, showProgress)
+.independent_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, startR, thin, showProgress = FALSE) {
+    .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, startR, thin, showProgress)
 }
 
 .lsbp_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, initialCategoriesR, probMM1, varInflate, burnInVarInflate, firstCategoryFixed, nSplineBases, thin, showProgress = FALSE) {

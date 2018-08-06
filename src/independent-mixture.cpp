@@ -19,11 +19,11 @@ Rcpp::List independentMixture(
     Rcpp::List missingIndicesR,
     Rcpp::List priorsR,
     Rcpp::NumericVector weightsPriorR,
-    Rcpp::IntegerVector initialCategoriesR,
     double probMM1,
     double varInflate,
     double burnInVarInflate,
     bool firstCategoryFixed,
+    Rcpp::List startR,
     Rcpp::List thin,
     bool showProgress = false
 ) {
@@ -43,14 +43,30 @@ Rcpp::List independentMixture(
     for (Rcpp::IntegerVector missingIndicesI : missingIndicesR) {
         missingIndices.push_back(Rcpp::as<Eigen::VectorXi>(missingIndicesI));
     }
-    // Initialise missing values to random normal draws
+    Rcpp::List xMissingStart = startR["x_missing"];
     for (int i = 0; i < missingIndices.size(); ++i) {
+        Rcpp::NumericVector xMissingStartI = xMissingStart[i];
         for (int j = 0; j < missingIndices[i].size(); ++j) {
-            x(missingIndices[i][j], i) = randNormal(rng);
+            x(missingIndices[i][j], i) = xMissingStartI[j];
         }
     }
 
     std::vector<AdaptSpecPrior> priors = AdaptSpecPrior::fromListOfLists(priorsR);
+    std::vector<AdaptSpecParameters> componentStarts = AdaptSpecParameters::fromListOfLists(
+        startR["components"],
+        priors
+    );
+
+    AdaptSpecIndependentMixtureSampler sampler(
+        x, missingIndices,
+        probMM1, burnInVarInflate, firstCategoryFixed,
+        Rcpp::as<Eigen::VectorXd>(startR["weights"]),
+        componentStarts,
+        Rcpp::as<Eigen::VectorXi>(startR["categories"]),
+        priors,
+        Rcpp::as<Eigen::VectorXd>(weightsPriorR)
+    );
+
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
         nLoop - nWarmUp,
         thin["n_segments"],
@@ -59,17 +75,6 @@ Rcpp::List independentMixture(
         thin["cut_points"],
         priors
     );
-    Eigen::VectorXd weightsPrior = Rcpp::as<Eigen::VectorXd>(weightsPriorR);
-    Eigen::VectorXi initialCategories = Rcpp::as<Eigen::VectorXi>(initialCategoriesR);
-
-    AdaptSpecIndependentMixtureSampler sampler(
-        x, missingIndices, probMM1, burnInVarInflate, firstCategoryFixed,
-        // starts,
-        initialCategories,
-        priors,
-        weightsPrior
-    );
-
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],

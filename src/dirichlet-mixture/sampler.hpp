@@ -26,7 +26,12 @@ public:
         const std::vector<AdaptSpecPrior>& componentPriors,
         double alphaPriorShape,
         double alphaPriorRate
-    ) : Base(x, missingIndices, probMM1, varInflate, firstCategoryFixed, initialCategories, componentPriors),
+    ) : Base(
+            x, missingIndices,
+            probMM1, varInflate, firstCategoryFixed,
+            componentStart, initialCategories,
+            componentPriors
+        ),
         alphaPriorShape_(alphaPriorShape),
         alphaPriorRate_(alphaPriorRate),
         logBeta1m_(logBeta1mStart),

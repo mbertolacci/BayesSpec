@@ -44,21 +44,14 @@ adaptspec_dirichlet_mixture <- function(
     }
   }
 
-  if (class(component_model) == 'adaptspecmodel') {
-    component_priors <- rep(list(component_model), n_components)
-  } else {
-    component_priors <- component_model
-  }
-  stopifnot(length(component_priors) == n_components)
-  for (component_prior in component_priors) {
-    # Cannot allow too many segments
-    stopifnot(
-      nrow(x) >= (component_model$n_segments_max * component_model$t_min)
-    )
-  }
+  ## Prior set up
+  # Mixture components
+  component_priors <- .mixture_component_priors(component_model, n_components)
+  # Validate prior
+  .validate_mixture_component_priors(component_priors, n_components, x)
 
-  missing_indices <- .missing_indices(x)
-
+  ## Starting value set up
+  start <- .mixture_start(start, component_priors, x)
   if (is.null(start$log_beta1m)) {
     start$log_beta1m <- log(runif(n_components))
     start$log_beta1m[n_components] <- -Inf
@@ -66,18 +59,8 @@ adaptspec_dirichlet_mixture <- function(
   if (is.null(start$alpha)) {
     start$alpha <- rgamma(1, shape = alpha_prior_shape, rate = alpha_prior_rate)
   }
-  if (is.null(start$categories)) {
-    start$categories <- sample.int(n_components, ncol(x), replace = TRUE) - 1
-  }
-  if (is.null(start$components)) {
-    start$components <- lapply(component_priors, function(component_prior) {
-      .adaptspec_start(NULL, component_prior, x)
-    })
-  }
-
-  start <- .x_missing_start(start, missing_indices)
-  stopifnot(length(start$categories) == ncol(x))
-  stopifnot(length(start$components) == n_components)
+  # Validate starting values
+  .validate_mixture_start(start, n_components, x)
   stopifnot(length(start$log_beta1m) == n_components)
 
   if (first_category_fixed) {
@@ -85,6 +68,7 @@ adaptspec_dirichlet_mixture <- function(
     start$categories[1] <- 0
   }
 
+  missing_indices <- .missing_indices(x)
   results <- .dirichlet_mixture(
     n_loop, n_warm_up, x,
     .zero_index_missing_indices(missing_indices),

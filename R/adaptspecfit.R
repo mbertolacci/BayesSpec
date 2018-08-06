@@ -274,7 +274,7 @@ cut_point_pmf <- function(fit, within_n_segments = FALSE) {
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points'))
   n_iterations <- length(fit_lcm$n_segments)
   max_index <- max(fit_lcm$cut_points)
-  bind_rows(lapply(unique(fit_lcm$n_segments), function(n_segments) {
+  do.call(rbind, lapply(unique(fit_lcm$n_segments), function(n_segments) {
     cut_points <- fit_lcm$cut_points[
       fit_lcm$n_segments == n_segments,
       ,
@@ -285,7 +285,7 @@ cut_point_pmf <- function(fit, within_n_segments = FALSE) {
       n_normalise <- nrow(cut_points)
     }
 
-    bind_rows(lapply(1 : n_segments, function(segment) {
+    do.call(rbind, lapply(1 : n_segments, function(segment) {
       counts <- tabulate(cut_points[, segment], max_index)
       probabilities <- counts / n_normalise
       non_zero <- probabilities > 0

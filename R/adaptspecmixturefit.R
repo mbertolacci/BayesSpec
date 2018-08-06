@@ -1,8 +1,8 @@
-adaptspecmixturefit <- function(results, component_priors, n_freq_hat) {
+adaptspecmixturefit <- function(results, component_priors) {
   for (component in 1 : results$n_components) {
     results$components[[component]]$prior <- component_priors[[component]]
     results$components[[component]] <- adaptspecfit(
-      results$components[[component]], n_freq_hat
+      results$components[[component]]
     )
   }
 

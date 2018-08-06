@@ -5,7 +5,6 @@ adaptspec_dirichlet_mixture <- function(
   initial_categories = NULL,
   prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
   first_category_fixed = FALSE,
-  n_freq_hat = 50,
   plotting = FALSE, detrend = TRUE,
   thin = list(
     log_beta1m = 1,
@@ -70,7 +69,7 @@ adaptspec_dirichlet_mixture <- function(
   results$var_inflate <- var_inflate
   results$prob_mm1 <- prob_mm1
 
-  results <- adaptspecmixturefit(results, component_priors, n_freq_hat)
+  results <- adaptspecmixturefit(results, component_priors)
   class(results) <- c('adaptspecdppmixturefit', 'adaptspecmixturefit')
 
   if (run_diagnostics) diagnostic_warnings(results)

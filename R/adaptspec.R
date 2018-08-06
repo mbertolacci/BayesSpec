@@ -73,7 +73,6 @@ adaptspec <- function(
   prob_mm1 = 0.8,
   var_inflate = 1,
   burn_in_var_inflate = var_inflate,
-  n_freq_hat = 50,
   n_segments_start = max(1, n_segments_min),
   thin = list(
     n_segments = 1,
@@ -85,10 +84,9 @@ adaptspec <- function(
   ),
   show_progress = FALSE,
   # Extra
-  plotting = FALSE,
   run_diagnostics = TRUE
 ) {
-  results <- adaptspec_sample(
+  adaptspec_sample(
     adaptspec_model(
       n_segments_min = n_segments_min,
       n_segments_max = n_segments_max,
@@ -107,18 +105,11 @@ adaptspec <- function(
     prob_mm1 = prob_mm1,
     var_inflate = var_inflate,
     burn_in_var_inflate = burn_in_var_inflate,
-    n_freq_hat = n_freq_hat,
     n_segments_start = n_segments_start,
     thin = thin,
     show_progress = show_progress,
     run_diagnostics = run_diagnostics
   )
-
-  if (plotting) {
-    plot(results)
-  }
-
-  return(results)
 }
 
 #' @export
@@ -159,7 +150,6 @@ adaptspec_sample <- function(
   prob_mm1 = 0.8,
   var_inflate = 1,
   burn_in_var_inflate = var_inflate,
-  n_freq_hat = 50,
   n_segments_start = model$n_segments_min,
   thin = list(
     n_segments = 1,
@@ -216,7 +206,7 @@ adaptspec_sample <- function(
   results$prob_mm1 <- prob_mm1
   results$var_inflate <- var_inflate
   results$prior <- model
-  results <- adaptspecfit(results, n_freq_hat)
+  results <- adaptspecfit(results)
 
   if (run_diagnostics) diagnostic_warnings(results)
 

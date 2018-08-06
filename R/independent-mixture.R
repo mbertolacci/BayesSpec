@@ -49,7 +49,7 @@ adaptspec_independent_mixture <- function(
   stopifnot(length(weights_prior) == n_components)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, x)
+  start <- .mixture_start(start, component_priors, x, first_category_fixed)
   if (is.null(start$weights)) {
     start$weights <- runif(n_components)
     start$weights[n_components] <- 1 - sum(start$weights[1 : (n_components - 1)])
@@ -58,11 +58,7 @@ adaptspec_independent_mixture <- function(
   .validate_mixture_start(start, n_components, x)
   stopifnot(length(start$weights) == n_components)
 
-  if (first_category_fixed) {
-    # The first time-series fixed to always be in the first cluster
-    start$categories[1] <- 0
-  }
-
+  # Run sampler
   missing_indices <- .missing_indices(x)
   results <- .independent_mixture(
     n_loop, n_warm_up, x,

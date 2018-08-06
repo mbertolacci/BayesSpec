@@ -51,7 +51,7 @@ adaptspec_dirichlet_mixture <- function(
   .validate_mixture_component_priors(component_priors, n_components, x)
 
   ## Starting value set up
-  start <- .mixture_start(start, component_priors, x)
+  start <- .mixture_start(start, component_priors, x, first_category_fixed)
   if (is.null(start$log_beta1m)) {
     start$log_beta1m <- log(runif(n_components))
     start$log_beta1m[n_components] <- -Inf
@@ -63,11 +63,7 @@ adaptspec_dirichlet_mixture <- function(
   .validate_mixture_start(start, n_components, x)
   stopifnot(length(start$log_beta1m) == n_components)
 
-  if (first_category_fixed) {
-    # The first time-series is fixed to always be in the first cluster
-    start$categories[1] <- 0
-  }
-
+  # Run sampler
   missing_indices <- .missing_indices(x)
   results <- .dirichlet_mixture(
     n_loop, n_warm_up, x,

@@ -17,7 +17,7 @@
   NULL
 }
 
-.mixture_start <- function(start, component_priors, data) {
+.mixture_start <- function(start, component_priors, data, first_category_fixed) {
   missing_indices <- .missing_indices(data)
   n_components <- length(component_priors)
   if (is.null(start$categories)) {
@@ -29,6 +29,10 @@
     })
   }
   start <- .x_missing_start(start, missing_indices)
+
+  if (first_category_fixed) {
+    start$categories[1] <- 0
+  }
 
   start
 }

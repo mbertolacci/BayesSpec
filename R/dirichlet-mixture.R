@@ -53,7 +53,11 @@ adaptspec_dirichlet_mixture <- function(
       start$log_beta1m[n_components] <- -Inf
     }
     if (is.null(start$alpha)) {
-      start$alpha <- rgamma(1, shape = alpha_prior_shape, rate = alpha_prior_rate)
+      start$alpha <- rgamma(
+        1,
+        shape = alpha_prior_shape,
+        rate = alpha_prior_rate
+      )
     }
   }
   # Validate starting values

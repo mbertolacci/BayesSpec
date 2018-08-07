@@ -233,7 +233,8 @@ adaptspec_nu <- function(n_freq, n_bases) {
   if (is.null(start$cut_points)) {
     start$cut_points <- rep(nrow(data), model$n_segments_max)
     start$cut_points[1 : start$n_segments] <- model$time_step * floor(
-      ((1 : start$n_segments) * nrow(data)) / (start$n_segments * model$time_step)
+      ((1 : start$n_segments) * nrow(data)) /
+      (start$n_segments * model$time_step)
     )
   }
   if (is.null(start$beta)) {

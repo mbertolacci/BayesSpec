@@ -19,13 +19,19 @@ diagnostic_plots <- function(x, ...) UseMethod('diagnostic_plots', x)
 diagnostic_warnings <- function(x, ...) UseMethod('diagnostic_warnings', x)
 
 #' @export
-time_varying_spectra_samples <- function(x, ...) UseMethod('time_varying_spectra_samples', x)
+time_varying_spectra_samples <- function(x, ...) {
+  UseMethod('time_varying_spectra_samples', x)
+}
 
 #' @export
-time_varying_spectra_mean <- function(x, ...) UseMethod('time_varying_spectra_mean', x)
+time_varying_spectra_mean <- function(x, ...) {
+  UseMethod('time_varying_spectra_mean', x)
+}
 
 #' @export
-component_probabilities <- function(x, ...) UseMethod('component_probabilities', x)
+component_probabilities <- function(x, ...) {
+  UseMethod('component_probabilities', x)
+}
 
 .gcd <- function(a, b) {
   while (b != 0) {
@@ -57,7 +63,10 @@ component_probabilities <- function(x, ...) UseMethod('component_probabilities',
     data0 <- 1 : nrow(data)  # nolint
     detrend_fits <- list()
     for (series in 1 : ncol(data)) {
-      detrend_fits[[series]] <- lm(data[, series] ~ data0, na.action = na.exclude)
+      detrend_fits[[series]] <- lm(
+        data[, series] ~ data0,
+        na.action = na.exclude
+      )
       data[, series] <- residuals(detrend_fits[[series]])
     }
   }

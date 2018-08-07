@@ -12,7 +12,9 @@ adaptspecmixturefit <- function(results, component_priors) {
       if (is.null(x_missing)) return(x_missing)
 
       missing_indices <- results$missing_indices[[i]]
-      x_base <- predict(results$detrend_fits[[i]], data.frame(data0 = missing_indices))
+      x_base <- predict(results$detrend_fits[[i]], data.frame(
+        data0 = missing_indices
+      ))
       x_missing + x_base
     })
   }
@@ -34,7 +36,11 @@ window.adaptspecmixturefit <- function(fit, ...) {
 
 #' @export
 diagnostics.adaptspecmixturefit <- function(fit, ...) {
-  cat(sprintf('Tuning parameters: var_inflate = %f, prob_mm1 = %f\n', fit$var_inflate, fit$prob_mm1))
+  cat(sprintf(
+    'Tuning parameters: var_inflate = %f, prob_mm1 = %f\n',
+    fit$var_inflate,
+    fit$prob_mm1
+  ))
 
   cat('Diagnostics for each component:\n')
   for (component in 1 : fit$n_components) {
@@ -75,7 +81,6 @@ time_varying_spectra_mean.adaptspecmixturefit <- function(
 ) {
   from <- match.arg(from)
   n_iterations <- nrow(fit$categories)
-  n_time_series <- ncol(fit$categories)
   n_times <- ceiling(max(fit$components[[1]]$cut_points) / time_step)
   n_components <- length(fit$components)
 
@@ -93,7 +98,10 @@ time_varying_spectra_mean.adaptspecmixturefit <- function(
     )
   }
   if (from == 'categories') {
-    output <- .time_varying_spectra_mixture_mean_categories(component_samples, fit$categories)
+    output <- .time_varying_spectra_mixture_mean_categories(
+      component_samples,
+      fit$categories
+    )
   } else if (from == 'probabilities') {
     output <- .time_varying_spectra_mixture_mean_probabilities(
       component_samples,

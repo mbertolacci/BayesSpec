@@ -48,7 +48,9 @@ adaptspec_independent_mixture <- function(
     start <- .mixture_start(start, component_priors, data, first_category_fixed)
     if (is.null(start$weights)) {
       start$weights <- runif(n_components)
-      start$weights[n_components] <- 1 - sum(start$weights[1 : (n_components - 1)])
+      start$weights[n_components] <- (
+        1 - sum(start$weights[1 : (n_components - 1)])
+      )
     }
   }
   # Validate starting values

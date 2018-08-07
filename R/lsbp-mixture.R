@@ -55,11 +55,23 @@ adaptspec_lsbp_mixture <- function(
     # TODO(mgnb): support additive splines; for now, we support just one spline
     stopifnot(all(range(spline_group, na.rm = TRUE) == c(1, 1)))
 
-    non_spline_design_matrix <- design_matrix[, is.na(spline_group), drop = FALSE]
-    spline_design_matrix <- design_matrix[, which(spline_group == 1), drop = FALSE]
+    non_spline_design_matrix <- design_matrix[
+      ,
+      is.na(spline_group),
+      drop = FALSE
+    ]
+    spline_design_matrix <- design_matrix[
+      ,
+      which(spline_group == 1),
+      drop = FALSE
+    ]
 
     if (is.null(spline_prior$type)) {
-      spline_prior$type <- ifelse(ncol(spline_design_matrix) == 1, 'smoothing', 'thinplate')
+      spline_prior$type <- ifelse(
+        ncol(spline_design_matrix) == 1,
+        'smoothing',
+        'thinplate'
+      )
     }
     stopifnot(spline_prior$type %in% c('smoothing', 'thinplate'))
 
@@ -75,11 +87,19 @@ adaptspec_lsbp_mixture <- function(
   }
   mixture_prior <- .extend_list(base_mixture_prior, mixture_prior)
   if (is.null(mixture_prior$mean)) {
-    mixture_prior$mean <- matrix(0, nrow = ncol(design_matrix), ncol = n_components - 1)
+    mixture_prior$mean <- matrix(
+      0,
+      nrow = ncol(design_matrix),
+      ncol = n_components - 1
+    )
   }
   if (is.null(mixture_prior$precision)) {
     # For spline fits, these will later be overwritten by estimated of tau
-    mixture_prior$precision <- matrix(1 / 100, nrow = ncol(design_matrix), ncol = n_components - 1)
+    mixture_prior$precision <- matrix(
+      1 / 100,
+      nrow = ncol(design_matrix),
+      ncol = n_components - 1
+    )
   }
   # Validate prior
   .validate_mixture_component_priors(component_priors, n_components, data)
@@ -165,7 +185,11 @@ component_probabilities.adaptspeclsbpmixturefit <- function(results) {
 
   values <- tensor::tensor(results$design_matrix, beta, 2, 2)
   v <- 1 / (1 + exp(-values))
-  p <- array(0, dim = c(nrow(results$design_matrix), n_iterations, n_components))
+  p <- array(0, dim = c(
+    nrow(results$design_matrix),
+    n_iterations,
+    n_components
+  ))
 
   v <- 1 / (1 + exp(-values))
   accum <- 1

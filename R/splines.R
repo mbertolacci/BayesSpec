@@ -32,7 +32,11 @@
     }
   }
   # This is equivalent to decomposition$u %*% diag(sqrt(decomposition$d))
-  design_matrix[, (intercept_offset + 1 + n_polynomials) : (intercept_offset + n_polynomials + n_bases)] <- t(
+  design_matrix[
+    ,
+    (intercept_offset + 1 + n_polynomials) :
+    (intercept_offset + n_polynomials + n_bases)
+  ] <- t(
     t(decomposition$vectors) * sqrt(decomposition$values)
   )
 
@@ -59,14 +63,14 @@ smoothing_spline_basis <- function(
   n_covariates <- length(covariates)
 
   # Construct matrices to facilitate pairwise operations
-  Xs <- matrix(rep(covariates, n_covariates), nrow = n_covariates)
-  tXs <- t(Xs)
+  x <- matrix(rep(covariates, n_covariates), nrow = n_covariates)
+  t_x <- t(x)
 
-  pair_min <- pmin(Xs, tXs)
+  pair_min <- pmin(x, t_x)
   if (order == 1) {
     omega <- pair_min
   } else if (order == 2) {
-    pair_max <- pmax(Xs, tXs)
+    pair_max <- pmax(x, t_x)
     omega <- (pair_min ^ 2) * (pair_max - pair_min / 3) / 2
   }
 
@@ -84,6 +88,7 @@ thinplate_spline_basis <- function(
 ) {
   omega <- assist::tp(covariates, order = order)
   .basis_expansion_design_matrix(
-    covariates, omega, nrow(covariates), ncol(covariates), n_bases, order, omit_intercept
+    covariates, omega, nrow(covariates), ncol(covariates),
+    n_bases, order, omit_intercept
   )
 }

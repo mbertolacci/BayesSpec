@@ -22,8 +22,8 @@ public:
             prior.nSegmentsMax,
             1 + prior.nBases
         }),
-        tauSquared_(nSamples, tauSquaredThin, prior.nSegmentsMax),
-        cutPoints_(nSamples, cutPointsThin, prior.nSegmentsMax) {}
+        tauSquared_(nSamples, tauSquaredThin, prior.nSegmentsMax, true),
+        cutPoints_(nSamples, cutPointsThin, prior.nSegmentsMax, true) {}
 
     AdaptSpecSamples(
       unsigned int nSamples,

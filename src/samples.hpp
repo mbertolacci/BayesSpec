@@ -17,11 +17,13 @@ public:
     Samples(
         size_t nSamples,
         size_t thin,
-        const Dimensions& dimensions
+        const Dimensions& dimensions,
+        bool forceMatrix = false
     )
         : currentIndex_(0),
           thin_(thin),
           dimensions_(dimensions),
+          forceMatrix_(forceMatrix),
           size_(std::accumulate(
             dimensions.cbegin(), dimensions.cend(), 1, std::multiplies<int>()
           )),
@@ -31,11 +33,12 @@ public:
             ))
           ) {}
 
-    Samples(size_t nSamples, size_t thin, size_t length)
+    Samples(size_t nSamples, size_t thin, size_t length, bool forceMatrix = false)
         : Samples(
             nSamples,
             thin,
-            Dimensions({ static_cast<size_t>(length) })
+            Dimensions({ static_cast<size_t>(length) }),
+            forceMatrix
         ) {}
 
     Samples(size_t nSamples, size_t thin)
@@ -78,6 +81,10 @@ public:
         return dimensions_;
     }
 
+    bool forceMatrix() const {
+        return forceMatrix_;
+    }
+
     size_t nStoredSamples() const {
         return samples_.size() == 0 ? 0 : samples_.size() / size_;
     }
@@ -90,6 +97,7 @@ private:
     size_t currentIndex_;
     size_t thin_;
     Dimensions dimensions_;
+    bool forceMatrix_;
     size_t size_;
     SamplesStorage samples_;
 };
@@ -112,7 +120,7 @@ SEXP wrap(const bayesspec::Samples<T>& input) {
         static_cast<int>(input.thin())
     }));
 
-    if (input.dimensions().size() == 1 && input.dimensions()[0] > 1) {
+    if (input.dimensions().size() == 1 && (input.dimensions()[0] > 1 || input.forceMatrix())) {
         Rcpp::Matrix<RTYPE> output(
             input.dimensions()[0],
             input.nStoredSamples()

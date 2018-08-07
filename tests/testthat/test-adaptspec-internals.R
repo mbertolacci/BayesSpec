@@ -8,7 +8,7 @@ prior <- adaptspec_model(
   sigma_squared_alpha = 1,
   tau_prior_a = 1,
   tau_prior_b = 1,
-  tau_upper_limit = 1,
+  tau_upper_limit = 2,
   n_bases = 2
 )
 
@@ -59,7 +59,7 @@ test_that('fit and densities', {
 
   # Likelihood and prior
   expect_equal(result$log_segment_likelihood[1], -23.12877, tolerance = 1e-5)
-  expect_equal(result$log_segment_prior[1], -2.756816, tolerance = 1e-5)
+  expect_equal(result$log_segment_prior[1], -3.449963, tolerance = 1e-5)
 
   # Proposal distribution
   expect_equal(result$log_segment_proposal[1], -6.155771, tolerance = 1e-5)
@@ -111,7 +111,7 @@ test_that('fit and densities', {
 
   # Likelihood and prior
   expect_equal(result$log_segment_likelihood[1], -46.25754, tolerance = 1e-5)
-  expect_equal(result$log_segment_prior[1], -2.756816, tolerance = 1e-5)
+  expect_equal(result$log_segment_prior[1], -3.449963, tolerance = 1e-5)
 
   # Proposal distribution
   expect_equal(result$log_segment_proposal[1], -16.84566, tolerance = 1e-5)
@@ -226,14 +226,14 @@ test_that('metropolis ratio within', {
 
   # Move the cutpoint by a big jump
   sample2 <- base_sample2
-  sample2$cut_points[1] <- 5
+  sample2$cut_points[1] <- 7
   expect_equal(
     .get_metropolis_log_ratio(
       base_sample2,
       sample2,
       x, prior2
     ),
-    0.269179, tolerance = 1e-5
+    0.1347071, tolerance = 1e-5
   )
 
   # Move the cutpoint by a small jump, unconstrained

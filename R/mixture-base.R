@@ -25,11 +25,12 @@
   start,
   component_priors,
   data,
-  first_category_fixed
+  first_category_fixed,
+  initialise_categories = TRUE
 ) {
   missing_indices <- .missing_indices(data)
   n_components <- length(component_priors)
-  if (is.null(start$categories)) {
+  if (initialise_categories && is.null(start$categories)) {
     start$categories <- sample.int(n_components, ncol(data), replace = TRUE) - 1
   }
   if (is.null(start$components)) {
@@ -50,9 +51,12 @@
   start,
   n_components,
   component_priors,
-  data
+  data,
+  check_categories = TRUE
 ) {
-  stopifnot(length(start$categories) == ncol(data))
+  if (check_categories) {
+    stopifnot(length(start$categories) == ncol(data))
+  }
   stopifnot(length(start$components) == n_components)
   for (i in 1 : length(start$components)) {
     .validate_adaptspec_start(

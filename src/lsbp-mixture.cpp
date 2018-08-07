@@ -88,7 +88,7 @@ Rcpp::List logisticStickBreakingMixture(
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],
-        x.cols()
+        designMatrix.rows()
     );
     Samples<double> betaSamples(
         nLoop - nWarmUp,

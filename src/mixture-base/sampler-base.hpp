@@ -29,8 +29,9 @@ public:
         nComponents_(componentPriors.size()),
         firstCategoryFixed_(firstCategoryFixed),
         categories_(categoriesStart),
-        allLogWeights_(x.cols(), nComponents_),
-        counts_(nComponents_) {
+        allLogWeights_(categoriesStart.size(), nComponents_),
+        counts_(nComponents_),
+        dataCounts_(nComponents_) {
         updateCounts_();
 
         componentStates_.reserve(nComponents_);
@@ -107,6 +108,7 @@ protected:
     Eigen::VectorXi categories_;
     Eigen::MatrixXd allLogWeights_;
     Eigen::VectorXi counts_;
+    Eigen::VectorXi dataCounts_;
 
 private:
     template<typename RNG>
@@ -119,9 +121,8 @@ private:
                 .rowwise().sum();
         }
 
-        Eigen::MatrixXd categoryLogWeights = (
-            categoryLogLikelihoods.array() + allLogWeights_.array()
-        ).matrix();
+        Eigen::MatrixXd categoryLogWeights(allLogWeights_);
+        categoryLogWeights.topRows(x_.cols()) += categoryLogLikelihoods;
         categoryLogWeights.colwise() -= categoryLogWeights.rowwise().maxCoeff();
 
         Eigen::MatrixXd categoryWeights = categoryLogWeights.array().exp().matrix();
@@ -151,16 +152,20 @@ private:
         // #pragma omp parallel for
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_[component].sample(
-                categories_.array() == static_cast<int>(component),
-                counts_[component],
+                categories_.head(x_.cols()).array() == static_cast<int>(component),
+                dataCounts_[component],
                 rng
             );
         }
     }
 
     void updateCounts_() {
+        dataCounts_.fill(0);
         counts_.fill(0);
         for (unsigned int series = 0; series < categories_.size(); ++series) {
+            if (series < x_.cols()) {
+                ++dataCounts_[categories_[series]];
+            }
             ++counts_[categories_[series]];
         }
     }

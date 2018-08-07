@@ -103,7 +103,7 @@ adaptspec_lsbp_mixture <- function(
   }
   # Validate prior
   .validate_mixture_component_priors(component_priors, n_components, data)
-  stopifnot(nrow(design_matrix) == ncol(data))
+  stopifnot(nrow(design_matrix) >= ncol(data))
   stopifnot(nrow(mixture_prior$mean) == ncol(design_matrix))
   stopifnot(ncol(mixture_prior$mean) == n_components - 1)
   stopifnot(nrow(mixture_prior$precision) == ncol(design_matrix))
@@ -114,7 +114,20 @@ adaptspec_lsbp_mixture <- function(
     # If provided a chain, continue it
     start <- start$final_values
   } else {
-    start <- .mixture_start(start, component_priors, data, first_category_fixed)
+    start <- .mixture_start(
+      start,
+      component_priors,
+      data,
+      first_category_fixed,
+      initialise_categories = FALSE
+    )
+    if (is.null(start$categories)) {
+      start$categories <- sample.int(
+        n_components,
+        nrow(design_matrix),
+        replace = TRUE
+      ) - 1
+    }
     if (is.null(start$beta)) {
       start$beta <- matrix(
         rnorm(ncol(design_matrix) * (n_components - 1)),
@@ -130,7 +143,14 @@ adaptspec_lsbp_mixture <- function(
     }
   }
   # Validate starting values
-  .validate_mixture_start(start, n_components, component_priors, data)
+  .validate_mixture_start(
+    start,
+    n_components,
+    component_priors,
+    data,
+    check_categories = FALSE
+  )
+  stopifnot(length(start$categories) == nrow(design_matrix))
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)

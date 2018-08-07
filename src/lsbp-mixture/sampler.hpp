@@ -118,7 +118,7 @@ private:
         Eigen::VectorXd currentOmega(cumulativeCount);
 
         unsigned int currentIndex = 0;
-        for (unsigned int series = 0; series < x_.cols(); ++series) {
+        for (unsigned int series = 0; series < designMatrix_.rows(); ++series) {
             if (categories_[series] >= component) {
                 currentDesignMatrix.row(currentIndex) = designMatrix_.row(series);
                 currentKappa[currentIndex] = categories_[series] == component ? 0.5 : -0.5;
@@ -166,7 +166,7 @@ private:
     void updateWeights_() {
         Eigen::MatrixXd values = (designMatrix_ * parameters_).array().matrix();
 
-        for (unsigned int series = 0; series < x_.cols(); ++series) {
+        for (unsigned int series = 0; series < designMatrix_.rows(); ++series) {
             double sumAccumulator = 0;
             for (unsigned int component = 0; component < nComponents_ - 1; ++component) {
                 allLogWeights_(series, component) = (

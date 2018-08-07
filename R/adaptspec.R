@@ -237,6 +237,14 @@ adaptspec_nu <- function(n_freq, n_bases) {
       (start$n_segments * model$time_step)
     )
   }
+  if (is.null(start$tau_squared)) {
+    start$tau_squared <- rep(0, model$n_segments_max)
+    start$tau_squared[model$n_segments_min : start$n_segments] <- runif(
+      length(model$n_segments_min : start$n_segments),
+      0,
+      model$tau_upper_limit
+    )
+  }
   if (is.null(start$beta)) {
     start$beta <- matrix(
       0,
@@ -246,14 +254,10 @@ adaptspec_nu <- function(n_freq, n_bases) {
     for (n_segments in model$n_segments_min : start$n_segments) {
       start$beta[n_segments, ] <- rnorm(1 + model$n_bases)
     }
-  }
-  if (is.null(start$tau_squared)) {
-    start$tau_squared <- rep(0, model$n_segments_max)
-    start$tau_squared[model$n_segments_min : start$n_segments] <- runif(
-      length(model$n_segments_min : start$n_segments),
-      0,
-      model$tau_upper_limit
-    )
+    # Runs the optimisation algorithm to find the conditional mode for beta
+    data[is.na(data)] <- rnorm(sum(is.na(data)))
+    state <- .get_sample_filled(data, model, start)
+    start$beta <- state$beta_mode
   }
 
   start

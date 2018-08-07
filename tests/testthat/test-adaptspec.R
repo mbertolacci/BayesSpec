@@ -10,7 +10,7 @@ test_that('sampler gives sane return samples', {
   expect_equal(class(result$n_segments), 'mcmc')
   expect_equal(length(result$n_segments), 50)
 
-  # This one is not a coda::mcmc object
+  expect_equal(class(result$beta), 'mcmca')
   expect_equal(dim(result$beta), c(50, 4, 4))
 
   expect_equal(class(result$tau_squared), 'mcmc')

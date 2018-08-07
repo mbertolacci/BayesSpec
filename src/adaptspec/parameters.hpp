@@ -50,7 +50,7 @@ public:
 
     bool isValid(const AdaptSpecPrior& prior) {
         // Check that nSegments is valid
-        if (nSegments > prior.nSegmentsMax) {
+        if (nSegments < prior.nSegmentsMin || nSegments > prior.nSegmentsMax) {
             return false;
         }
 

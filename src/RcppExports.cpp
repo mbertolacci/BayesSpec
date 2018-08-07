@@ -27,19 +27,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// getSampleDefault
-Rcpp::List getSampleDefault(Rcpp::NumericMatrix xR, Rcpp::List priorList, unsigned int nStartingSegments);
-RcppExport SEXP _BayesSpec_getSampleDefault(SEXP xRSEXP, SEXP priorListSEXP, SEXP nStartingSegmentsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
-    Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nStartingSegments(nStartingSegmentsSEXP);
-    rcpp_result_gen = Rcpp::wrap(getSampleDefault(xR, priorList, nStartingSegments));
-    return rcpp_result_gen;
-END_RCPP
-}
 // getSampleFilled
 Rcpp::List getSampleFilled(Rcpp::NumericMatrix xR, Rcpp::List priorList, Rcpp::List stateList);
 RcppExport SEXP _BayesSpec_getSampleFilled(SEXP xRSEXP, SEXP priorListSEXP, SEXP stateListSEXP) {
@@ -311,7 +298,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 11},
-    {"_BayesSpec_getSampleDefault", (DL_FUNC) &_BayesSpec_getSampleDefault, 3},
     {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 3},
     {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 4},
     {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 14},

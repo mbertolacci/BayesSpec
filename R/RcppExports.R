@@ -5,10 +5,6 @@
     .Call('_BayesSpec_adaptspec', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorList, probMM1, varInflate, burnInVarInflate, startR, thin, showProgress)
 }
 
-.get_sample_default <- function(xR, priorList, nStartingSegments) {
-    .Call('_BayesSpec_getSampleDefault', PACKAGE = 'BayesSpec', xR, priorList, nStartingSegments)
-}
-
 .get_sample_filled <- function(xR, priorList, stateList) {
     .Call('_BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, stateList)
 }

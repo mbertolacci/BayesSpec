@@ -13,15 +13,21 @@ prior <- adaptspec_model(
 )
 
 test_that('initialise', {
-  result <- .get_sample_default(x, prior, 1)
+  result <- .get_sample_filled(x, prior, .adaptspec_start(
+    list(n_segments = 1), prior, x
+  ))
   expect_equal(result$parameters$cut_points, c(20, 20, 20))
   expect_equal(result$segment_lengths, c(20, 0, 0))
 
-  result <- .get_sample_default(x, prior, 2)
+  result <- .get_sample_filled(x, prior, .adaptspec_start(
+    list(n_segments = 2), prior, x
+  ))
   expect_equal(result$parameters$cut_points, c(10, 20, 20))
   expect_equal(result$segment_lengths, c(10, 10, 0))
 
-  result <- .get_sample_default(x, prior, 3)
+  result <- .get_sample_filled(x, prior, .adaptspec_start(
+    list(n_segments = 3), prior, x
+  ))
   expect_equal(result$parameters$cut_points, c(6, 13, 20))
   expect_equal(result$segment_lengths, c(6, 7, 7))
 })
@@ -129,7 +135,9 @@ test_that('fit and densities', {
 
 test_that('the nu matrix is correct for even and odd numbers of observations', {
   y_even <- as.matrix(rnorm(4))
-  result_even <- .get_sample_default(y_even, prior, 1)
+  result_even <- .get_sample_filled(y_even, prior, .adaptspec_start(
+    list(n_segments = 1), prior, y_even
+  ))
   expect_equal(result_even$nu[[1]], rbind(
     c(1, 4.501582e-01,  2.250791e-01),
     c(1, 3.183099e-01,  1.378212e-17),
@@ -137,7 +145,9 @@ test_that('the nu matrix is correct for even and odd numbers of observations', {
   ), tolerance = 1e-5)
 
   y_odd <- as.matrix(rnorm(5))
-  result_odd <- .get_sample_default(y_odd, prior, 1)
+  result_odd <- .get_sample_filled(y_odd, prior, .adaptspec_start(
+    list(n_segments = 1), prior, y_odd
+  ))
   expect_equal(result_odd$nu[[1]], rbind(
     c(1, 0.4501582,  0.22507908),
     c(1, 0.3641856,  0.06955326),

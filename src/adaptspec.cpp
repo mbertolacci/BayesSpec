@@ -148,27 +148,10 @@ Rcpp::List wrapState(const AdaptSpecState& state) {
 AdaptSpecState getStateFromList(
     Rcpp::List parametersList, Eigen::MatrixXd& x, const AdaptSpecPrior& prior
 ) {
-    AdaptSpecParameters parameters(prior);
-    parameters.nSegments = parametersList["n_segments"];
-    parameters.beta = Rcpp::as< Eigen::MatrixXd >(parametersList["beta"]);
-    parameters.tauSquared = Rcpp::as< Eigen::VectorXd >(parametersList["tau_squared"]);
-    parameters.cutPoints = Rcpp::as< Eigen::VectorXi >(parametersList["cut_points"]);
-
-    return AdaptSpecState(parameters, x, prior, 0.8, 1);
-}
-
-// [[Rcpp::export(name=".get_sample_default")]]
-Rcpp::List getSampleDefault(
-    Rcpp::NumericMatrix xR,
-    Rcpp::List priorList,
-    unsigned int nStartingSegments
-) {
-    AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
-    AdaptSpecParameters parameters(prior, xR.rows(), nStartingSegments);
-    Eigen::MatrixXd x(Rcpp::as< Eigen::MatrixXd >(xR));
-    AdaptSpecState state(parameters, x, prior, 0.8, 1);
-
-    return wrapState(state);
+    return AdaptSpecState(
+        AdaptSpecParameters::fromList(parametersList, prior),
+        x, prior, 0.8, 1
+    );
 }
 
 // [[Rcpp::export(name=".get_sample_filled")]]

@@ -25,29 +25,6 @@ public:
         cutPoints.resize(prior.nSegmentsMax);
     }
 
-    AdaptSpecParameters(
-        const AdaptSpecPrior& prior,
-        unsigned int nObservations,
-        unsigned int nStartingSegments
-    ) : AdaptSpecParameters(prior) {
-        nSegments = nStartingSegments;
-        cutPoints.fill(nObservations);
-        beta.fill(0.1);
-        tauSquared.fill(1);
-        // Split evenly
-        for (unsigned int segment = 0; segment < nSegments; ++segment) {
-            cutPoints[segment] = prior.timeStep * (
-                ((segment + 1) * nObservations) / (nSegments * prior.timeStep)
-            );
-            tauSquared[segment] = prior.tauUpperLimit / 2;
-        }
-    }
-
-    AdaptSpecParameters(
-        const AdaptSpecPrior& prior,
-        unsigned int nObservations
-    ) : AdaptSpecParameters(prior, nObservations, prior.nSegmentsMin) {}
-
     bool isValid(const AdaptSpecPrior& prior) {
         // Check that nSegments is valid
         if (nSegments < prior.nSegmentsMin || nSegments > prior.nSegmentsMax) {

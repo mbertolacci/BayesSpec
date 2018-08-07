@@ -33,11 +33,12 @@
   if (initialise_categories && is.null(start$categories)) {
     start$categories <- sample.int(n_components, ncol(data), replace = TRUE) - 1
   }
-  if (is.null(start$components)) {
-    start$components <- lapply(component_priors, function(component_prior) {
-      .adaptspec_start(NULL, component_prior, data)
-    })
-  }
+  start$components <- lapply(
+    seq_len(length(component_priors)),
+    function(i) {
+      .adaptspec_start(start$components[[i]], component_priors[[i]], data)
+    }
+  )
   start <- .x_missing_start(start, missing_indices)
 
   if (first_category_fixed) {

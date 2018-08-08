@@ -149,7 +149,7 @@ private:
 
     template<typename RNG>
     void sampleComponents_(RNG& rng) {
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_[component].sample(
                 categories_.head(x_.cols()).array() == static_cast<int>(component),

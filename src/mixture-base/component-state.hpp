@@ -18,18 +18,21 @@ public:
 
     AdaptSpecState state;
 
+    Eigen::MatrixXd& x;
+    const std::vector<Eigen::VectorXi>& missingIndices;
+
     AdaptSpecMixtureComponentState(
-        Eigen::MatrixXd& x,
-        const std::vector<Eigen::VectorXi>& missingIndices,
+        Eigen::MatrixXd& x_,
+        const std::vector<Eigen::VectorXi>& missingIndices_,
         const AdaptSpecParameters& start,
         const AdaptSpecPrior& prior,
         double probMM1,
         double varInflate
-    ) : state(start, x, missingIndices, prior, probMM1, varInflate),
-        x_(x),
+    ) : state(start, x_, missingIndices_, prior, probMM1, varInflate),
+        x(x_),
         lastIsComponent_(x.cols()),
         isFirstSample_(true),
-        missingIndices_(missingIndices),
+        missingIndices(missingIndices_),
         nSegmentsMax_(prior.nSegmentsMax) {
         allPeriodograms.resize(prior.nSegmentsMax);
         allLogSegmentLikelihoods.resize(x.cols(), prior.nSegmentsMax);
@@ -57,7 +60,7 @@ public:
         isFirstSample_ = false;
         lastIsComponent_ = isComponent;
 
-        Eigen::MatrixXd thisX(x_.rows(), count);
+        Eigen::MatrixXd thisX(x.rows(), count);
         std::vector<Eigen::VectorXi> thisMissingIndices;
 
         if (hasChanged) {
@@ -81,8 +84,8 @@ public:
         for (unsigned int series = 0; series < isComponent.size(); ++series) {
             if (!isComponent[series]) continue;
 
-            thisX.col(currentIndex) = x_.col(series);
-            thisMissingIndices.emplace_back(missingIndices_[series]);
+            thisX.col(currentIndex) = x.col(series);
+            thisMissingIndices.emplace_back(missingIndices[series]);
             for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
                 state.periodogram[segment].col(currentIndex) = allPeriodograms[segment].col(series);
             }
@@ -105,17 +108,15 @@ public:
         for (unsigned int series = 0; series < isComponent.size(); ++series) {
             if (!isComponent[series]) continue;
             for (unsigned int i = 0; i < thisMissingIndices[currentIndex].size(); ++i) {
-                x_(thisMissingIndices[currentIndex][i], series) = thisX(thisMissingIndices[currentIndex][i], currentIndex);
+                x(thisMissingIndices[currentIndex][i], series) = thisX(thisMissingIndices[currentIndex][i], currentIndex);
             }
             ++currentIndex;
         }
     }
 
 private:
-    Eigen::MatrixXd& x_;
     BoolArray lastIsComponent_;
     bool isFirstSample_;
-    const std::vector<Eigen::VectorXi>& missingIndices_;
     unsigned int nSegmentsMax_;
 
     void updateInternals_(
@@ -150,16 +151,16 @@ private:
                     mustUpdateLikelihoods = false;
                 }
             } else {
-                allPeriodograms[segment].resize(state.periodogram[segment].rows(), x_.cols());
+                allPeriodograms[segment].resize(state.periodogram[segment].rows(), x.cols());
 
                 unsigned int currentIndex = 0;
-                for (unsigned int series = 0; series < x_.cols(); ++series) {
+                for (unsigned int series = 0; series < x.cols(); ++series) {
                     if (isComponent[series]) {
                         allPeriodograms[segment].col(series) = state.periodogram[segment].col(currentIndex);
                         ++currentIndex;
                     } else {
                         allPeriodograms[segment].col(series) = AdaptSpecUtils::calculatePeriodogram(
-                            x_.col(series),
+                            x.col(series),
                             state.parameters.cutPoints[segment],
                             state.segmentLengths[segment]
                         );

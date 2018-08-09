@@ -36,7 +36,8 @@ adaptspec_lsbp_mixture <- function(
     x_missing = 1
   ),
   show_progress = FALSE,
-  run_diagnostics = TRUE
+  run_diagnostics = TRUE,
+  mpi = FALSE
 ) {
   thin <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$thin), thin)
 
@@ -148,6 +149,16 @@ adaptspec_lsbp_mixture <- function(
       ))
     }
   }
+
+  if (mpi) {
+    futile.logger::flog.debug('Syncing start from rank 0 to all')
+    if (Rmpi::mpi.comm.rank(0) == 0) {
+      Rmpi::mpi.bcast.Robj(start, 0, 0)
+    } else {
+      start <- Rmpi::mpi.bcast.Robj(NULL, 0, 0)
+    }
+  }
+
   # Validate starting values
   .validate_mixture_start(
     start,
@@ -177,7 +188,8 @@ adaptspec_lsbp_mixture <- function(
     spline_prior$n_bases,
     start,
     thin,
-    show_progress
+    show_progress,
+    mpi
   )
 
   flog.debug('Post-processing MCMC samples', name = 'BayesSpec.lsbp-mixture')

@@ -36,7 +36,15 @@
   start$components <- lapply(
     seq_len(length(component_priors)),
     function(i) {
-      .adaptspec_start(start$components[[i]], component_priors[[i]], data)
+      .adaptspec_start(
+        start$components[[i]],
+        component_priors[[i]],
+        data[
+          ,
+          start$categories == i - 1,
+          drop = FALSE
+        ]
+      )
     }
   )
   start <- .x_missing_start(start, missing_indices)

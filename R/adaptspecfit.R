@@ -29,11 +29,13 @@ window.adaptspecfit <- function(fit, ...) {
     fit$log_posterior <- window(fit$log_posterior, ...)
   }
   fit$beta <- window(fit$beta, ...)
-
   fit$x_missing <- lapply(fit$x_missing, function(x_missing) {
-    window(x_missing, ...)
+    if (is.null(x_missing)) {
+      x_missing
+    } else {
+      window(x_missing, ...)
+    }
   })
-
   fit
 }
 

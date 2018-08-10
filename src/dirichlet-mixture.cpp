@@ -78,7 +78,8 @@ Rcpp::List dirichletMixture(
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],
-        x.cols()
+        x.cols(),
+        true
     );
     Samples<double> alphaSamples(
         nLoop - nWarmUp,
@@ -87,7 +88,8 @@ Rcpp::List dirichletMixture(
     Samples<double> logBeta1mSamples(
         nLoop - nWarmUp,
         thin["log_beta1m"],
-        nComponents
+        nComponents,
+        true
     );
     Samples<double> logPosteriorSamples(nLoop - nWarmUp, thin["log_posterior"]);
     std::vector< Samples<double> > xMissingSamples;

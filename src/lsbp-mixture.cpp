@@ -88,7 +88,8 @@ Rcpp::List logisticStickBreakingMixture(
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],
-        designMatrix.rows()
+        designMatrix.rows(),
+        true
     );
     Samples<double> betaSamples(
         nLoop - nWarmUp,
@@ -101,7 +102,8 @@ Rcpp::List logisticStickBreakingMixture(
     Samples<double> tauSquaredSamples(
         nLoop - nWarmUp,
         thin["tau_squared_lsbp"],
-        nComponents - 1
+        nComponents - 1,
+        true
     );
     Samples<double> logPosteriorSamples(nLoop - nWarmUp, thin["log_posterior"]);
     std::vector< Samples<double> > xMissingSamples;

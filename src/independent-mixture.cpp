@@ -78,12 +78,14 @@ Rcpp::List independentMixture(
     Samples<unsigned int> categoriesSamples(
         nLoop - nWarmUp,
         thin["categories"],
-        x.cols()
+        x.cols(),
+        true
     );
     Samples<double> weightsSamples(
         nLoop - nWarmUp,
         thin["weights"],
-        nComponents
+        nComponents,
+        true
     );
     Samples<double> logPosteriorSamples(nLoop - nWarmUp, thin["log_posterior"]);
     std::vector< Samples<double> > xMissingSamples;

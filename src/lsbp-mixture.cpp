@@ -120,6 +120,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
         );
     }
 
+    logger.debug("Starting sampler");
     sampler.start();
 
     ProgressBar progressBar(nLoop);

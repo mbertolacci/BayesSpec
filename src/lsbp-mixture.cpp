@@ -1,5 +1,6 @@
 #include <RcppEigen.h>
 
+#include "logging.hpp"
 #include "progress.hpp"
 
 #if defined(omp_get_num_threads)
@@ -31,6 +32,8 @@ Rcpp::List logisticStickBreakingMixture(
     Rcpp::List thin,
     bool showProgress = false
 ) {
+    Logger logger("BayesSpec.lsbp-mixture");
+
     #if defined(omp_get_num_threads)
         Eigen::initParallel();
         RNGOpenMP<std::mt19937_64> rng([]() -> uint_fast64_t {
@@ -65,6 +68,7 @@ Rcpp::List logisticStickBreakingMixture(
         priors
     );
 
+    logger.debug("Constructing sampler object");
     AdaptSpecLogisticStickBreakingPriorMixtureSampler sampler(
         x, missingIndices, designMatrix,
         probMM1, burnInVarInflate, firstCategoryFixed,
@@ -121,6 +125,7 @@ Rcpp::List logisticStickBreakingMixture(
             sampler.setVarInflate(varInflate);
         }
 
+        logger.trace("[Iteration %d] Sampling", iteration);
         sampler.sample(rng);
 
         if (iteration % 100 == 0) {
@@ -129,6 +134,7 @@ Rcpp::List logisticStickBreakingMixture(
         }
 
         if (iteration >= nWarmUp) {
+            logger.trace("[Iteration %d] Saving sample", iteration);
             for (unsigned int component = 0; component < nComponents; ++component) {
                 samples[component].save(sampler.getParameters(component));
             }

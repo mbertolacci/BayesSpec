@@ -40,6 +40,7 @@ adaptspec_lsbp_mixture <- function(
 ) {
   thin <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$thin), thin)
 
+  flog.debug('Preparing data', name = 'BayesSpec.lsbp-mixture')
   prepared_data <- .prepare_data(data, detrend)
   data <- prepared_data$data
   detrend_fits <- prepared_data$detrend_fits
@@ -75,6 +76,10 @@ adaptspec_lsbp_mixture <- function(
     }
     stopifnot(spline_prior$type %in% c('smoothing', 'thinplate'))
 
+    flog.debug(
+      'Adding spline basis vectors to design matrix',
+      name = 'BayesSpec.lsbp-mixture'
+    )
     design_matrix <- cbind(
       1,
       non_spline_design_matrix,
@@ -110,6 +115,7 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(ncol(mixture_prior$precision) == n_components - 1)
 
   ## Starting value set up
+  flog.debug('Finding start values', name = 'BayesSpec.lsbp-mixture')
   if (inherits(start, 'adaptspeclsbpmixturefit')) {
     # If provided a chain, continue it
     start <- start$final_values
@@ -155,6 +161,10 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)
 
+  flog.debug(
+    'Starting MCMC sampler',
+    name = 'BayesSpec.lsbp-mixture'
+  )
   # Run sampler
   results <- .lsbp_mixture(
     n_loop, n_warm_up, data,
@@ -169,6 +179,8 @@ adaptspec_lsbp_mixture <- function(
     thin,
     show_progress
   )
+
+  flog.debug('Post-processing MCMC samples', name = 'BayesSpec.lsbp-mixture')
   results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits

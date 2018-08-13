@@ -86,7 +86,17 @@ thinplate_spline_basis <- function(
   order = 2,
   omit_intercept = FALSE
 ) {
+  flog.debug(
+    'Computing thinplate spline (order %d) covariance matrix',
+    order,
+    name = 'BayesSpec.splines'
+  )
   omega <- assist::tp(covariates, order = order)
+  flog.debug(
+    'Finding %d basis vectors for covariance matrix',
+    n_bases,
+    name = 'BayesSpec.splines'
+  )
   .basis_expansion_design_matrix(
     covariates, omega, nrow(covariates), ncol(covariates),
     n_bases, order, omit_intercept

@@ -30,9 +30,9 @@ public:
         double varInflate
     ) : state(start, x_, missingIndices_, prior, probMM1, varInflate),
         x(x_),
+        missingIndices(missingIndices_),
         lastIsComponent_(x.cols()),
         isFirstSample_(true),
-        missingIndices(missingIndices_),
         nSegmentsMax_(prior.nSegmentsMax) {
         allPeriodograms.resize(prior.nSegmentsMax);
         allLogSegmentLikelihoods.resize(x.cols(), prior.nSegmentsMax);

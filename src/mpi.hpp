@@ -42,7 +42,21 @@ public:
         );
     }
 
-    static void broadcast(Eigen::MatrixXd& x, int senderRank) {
+    static void broadcast(Eigen::MatrixXd& x, int senderRank, bool resize = false) {
+        if (resize) {
+            int myRank = rank();
+            unsigned int rows = 0;
+            unsigned int cols = 0;
+            if (myRank == senderRank) {
+                rows = x.rows();
+                cols = x.cols();
+            }
+            broadcast(rows, senderRank);
+            broadcast(cols, senderRank);
+            if (myRank != senderRank) {
+                x.resize(rows, cols);
+            }
+        }
         MPI_Bcast(
             x.data(),
             x.size(),

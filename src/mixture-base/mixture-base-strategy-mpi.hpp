@@ -74,14 +74,12 @@ private:
         const AdaptSpecMixtureComponentState::BoolArray& isComponent,
         int senderRank
     ) {
+        // NOTE(mgnb): this doesn't sync the full state, just the parts relevant
+        // to other steps in the sampler, so it may need to change if those
+        // steps change
+
         int rank = MPI::rank();
-        // NOTE(mgnb): this isn't the full state, just the parts relevant to
-        // other steps in the sampler, so it may need to change if those steps
-        // change
-        for (unsigned int i = 0; i < componentState.allPeriodograms.size(); ++i) {
-            MPI::broadcast(componentState.allPeriodograms[i], senderRank);
-        }
-        MPI::broadcast(componentState.allLogSegmentLikelihoods, senderRank);
+
         MPI::broadcast(componentState.state.parameters.nSegments, senderRank);
         MPI::broadcast(componentState.state.parameters.beta, senderRank);
         MPI::broadcast(componentState.state.parameters.tauSquared, senderRank);
@@ -89,6 +87,11 @@ private:
         MPI::broadcast(componentState.state.logSegmentLikelihood, senderRank);
         MPI::broadcast(componentState.state.logSegmentPrior, senderRank);
         MPI::broadcast(componentState.state.logPriorCutPoints, senderRank);
+
+        for (unsigned int segment = 0; segment < componentState.state.parameters.nSegments; ++segment) {
+            MPI::broadcast(componentState.allPeriodograms[segment], senderRank, true);
+        }
+        MPI::broadcast(componentState.allLogSegmentLikelihoods, senderRank);
 
         for (unsigned int timeSeries = 0; timeSeries < isComponent.size(); ++timeSeries) {
             if (isComponent[timeSeries]) {

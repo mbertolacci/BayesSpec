@@ -90,3 +90,8 @@ window.adaptspecindependentmixturefit <- function(fit, ...) {
   fit$weights <- window(fit$weights, ...)
   fit
 }
+
+.merge_samples.adaptspecindependentmixturefit <- function(x, fits) {
+  output <- .merge_samples.adaptspecmixturefit(NULL, fits)
+  .merge_mcmc_parts(output, fits, c('weights'))
+}

@@ -201,10 +201,8 @@ adaptspec_lsbp_mixture <- function(
 #' @export
 window.adaptspeclsbpmixturefit <- function(fit, ...) {
   fit <- NextMethod()
-  time_before <- time(fit$tau_squared)
   fit$tau_squared <- window(fit$tau_squared, ...)
-  time_after <- time(fit$tau_squared)
-  fit$beta <- fit$beta[time_before %in% time_after, , ]
+  fit$beta <- window(fit$beta, ...)
   fit
 }
 
@@ -233,4 +231,9 @@ component_probabilities.adaptspeclsbpmixturefit <- function(results) {
 
   # Permute to something sensible
   aperm(p, c(2, 1, 3))
+}
+
+.merge_samples.adaptspeclsbpmixturefit <- function(x, fits) {
+  output <- .merge_samples.adaptspecmixturefit(NULL, fits)
+  .merge_mcmc_parts(output, fits, c('tau_squared', 'beta'))
 }

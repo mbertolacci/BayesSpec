@@ -342,3 +342,15 @@ cut_point_pmf <- function(fit, within_n_segments = FALSE) {
     }))
   }))
 }
+
+.merge_samples.adaptspecfit <- function(x, fits) {
+  output <- .merge_mcmc_parts(fits[[1]], fits, c(
+    'n_segments',
+    'tau_squared',
+    'cut_points',
+    'log_posterior',
+    'beta'
+  ))
+  output$x_missing <- .merge_x_missing(fits)
+  output
+}

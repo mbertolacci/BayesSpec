@@ -33,6 +33,15 @@ component_probabilities <- function(x, ...) {
   UseMethod('component_probabilities', x)
 }
 
+.merge_samples <- function(x, ...) {
+  UseMethod('.merge_samples', x)
+}
+
+#' @export
+merge_samples <- function(values) {
+  .merge_samples(values[[1]], values)
+}
+
 .gcd <- function(a, b) {
   while (b != 0) {
     t <- b
@@ -91,4 +100,52 @@ component_probabilities <- function(x, ...) {
   for (i in seq_len(length(missing_indices))) {
     stopifnot(length(missing_indices[[i]]) == length(start$x_missing[[i]]))
   }
+}
+
+.merge_mcmc <- function(values) {
+  if (is.null(values[[1]])) {
+    return(NULL)
+  }
+  if (is.null(dim(values[[1]]))) {
+    how <- c
+  } else if (length(dim(values[[1]])) < 3) {
+    how <- rbind
+  } else {
+    how <- function(...) abind::abind(..., along = 1)
+  }
+  output <- do.call(how, values)
+  if (is.null(dim(output)) || length(dim(output)) < 3) {
+    class(output) <- 'mcmc'
+  } else {
+    class(output) <- 'mcmca'
+  }
+  first_mcpar <- attr(values[[1]], 'mcpar')
+  end <- (
+    (length(values) - 1) * (first_mcpar[3] - 1) +
+    sum(sapply(values, function(value) attr(value, 'mcpar')[2]))
+  )
+  attr(output, 'mcpar') <- c(
+    first_mcpar[1],
+    end,
+    first_mcpar[3]
+  )
+  output
+}
+
+.merge_mcmc_parts <- function(start, values, parts) {
+  output <- start
+  for (part in parts) {
+    output[[part]] <- .merge_mcmc(lapply(values, getElement, part))
+  }
+  output
+}
+
+.merge_x_missing <- function(fits) {
+  lapply(seq_len(length(fits[[1]]$x_missing)), function(i) {
+    if (is.null(fits[[1]]$x_missing[[i]])) NULL
+    else {
+      values <- lapply(fits, function(fit) fit$x_missing[[i]])
+      .merge_mcmc(values)
+    }
+  })
 }

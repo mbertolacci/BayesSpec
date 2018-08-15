@@ -98,3 +98,8 @@ window.adaptspecdppmixturefit <- function(fit, ...) {
   fit$alpha <- window(fit$log_beta1m, ...)
   fit
 }
+
+.merge_samples.adaptspecdppmixturefit <- function(x, fits) {
+  output <- .merge_samples.adaptspecmixturefit(NULL, fits)
+  .merge_mcmc_parts(output, fits, c('log_beta1m', 'alpha'))
+}

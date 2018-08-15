@@ -123,3 +123,18 @@ time_varying_spectra_mean.adaptspecmixturefit <- function(
   )
   output
 }
+
+.merge_samples.adaptspecmixturefit <- function(x, fits) {
+  output <- .merge_mcmc_parts(fits[[1]], fits, c(
+    'categories',
+    'log_posterior'
+  ))
+  for (i in seq_along(fits[[1]]$components)) {
+    output$components[[i]] <- merge_samples(
+      lapply(fits, function(fit) fit$components[[i]])
+    )
+  }
+  output$x_missing <- .merge_x_missing(fits)
+
+  output
+}

@@ -88,7 +88,7 @@ diagnostic_plots.adaptspecfit <- function(fit, iterations_threshold = 0) {
         value <- rep(NA, n_iterations)
         value[indices] <- fit_lcm$beta[indices, segment, 1]
         data.frame(
-          iteration = 1 : n_iterations,
+          iteration = as.vector(time(fit_lcm$n_segments)),
           n_segments = factor(n_segments),
           segment = factor(segment),
           value = value

@@ -253,9 +253,50 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 }
 
 #' @export
-segment_spectra_mean <- function(fit, n_frequencies = 64) {
+segment_log_spectra_mean <- function(
+  fit,
+  n_frequencies = 64,
+  frequencies = seq(0, 0.5, length.out = n_frequencies)
+) {
+  if (missing(n_frequencies) && !missing(frequencies)) {
+    n_frequencies <- length(frequencies)
+  }
   # Compute fits of the spectra
-  frequencies <- (0 : (n_frequencies - 1)) / (2 * (n_frequencies - 1))
+  nu <- splines_basis1d_demmler_reinsch(frequencies, fit$prior$n_bases)
+
+  fit_lcm <- .thin_to_lcm(fit, c('beta', 'n_segments'))
+
+  log_spectrum <- list()
+  for (n_segments in unique(fit_lcm$n_segments)) {
+    log_spectrum[[n_segments]] <- matrix(
+      0, nrow = n_frequencies, ncol = n_segments
+    )
+    for (segment in 1 : n_segments) {
+      beta <- fit_lcm$beta[
+        fit_lcm$n_segments == n_segments,
+        segment, , drop = FALSE
+      ]
+      dim(beta) <- dim(beta)[c(1, 3)]
+      log_spectrum[[n_segments]][, segment] <- rowMeans(nu %*% t(beta))
+    }
+  }
+
+  list(
+    frequencies = frequencies,
+    log_spectrum = log_spectrum
+  )
+}
+
+#' @export
+segment_spectra_mean <- function(
+  fit,
+  n_frequencies = 64,
+  frequencies = seq(0, 0.5, length.out = n_frequencies)
+) {
+  if (missing(n_frequencies) && !missing(frequencies)) {
+    n_frequencies <- length(frequencies)
+  }
+  # Compute fits of the spectra
   nu <- splines_basis1d_demmler_reinsch(frequencies, fit$prior$n_bases)
 
   fit_lcm <- .thin_to_lcm(fit, c('beta', 'n_segments'))
@@ -271,7 +312,9 @@ segment_spectra_mean <- function(fit, n_frequencies = 64) {
         segment, , drop = FALSE
       ]
       dim(beta) <- dim(beta)[c(1, 3)]
-      spectrum[[n_segments]][, segment] <- rowMeans(nu %*% t(beta))
+      spectrum[[n_segments]][, segment] <- rowMeans(exp(
+        nu %*% t(beta)
+      ))
     }
   }
 

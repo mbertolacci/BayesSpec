@@ -386,6 +386,35 @@ cut_point_pmf <- function(fit, within_n_segments = FALSE) {
   }))
 }
 
+#' @export
+sample_posterior_predictive <- function(fit) {
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'beta'))
+  n_times <- max(fit_lcm$cut_points)
+
+  output <- matrix(NA, nrow = length(fit_lcm$n_segments), ncol = n_times)
+  for (i in seq_along(fit_lcm$n_segments)) {
+    segment_start <- 1
+    for (segment in 1 : fit_lcm$n_segments[i]) {
+      segment_end <- fit_lcm$cut_points[i, segment]
+      segment_length <- segment_end - segment_start + 1
+      max_frequency <- floor(segment_length / 2)
+      frequencies <- (0 : max_frequency) / segment_length
+      nu <- splines_basis1d_demmler_reinsch(frequencies, fit_lcm$prior$n_bases)
+      log_spectrum <- as.vector(nu %*% fit_lcm$beta[i, segment, ])
+
+      output[cbind(i, segment_start : segment_end)] <- .sample_whittle_missing(
+        rep(0, segment_length),
+        0 : (segment_length - 1),
+        exp(log_spectrum)
+      )
+
+      segment_start <- segment_end + 1
+    }
+  }
+  attr(output, 'mcpar') <- attr(fit_lcm$n_segments, 'mcpar')
+  output
+}
+
 .merge_samples.adaptspecfit <- function(x, fits) {
   output <- .merge_mcmc_parts(fits[[1]], fits, c(
     'n_segments',

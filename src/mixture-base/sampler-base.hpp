@@ -9,11 +9,15 @@
 #include "../adaptspec/prior.hpp"
 
 #include "component-state.hpp"
+#include "mixture-base-strategy.hpp"
 
 namespace bayesspec {
 
-template<class Instantiation>
-class MixtureSamplerBase {
+template<
+    class Instantiation,
+    class MixtureBaseStrategyType = MixtureBaseStrategy
+>
+class MixtureSamplerBase : MixtureBaseStrategyType {
 public:
     MixtureSamplerBase(
         Eigen::MatrixXd& x,
@@ -51,10 +55,22 @@ public:
     template<typename RNG>
     void sample(RNG& rng) {
         // Draw new components
-        sampleComponents_(rng);
+        this->sampleComponents_(
+            componentStates_,
+            categories_.head(x_.cols()),
+            dataCounts_,
+            rng
+        );
 
         // Draw new categories
-        sampleCategories_(rng);
+        this->sampleCategories_(
+            categories_,
+            componentStates_,
+            allLogWeights_,
+            firstCategoryFixed_,
+            rng
+        );
+        updateCounts_();
 
         // Draw new weights
         static_cast<Instantiation *>(this)->sampleWeights_(rng);
@@ -111,53 +127,6 @@ protected:
     Eigen::VectorXi dataCounts_;
 
 private:
-    template<typename RNG>
-    void sampleCategories_(RNG& rng) {
-        Eigen::MatrixXd categoryLogLikelihoods(x_.cols(), nComponents_);
-        for (unsigned int component = 0; component < nComponents_; ++component) {
-            categoryLogLikelihoods.col(component) = componentStates_[component]
-                .allLogSegmentLikelihoods
-                .leftCols(componentStates_[component].state.parameters.nSegments)
-                .rowwise().sum();
-        }
-
-        Eigen::MatrixXd categoryLogWeights(allLogWeights_);
-        categoryLogWeights.topRows(x_.cols()) += categoryLogLikelihoods;
-        categoryLogWeights.colwise() -= categoryLogWeights.rowwise().maxCoeff();
-
-        Eigen::MatrixXd categoryWeights = categoryLogWeights.array().exp().matrix();
-
-        unsigned int series = 0;
-        if (firstCategoryFixed_) {
-            // NOTE(mgnb): this starts at 1, as the first time-series is fixed
-            // to category zero
-            series = 1;
-        }
-        for (; series < categories_.size(); ++series) {
-            double u = randUniform(rng) * categoryWeights.row(series).sum();
-            for (unsigned int component = 0; component < nComponents_; ++component) {
-                u -= categoryWeights(series, component);
-                if (u <= 0) {
-                    categories_[series] = component;
-                    break;
-                }
-            }
-        }
-
-        updateCounts_();
-    }
-
-    template<typename RNG>
-    void sampleComponents_(RNG& rng) {
-        #pragma omp parallel for
-        for (unsigned int component = 0; component < nComponents_; ++component) {
-            componentStates_[component].sample(
-                categories_.head(x_.cols()).array() == static_cast<int>(component),
-                dataCounts_[component],
-                rng
-            );
-        }
-    }
 
     void updateCounts_() {
         dataCounts_.fill(0);

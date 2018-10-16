@@ -13,7 +13,8 @@ Imports:
     RSpectra,
     tensor,
     ggplot2,
-    gridExtra
+    gridExtra,
+    futile.logger
 Depends:
     acoda,
     coda

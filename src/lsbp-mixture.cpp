@@ -9,11 +9,12 @@
 
 #include "adaptspec/samples.hpp"
 #include "lsbp-mixture/sampler.hpp"
+#include "lsbp-mixture/sampler-mpi.hpp"
 
 using namespace bayesspec;
 
-// [[Rcpp::export(name=".lsbp_mixture")]]
-Rcpp::List logisticStickBreakingMixture(
+template<typename Sampler>
+Rcpp::List logisticStickBreakingMixtureBase(
     unsigned int nLoop,
     unsigned int nWarmUp,
     Rcpp::NumericMatrix xR,
@@ -69,7 +70,7 @@ Rcpp::List logisticStickBreakingMixture(
     );
 
     logger.debug("Constructing sampler object");
-    AdaptSpecLogisticStickBreakingPriorMixtureSampler sampler(
+    Sampler sampler(
         x, missingIndices, designMatrix,
         probMM1, burnInVarInflate, firstCategoryFixed,
         Rcpp::as<Eigen::MatrixXd>(startR["beta"]),
@@ -118,6 +119,9 @@ Rcpp::List logisticStickBreakingMixture(
             missingIndices[i].size()
         );
     }
+
+    logger.debug("Starting sampler");
+    sampler.start();
 
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
@@ -176,4 +180,70 @@ Rcpp::List logisticStickBreakingMixture(
     output["final_values"] = sampler.getParametersAsList();
 
     return output;
+}
+
+// [[Rcpp::export(name=".lsbp_mixture")]]
+Rcpp::List logisticStickBreakingMixture(
+    unsigned int nLoop,
+    unsigned int nWarmUp,
+    Rcpp::NumericMatrix xR,
+    Rcpp::List missingIndicesR,
+    Rcpp::NumericMatrix designMatrixR,
+    Rcpp::List priorsR,
+    Rcpp::NumericMatrix priorMeanR,
+    Rcpp::NumericMatrix priorPrecisionR,
+    double tauPriorASquared, double tauPriorNu,
+    double probMM1,
+    double varInflate,
+    double burnInVarInflate,
+    bool firstCategoryFixed,
+    unsigned int nSplineBases,
+    Rcpp::List startR,
+    Rcpp::List thin,
+    bool showProgress,
+    bool mpi
+) {
+    if (mpi) {
+        return logisticStickBreakingMixtureBase<AdaptSpecLSBPMixtureSamplerMPI>(
+            nLoop,
+            nWarmUp,
+            xR,
+            missingIndicesR,
+            designMatrixR,
+            priorsR,
+            priorMeanR,
+            priorPrecisionR,
+            tauPriorASquared,
+            tauPriorNu,
+            probMM1,
+            varInflate,
+            burnInVarInflate,
+            firstCategoryFixed,
+            nSplineBases,
+            startR,
+            thin,
+            showProgress
+        );
+    } else {
+        return logisticStickBreakingMixtureBase<AdaptSpecLSBPMixtureSampler>(
+            nLoop,
+            nWarmUp,
+            xR,
+            missingIndicesR,
+            designMatrixR,
+            priorsR,
+            priorMeanR,
+            priorPrecisionR,
+            tauPriorASquared,
+            tauPriorNu,
+            probMM1,
+            varInflate,
+            burnInVarInflate,
+            firstCategoryFixed,
+            nSplineBases,
+            startR,
+            thin,
+            showProgress
+        );
+    }
 }

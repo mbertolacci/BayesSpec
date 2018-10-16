@@ -3,10 +3,8 @@
 
 #include <RcppEigen.h>
 
-#include "../random/inverse-gamma.hpp"
-#include "../random/utils.hpp"
-#include "../random/polyagamma.hpp"
 #include "../mixture-base/sampler-base.hpp"
+#include "sampler-strategy.hpp"
 
 namespace bayesspec {
 
@@ -18,11 +16,30 @@ double log1pexp(double x) {
     return std::log1p(std::exp(x));
 }
 
-class AdaptSpecLogisticStickBreakingPriorMixtureSampler : public MixtureSamplerBase<AdaptSpecLogisticStickBreakingPriorMixtureSampler> {
+template<
+    typename AdaptSpecLSBPMixtureStrategyType,
+    typename MixtureBaseStrategyType
+>
+class AdaptSpecLSBPMixtureSamplerBase
+    : public AdaptSpecLSBPMixtureStrategyType,
+      public MixtureSamplerBase<
+        AdaptSpecLSBPMixtureSamplerBase<
+            AdaptSpecLSBPMixtureStrategyType,
+            MixtureBaseStrategyType
+        >,
+        MixtureBaseStrategyType
+    >
+{
 public:
-    typedef MixtureSamplerBase<AdaptSpecLogisticStickBreakingPriorMixtureSampler> Base;
+    typedef MixtureSamplerBase<
+        AdaptSpecLSBPMixtureSamplerBase<
+            AdaptSpecLSBPMixtureStrategyType,
+            MixtureBaseStrategyType
+        >,
+        MixtureBaseStrategyType
+    > Base;
 
-    AdaptSpecLogisticStickBreakingPriorMixtureSampler(
+    AdaptSpecLSBPMixtureSamplerBase(
         Eigen::MatrixXd& x,
         const std::vector<Eigen::VectorXi>& missingIndices,
         const Eigen::MatrixXd& designMatrix,
@@ -57,20 +74,22 @@ public:
 
     template<typename RNG>
     void sampleWeights_(RNG& rng) {
-        Eigen::MatrixXd values = designMatrix_ * parameters_;
-        Eigen::VectorXi cumulativeCounts(nComponents_);
-        cumulativeCounts[nComponents_ - 1] = counts_[nComponents_ - 1];
-        for (int component = nComponents_ - 2; component >= 0; --component) {
-            cumulativeCounts[component] = counts_[component] + cumulativeCounts[component + 1];
-        }
-
-        #pragma omp parallel for
-        for (unsigned int component = 0; component < nComponents_ - 1; ++component) {
-            sampleComponentParameters_(component, cumulativeCounts[component], values, rng);
-        }
+        this->sampleLSBPWeights_(
+            parameters_,
+            tauSquared_,
+            designMatrix_,
+            priorMean_,
+            priorPrecision_,
+            this->categories_,
+            this->counts_,
+            tauPriorNu_,
+            tauPriorASquared_,
+            nSplineBases_,
+            rng
+        );
 
         if (nSplineBases_ > 0) {
-            sampleTau_(rng);
+            updatePriorPrecision_();
         }
         updateWeights_();
     }
@@ -111,52 +130,9 @@ private:
 
     unsigned int nSplineBases_;
 
-    template<typename RNG>
-    void sampleComponentParameters_(unsigned int component, unsigned int cumulativeCount, const Eigen::MatrixXd& values, RNG& rng) {
-        Eigen::MatrixXd currentDesignMatrix(cumulativeCount, designMatrix_.cols());
-        Eigen::VectorXd currentKappa(cumulativeCount);
-        Eigen::VectorXd currentOmega(cumulativeCount);
-
-        unsigned int currentIndex = 0;
-        for (unsigned int series = 0; series < designMatrix_.rows(); ++series) {
-            if (categories_[series] >= component) {
-                currentDesignMatrix.row(currentIndex) = designMatrix_.row(series);
-                currentKappa[currentIndex] = categories_[series] == component ? 0.5 : -0.5;
-                currentOmega[currentIndex] = PolyagammaDistribution(values(series, component))(rng);
-                ++currentIndex;
-            }
-        }
-
-        Eigen::MatrixXd precision = priorPrecision_.col(component).asDiagonal();
-        precision += currentDesignMatrix.transpose() * currentOmega.asDiagonal() * currentDesignMatrix;
-        Eigen::MatrixXd precisionCholeskyU = precision.llt().matrixU();
-
-        Eigen::VectorXd z = precisionCholeskyU.transpose().triangularView<Eigen::Lower>().solve(
-            currentDesignMatrix.transpose() * currentKappa
-            + priorPrecision_.col(component).asDiagonal() * priorMean_.col(component)
-        );
-        Eigen::VectorXd mean = precisionCholeskyU.triangularView<Eigen::Upper>().solve(z);
-
-        parameters_.col(component) = mean + precisionCholeskyU.triangularView<Eigen::Upper>().solve(
-            randNormal(mean.size(), rng)
-        );
-    }
-
-    template<typename RNG>
-    void sampleTau_(RNG& rng) {
+    void updatePriorPrecision_() {
         unsigned int splineStartIndex = parameters_.rows() - nSplineBases_;
-        for (unsigned int component = 0; component < nComponents_ - 1; ++component) {
-            double a = InverseGammaDistribution(
-                (tauPriorNu_ + 1.0) / 2.0,
-                tauPriorNu_ / tauSquared_[component] + 1 / tauPriorASquared_
-            )(rng);
-            double residuals = parameters_.col(component).segment(splineStartIndex, nSplineBases_).array().square().sum();
-
-            tauSquared_[component] = InverseGammaDistribution(
-                (static_cast<double>(nSplineBases_) + tauPriorNu_) / 2.0,
-                residuals / 2.0 + tauPriorNu_ / a
-            )(rng);
-
+        for (unsigned int component = 0; component < this->nComponents_ - 1; ++component) {
             for (unsigned int k = 0; k < nSplineBases_; ++k) {
                 priorPrecision_(splineStartIndex + k, component) = 1.0 / tauSquared_[component];
             }
@@ -168,16 +144,21 @@ private:
 
         for (unsigned int series = 0; series < designMatrix_.rows(); ++series) {
             double sumAccumulator = 0;
-            for (unsigned int component = 0; component < nComponents_ - 1; ++component) {
-                allLogWeights_(series, component) = (
+            for (unsigned int component = 0; component < this->nComponents_ - 1; ++component) {
+                this->allLogWeights_(series, component) = (
                     -log1pexp(-values(series, component)) + sumAccumulator
                 );
                 sumAccumulator = sumAccumulator - log1pexp(values(series, component));
             }
-            allLogWeights_(series, nComponents_ - 1) = sumAccumulator;
+            this->allLogWeights_(series, this->nComponents_ - 1) = sumAccumulator;
         }
     }
 };
+
+typedef AdaptSpecLSBPMixtureSamplerBase<
+    AdaptSpecLSBPMixtureStrategy,
+    MixtureBaseStrategy
+> AdaptSpecLSBPMixtureSampler;
 
 }  // namespace bayespec
 

@@ -16,10 +16,19 @@ namespace bayesspec {
 class AdaptSpecUtils {
 public:
     static
-    Eigen::MatrixXd calculateNu(unsigned int n, unsigned int nBases) {
+    Eigen::MatrixXd calculateNu(unsigned int n, unsigned int nBases, bool cubeRoot = false) {
         unsigned int maxFrequency = n / 2;
+        Eigen::VectorXd frequencies = (
+            Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency)
+            / static_cast<double>(n)
+        );
+        if (cubeRoot) {
+            for (int i = 0; i < frequencies.size(); ++i) {
+                frequencies[i] = std::cbrt(frequencies[i]);
+            }
+        }
         return splineBasis1dDemmlerReinsch(
-            Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency) / static_cast<double>(n),
+            frequencies,
             nBases
         );
     }

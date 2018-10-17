@@ -177,6 +177,7 @@ adaptspec <- function(
   tau_upper_limit = 10000,
   n_bases = 7,
   time_step = 1,
+  cube_root = FALSE,
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
@@ -222,7 +223,8 @@ adaptspec <- function(
       tau_prior_b = tau_prior_b,
       tau_upper_limit = tau_upper_limit,
       n_bases = n_bases,
-      time_step = time_step
+      time_step = time_step,
+      cube_root = cube_root
     ),
     n_loop = n_loop,
     n_warm_up = n_warm_up,
@@ -246,7 +248,8 @@ adaptspec_model <- function(
   tau_prior_b = 0,
   tau_upper_limit = 10000,
   n_bases = 7,
-  time_step = 1
+  time_step = 1,
+  cube_root = FALSE
 ) {
   stopifnot(t_min %% time_step == 0)
   model <- list(
@@ -258,7 +261,8 @@ adaptspec_model <- function(
     tau_prior_b = tau_prior_b,
     tau_upper_limit = tau_upper_limit,
     n_bases = n_bases,
-    time_step = time_step
+    time_step = time_step,
+    cube_root = cube_root
   )
   class(model) <- 'adaptspecmodel'
   return(model)

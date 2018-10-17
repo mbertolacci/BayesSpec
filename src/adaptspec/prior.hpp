@@ -15,6 +15,7 @@ struct AdaptSpecPrior {
     double tauUpperLimit;
     unsigned int nBases;
     unsigned int timeStep;
+    bool cubeRoot;
 
     AdaptSpecPrior(
         unsigned int nSegmentsMin_,
@@ -25,7 +26,8 @@ struct AdaptSpecPrior {
         double tauPriorB_,
         double tauUpperLimit_,
         unsigned int nBases_,
-        unsigned int timeStep_
+        unsigned int timeStep_,
+        bool cubeRoot_
     ) : nSegmentsMin(nSegmentsMin_),
         nSegmentsMax(nSegmentsMax_),
         tMin(tMin_),
@@ -34,7 +36,8 @@ struct AdaptSpecPrior {
         tauPriorB(tauPriorB_),
         tauUpperLimit(tauUpperLimit_),
         nBases(nBases_),
-        timeStep(timeStep_) {}
+        timeStep(timeStep_),
+        cubeRoot(cubeRoot_) {}
 
     static AdaptSpecPrior fromList(const Rcpp::List& priorList) {
         return AdaptSpecPrior(
@@ -46,7 +49,8 @@ struct AdaptSpecPrior {
             priorList["tau_prior_b"],
             priorList["tau_upper_limit"],
             priorList["n_bases"],
-            priorList["time_step"]
+            priorList["time_step"],
+            priorList["cube_root"]
         );
     }
 

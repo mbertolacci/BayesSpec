@@ -16,7 +16,8 @@ NumericVector timeVaryingSpectraSamples(
     IntegerMatrix cutPoints,
     NumericVector beta,
     unsigned int nFrequencies,
-    unsigned int timeStep
+    unsigned int timeStep,
+    bool cubeRoot
 ) {
     const NumericVector& betaDims = beta.attr("dim");
 
@@ -32,7 +33,15 @@ NumericVector timeVaryingSpectraSamples(
     VectorXd frequencies = VectorXd::LinSpaced(
         nFrequencies, 0, nFrequencies - 1
     ) / static_cast<double>(2 * (nFrequencies - 1));
-    Eigen::MatrixXd nuHat = splineBasis1dDemmlerReinsch(frequencies, nBases);
+    VectorXd transformedFrequencies(nFrequencies);
+    if (cubeRoot) {
+        for (int i = 0; i < frequencies.size(); ++i) {
+            transformedFrequencies[i] = std::cbrt(frequencies[i]);
+        }
+    } else {
+        transformedFrequencies = frequencies;
+    }
+    Eigen::MatrixXd nuHat = splineBasis1dDemmlerReinsch(transformedFrequencies, nBases);
     VectorXd segmentBeta(nBeta);
 
     NumericVector output(Rcpp::Dimension({ nIterations, nFrequencies, nTimes }));

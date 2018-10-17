@@ -20,6 +20,26 @@ adaptspecfit <- function(results) {
   return(results)
 }
 
+#' @name adaptspecfit
+#' @title Methods for adaptspecfit objects
+#' @description These methods apply to the adaptspecfit objects returned by
+#' \code{\link{adaptspec}}.
+#' @param fit \code{adaptspecfit} object
+#' @param iterations_threshold Number of iterations below which to suppress
+#' output. For example, if this is 100, and the MCMC chain spent less than
+#' 100 iterations in, say, n_segments = 4, summary output will not include
+#' n_segments = 4
+#' @param effective_size_threshold Minimum effective sample size (see
+#' \code{\link[coda]{effectiveSize}}) below which a warning is output.
+#' @param iterations_proportion_threshold Proportion of iterations below which
+#' to suppress output. Just like \code{iterations_threshold}, but a proportion.
+#' @param prefix Used internally.
+#' @param ask Prompt user before each page of plots
+#' @param auto_layout Automatically generate output format
+NULL
+
+#' @describeIn adaptspecfit Method to modify the start/thinning of MCMC samples,
+#' as per \code{\link[coda]{window.mcmc}}
 #' @export
 window.adaptspecfit <- function(fit, ...) {
   fit$n_segments <- window(fit$n_segments, ...)
@@ -49,6 +69,7 @@ window.adaptspecfit <- function(fit, ...) {
   fit
 }
 
+#' @describeIn adaptspecfit Summarises MCMC samples.
 #' @export
 summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
   cat('Posterior distribution of number of segments =')
@@ -74,8 +95,9 @@ summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
   }
 }
 
+#' @describeIn adaptspecfit MCMC diagnostic plots to assess convergence.
 #' @export
-diagnostic_plots.adaptspecfit <- function(fit, iterations_threshold = 0) {
+diagnostic_plots.adaptspecfit <- function(fit) {
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'beta'))
   n_iterations <- length(fit_lcm$n_segments)
 
@@ -106,6 +128,8 @@ diagnostic_plots.adaptspecfit <- function(fit, iterations_threshold = 0) {
     )
 }
 
+#' @describeIn adaptspecfit Outputs MCMC diagnostics statistics to help assess
+#' convergence.
 #' @export
 diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
   cat(sprintf(
@@ -137,6 +161,10 @@ diagnostics.adaptspecfit <- function(fit, iterations_threshold = 0) {
   }
 }
 
+#' @describeIn adaptspecfit Outputs warnings when MCMC diagnostics are below
+#' outside of nominal threshold ranges. The user is cautioned that this is
+#' subject to both false positive and false negatives; examining diagnostics
+#' plots directly is advised.
 #' @export
 diagnostic_warnings.adaptspecfit <- function(
   fit,
@@ -188,18 +216,7 @@ diagnostic_warnings.adaptspecfit <- function(
   invisible(NULL)
 }
 
-#' @name plot.adaptspecfit
-#'
-#' @title Summary plots of adaptspecfit objects
-#'
-#' @description Plots an adaptspecfit object
-#'
-#' @param fit The fit object, as returned by adaptspec
-#' @param ask Prompt user before each page of plots
-#' @param auto_layout Automatically generate output format
-#'
-#' @usage plot.mcmc(fit, ask = dev.interactive(), auto_layout = TRUE)
-#'
+#' @describeIn adaptspecfit Summary plots
 #' @export
 plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
   if (missing(ask)) {
@@ -252,6 +269,19 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
   }
 }
 
+#' Estimates of segment spectral densities from adaptspecfit objects
+#'
+#' These methods calculates estimates of the segment spectral densities
+#' modelled by \code{\link{adaptspec}}, as evaluated at specified frequencies.
+#' \code{segment_log_spectra_mean} calculates the posterior mean of the log
+#' spectral density, while \code{segment_spectra_mean} does the same for the
+#' spectral density.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param n_frequencies Number of frequencies at which to evaluate the spectral
+#' densities
+#' @param frequencies Frequencies at which to evaluate the spectral density.
+#' Should be between 0 and 0.5.
 #' @export
 segment_log_spectra_mean <- function(
   fit,
@@ -287,6 +317,8 @@ segment_log_spectra_mean <- function(
   )
 }
 
+#' @describeIn segment_log_spectra_mean Posterior mean of spectral density in
+#' each segment.
 #' @export
 segment_spectra_mean <- function(
   fit,
@@ -324,6 +356,27 @@ segment_spectra_mean <- function(
   )
 }
 
+#' Samples of the time varying spectral density from an adaptspecfit object
+#'
+#' This method calculates samples from the time varying spectral density
+#' modelled by \code{\link{adaptspec}}. This function can take a lot of time
+#' and memory so considering thinning the input \code{fit} using
+#' \code{\link{window.adaptspecfit}} prior to calling, or using the
+#' \code{time_step} argument.
+#'
+#' A matrix with frequency on the rows and times on the
+#' columns. Attributes 'frequencies' and 'times' contain the corresponding
+#' frequencies and times.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param n_frequencies Number of frequencies at which to evaluate the spectral
+#' densities
+#' @param time_step Time varying spectral density is calculated only at times
+#' divisible by this number. Reduces the size of the output.
+#' @return Three dimensional array. First dimension is sample, second
+#' dimension is frequency, and third dimension is time. Attributes 'frequencies'
+#' and 'times' contain the corresponding frequencies/times (use \code{str()}
+#' to inspect this object to see).
 #' @export
 time_varying_spectra_samples.adaptspecfit <- function(
   fit,
@@ -341,6 +394,44 @@ time_varying_spectra_samples.adaptspecfit <- function(
   output
 }
 
+#' Posterior mean estimate of the time varying spectral density from
+#' an adaptspecfit object
+#'
+#' This method calculates the posterior mean of the time varying spectral
+#' density modelled by \code{\link{adaptspec}}. This function can take a lot of
+#' time and memory so considering thinning the input \code{fit} using
+#' \code{\link{window.adaptspecfit}} prior to calling, or using the
+#' \code{time_step} argument.
+#'
+#' A matrix with frequency on the rows and times on the
+#' columns. Attributes 'frequencies' and 'times' contain the corresponding
+#' frequencies and times.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param n_frequencies Number of frequencies at which to evaluate the spectral
+#' densities
+#' @param time_step Time varying spectral density is calculated only at times
+#' divisible by this number. Reduces the size of the output.
+#' @return Numeric matrix. Rows hold frequencies, columns hold times. Attributes
+#' 'frequencies' and 'times' contain the corresponding frequencies/times
+#' (use \code{str()} to inspect this object to see).
+#' @examples
+#' data(simulated_piecewise)
+#' fit <- adaptspec(
+#'   5000,
+#'   1000,
+#'   simulated_piecewise,
+#'   n_bases = 15
+#' )
+#' tvsm <- time_varying_spectra_mean(window(fit, thin = 10), 128, 5)
+#' image(
+#'   t(tvsm),
+#'   x = attr(tvsm, 'times'),
+#'   y = attr(tvsm, 'frequencies'),
+#'   xlab = 'Time',
+#'   ylab = 'Frequency',
+#'   col = viridisLite::viridis(50)
+#' )
 #' @export
 time_varying_spectra_mean.adaptspecfit <- function(
   fit,
@@ -356,6 +447,21 @@ time_varying_spectra_mean.adaptspecfit <- function(
   output
 }
 
+#' Calculates the estimated posterior PMF of the cut points
+#'
+#' Returns a data frame with four columns:
+#' \itemize{
+#'   \item n_segments Number of segments
+#'   \item segment Segment index
+#'   \item cut_point Value of the cutpoint (i.e., time of end of segment)
+#'   \item probability Estimated probability that the cut point for this
+#'   segment is this value when the number of segments is n_segments
+#' }
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param within_n_segments Whether to normalise the probabilities so they
+#' sum to one within each value of n_segments. If FALSE, summing down the
+#' probability column will be equal to one overall.
 #' @export
 cut_point_pmf <- function(fit, within_n_segments = FALSE) {
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points'))

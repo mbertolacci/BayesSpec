@@ -282,6 +282,9 @@ plot.adaptspecfit <- function(fit, ask, auto_layout = TRUE) {
 #' densities
 #' @param frequencies Frequencies at which to evaluate the spectral density.
 #' Should be between 0 and 0.5.
+#' @return For \code{segment_log_spectra_mean}, a list with entries
+#' \code{frequencies} and \code{log_spectrum}. For \code{segment_spectra_mean},
+#' the entries are \code{frequencies} and \code{spectrum}.
 #' @export
 segment_log_spectra_mean <- function(
   fit,
@@ -360,7 +363,7 @@ segment_spectra_mean <- function(
 #'
 #' This method calculates samples from the time varying spectral density
 #' modelled by \code{\link{adaptspec}}. This function can take a lot of time
-#' and memory so considering thinning the input \code{fit} using
+#' and memory, so consider thinning the input \code{fit} using
 #' \code{\link{window.adaptspecfit}} prior to calling, or using the
 #' \code{time_step} argument.
 #'
@@ -399,7 +402,7 @@ time_varying_spectra_samples.adaptspecfit <- function(
 #'
 #' This method calculates the posterior mean of the time varying spectral
 #' density modelled by \code{\link{adaptspec}}. This function can take a lot of
-#' time and memory so considering thinning the input \code{fit} using
+#' time and memory, so consider thinning the input \code{fit} using
 #' \code{\link{window.adaptspecfit}} prior to calling, or using the
 #' \code{time_step} argument.
 #'
@@ -430,8 +433,10 @@ time_varying_spectra_samples.adaptspecfit <- function(
 #'   y = attr(tvsm, 'frequencies'),
 #'   xlab = 'Time',
 #'   ylab = 'Frequency',
-#'   col = viridisLite::viridis(50)
+#'   col = terrain.colors(50)
 #' )
+#' @seealso \code{time_varying_spectra_samples} for samples of the time-varying
+#' spectrum
 #' @export
 time_varying_spectra_mean.adaptspecfit <- function(
   fit,

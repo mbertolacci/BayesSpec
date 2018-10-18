@@ -25,7 +25,7 @@ to inspect this object to see).
 \description{
 This method calculates samples from the time varying spectral density
 modelled by \code{\link{adaptspec}}. This function can take a lot of time
-and memory so considering thinning the input \code{fit} using
+and memory, so consider thinning the input \code{fit} using
 \code{\link{window.adaptspecfit}} prior to calling, or using the
 \code{time_step} argument.
 }

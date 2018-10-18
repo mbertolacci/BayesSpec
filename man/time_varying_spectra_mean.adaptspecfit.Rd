@@ -25,7 +25,7 @@ Numeric matrix. Rows hold frequencies, columns hold times. Attributes
 \description{
 This method calculates the posterior mean of the time varying spectral
 density modelled by \code{\link{adaptspec}}. This function can take a lot of
-time and memory so considering thinning the input \code{fit} using
+time and memory, so consider thinning the input \code{fit} using
 \code{\link{window.adaptspecfit}} prior to calling, or using the
 \code{time_step} argument.
 }
@@ -49,6 +49,10 @@ image(
   y = attr(tvsm, 'frequencies'),
   xlab = 'Time',
   ylab = 'Frequency',
-  col = viridisLite::viridis(50)
+  col = terrain.colors(50)
 )
+}
+\seealso{
+\code{time_varying_spectra_samples} for samples of the time-varying
+spectrum
 }

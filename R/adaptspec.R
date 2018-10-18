@@ -110,8 +110,10 @@
 #' )
 #' summary(model1)
 #' @seealso \code{\link{segment_log_spectra_mean}} for methods calculating
-#' estimates of the spectral densities modelled. \code{\link{adaptspecfit}} for
-#' useful methods applying to objects returned by this function.
+#' estimates of the spectral densities in each segments.
+#' \code{\link{time_varying_spectra_mean}} for estimates of the time-varying
+#' spectral density. \code{\link{adaptspecfit}} for other useful methods
+#' applying to objects returned by this function.
 #' @export
 adaptspec <- function(
   # Sampler

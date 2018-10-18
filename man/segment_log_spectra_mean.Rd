@@ -20,6 +20,11 @@ densities}
 \item{frequencies}{Frequencies at which to evaluate the spectral density.
 Should be between 0 and 0.5.}
 }
+\value{
+For \code{segment_log_spectra_mean}, a list with entries
+\code{frequencies} and \code{log_spectrum}. For \code{segment_spectra_mean},
+the entries are \code{frequencies} and \code{spectrum}.
+}
 \description{
 These methods calculates estimates of the segment spectral densities
 modelled by \code{\link{adaptspec}}, as evaluated at specified frequencies.

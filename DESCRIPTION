@@ -1,7 +1,7 @@
 Package: BayesSpec
 Type: Package
 Title: Bayesian Spectral Analysis Techniques
-Version: 0.5.2
+Version: 0.6.0
 Author: Rosen, O., Wood, S. and Stoffer, D.
 Maintainer: Centre for Translational Data Science (CTDS)
     <andrew.ferris@sydney.edu.au>

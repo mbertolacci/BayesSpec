@@ -31,3 +31,14 @@ test_that('sampler can be initialised with n_segments_min > 1', {
   )
   expect_equal(class(result$n_segments), 'mcmc')
 })
+
+test_that('frequency_transform accepts cbrt', {
+  x <- as.matrix(sin(seq(0, 2 * pi, length.out = 20)))
+
+  result <- adaptspec(
+    50, 0, x, n_segments_max = 4, n_bases = 3, t_min = 4,
+    frequency_transform = 'cbrt',
+    run_diagnostics = FALSE
+  )
+  expect_equal(class(result$n_segments), 'mcmc')
+})

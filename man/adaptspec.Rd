@@ -21,6 +21,7 @@ adaptspec(
   tau_upper_limit = 10000,
   n_bases = 7,
   time_step = 1,
+  frequency_transform = c('identity', 'cbrt'),
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
@@ -92,6 +93,9 @@ smoothing spline smoothing parameter}
 \item{n_bases}{Number of spline basis vectors to use for log spectrum}
 
 \item{time_step}{Restricts cut points to times divisible by this number}
+
+\item{frequency_transform}{How to transform frequencies prior to fitting
+smoothing spline. Defaults to no transformation.}
 
 \item{tuning}{Tuning parameters for the MCMC scheme}
 

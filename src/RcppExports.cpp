@@ -198,8 +198,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // timeVaryingSpectraSamples
-NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep, bool cubeRoot);
-RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP, SEXP cubeRootSEXP) {
+NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep, std::string frequencyTransform);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP, SEXP frequencyTransformSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -208,8 +208,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nFrequencies(nFrequenciesSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type timeStep(timeStepSEXP);
-    Rcpp::traits::input_parameter< bool >::type cubeRoot(cubeRootSEXP);
-    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies, timeStep, cubeRoot));
+    Rcpp::traits::input_parameter< std::string >::type frequencyTransform(frequencyTransformSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform));
     return rcpp_result_gen;
 END_RCPP
 }

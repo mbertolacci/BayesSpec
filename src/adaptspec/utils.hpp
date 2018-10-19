@@ -9,6 +9,7 @@
     #include <unsupported/Eigen/FFT>
 #endif
 
+#include "prior.hpp"
 #include "../splines.hpp"
 
 namespace bayesspec {
@@ -16,13 +17,17 @@ namespace bayesspec {
 class AdaptSpecUtils {
 public:
     static
-    Eigen::MatrixXd calculateNu(unsigned int n, unsigned int nBases, bool cubeRoot = false) {
+    Eigen::MatrixXd calculateNu(
+        unsigned int n,
+        unsigned int nBases,
+        AdaptSpecPrior::FrequencyTransform frequencyTransform
+    ) {
         unsigned int maxFrequency = n / 2;
         Eigen::VectorXd frequencies = (
             Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency)
             / static_cast<double>(n)
         );
-        if (cubeRoot) {
+        if (frequencyTransform == AdaptSpecPrior::CUBE_ROOT) {
             for (int i = 0; i < frequencies.size(); ++i) {
                 frequencies[i] = std::cbrt(frequencies[i]);
             }

@@ -17,7 +17,7 @@ NumericVector timeVaryingSpectraSamples(
     NumericVector beta,
     unsigned int nFrequencies,
     unsigned int timeStep,
-    bool cubeRoot
+    std::string frequencyTransform
 ) {
     const NumericVector& betaDims = beta.attr("dim");
 
@@ -34,7 +34,7 @@ NumericVector timeVaryingSpectraSamples(
         nFrequencies, 0, nFrequencies - 1
     ) / static_cast<double>(2 * (nFrequencies - 1));
     VectorXd transformedFrequencies(nFrequencies);
-    if (cubeRoot) {
+    if (frequencyTransform == "cbrt") {
         for (int i = 0; i < frequencies.size(); ++i) {
             transformedFrequencies[i] = std::cbrt(frequencies[i]);
         }

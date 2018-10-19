@@ -183,7 +183,11 @@ public:
 
     void updateSegment(unsigned int segment) {
         unsigned int segmentLength = segmentLengths[segment];
-        nu[segment] = AdaptSpecUtils::calculateNu(segmentLength, prior_->nBases, prior_->cubeRoot);
+        nu[segment] = AdaptSpecUtils::calculateNu(
+            segmentLength,
+            prior_->nBases,
+            prior_->frequencyTransform
+        );
         periodogram[segment] = AdaptSpecUtils::calculatePeriodogram(
             *x,
             parameters.cutPoints[segment],

@@ -295,12 +295,15 @@ segment_log_spectra_mean <- function(
     n_frequencies <- length(frequencies)
   }
   # Compute fits of the spectra
-  if (fit$prior$cube_root) {
+  if (fit$prior$frequency_transform == 'cbrt') {
     transformed_frequencies <- frequencies ^ (1 / 3)
   } else {
     transformed_frequencies <- frequencies
   }
-  nu <- splines_basis1d_demmler_reinsch(transformed_frequencies, fit$prior$n_bases)
+  nu <- splines_basis1d_demmler_reinsch(
+    transformed_frequencies,
+    fit$prior$n_bases
+  )
 
   fit_lcm <- .thin_to_lcm(fit, c('beta', 'n_segments'))
 
@@ -337,12 +340,15 @@ segment_spectra_mean <- function(
     n_frequencies <- length(frequencies)
   }
   # Compute fits of the spectra
-  if (fit$prior$cube_root) {
+  if (fit$prior$frequency_transform == 'cbrt') {
     transformed_frequencies <- frequencies ^ (1 / 3)
   } else {
     transformed_frequencies <- frequencies
   }
-  nu <- splines_basis1d_demmler_reinsch(transformed_frequencies, fit$prior$n_bases)
+  nu <- splines_basis1d_demmler_reinsch(
+    transformed_frequencies,
+    fit$prior$n_bases
+  )
 
   fit_lcm <- .thin_to_lcm(fit, c('beta', 'n_segments'))
 
@@ -399,7 +405,7 @@ time_varying_spectra_samples.adaptspecfit <- function(
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'beta'))
   output <- .time_varying_spectra_samples(
     fit_lcm$n_segments, fit_lcm$cut_points, fit_lcm$beta,
-    n_frequencies, time_step, fit$prior$cube_root
+    n_frequencies, time_step, fit$prior$frequency_transform
   )
   attr(output, 'times') <- (
     1 + (0 : (dim(output)[3] - 1)) * time_step

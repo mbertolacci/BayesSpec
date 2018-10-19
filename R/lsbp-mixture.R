@@ -245,7 +245,7 @@ component_probabilities.adaptspeclsbpmixturefit <- function(results) {
   aperm(p, c(2, 1, 3))
 }
 
-.merge_samples.adaptspeclsbpmixturefit <- function(x, fits) {
-  output <- .merge_samples.adaptspecmixturefit(NULL, fits)
+.merge_samples.adaptspeclsbpmixturefit <- function(x, fits) {  # nolint
+  output <- .merge_samples.adaptspecmixturefit(NULL, fits)  # nolint
   .merge_mcmc_parts(output, fits, c('tau_squared', 'beta'))
 }

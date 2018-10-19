@@ -124,7 +124,7 @@ time_varying_spectra_mean.adaptspecmixturefit <- function(
   output
 }
 
-.merge_samples.adaptspecmixturefit <- function(x, fits) {
+.merge_samples.adaptspecmixturefit <- function(x, fits) {  # nolint
   output <- .merge_mcmc_parts(fits[[1]], fits, c(
     'categories',
     'log_posterior'

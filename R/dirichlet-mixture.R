@@ -99,7 +99,7 @@ window.adaptspecdppmixturefit <- function(fit, ...) {
   fit
 }
 
-.merge_samples.adaptspecdppmixturefit <- function(x, fits) {
-  output <- .merge_samples.adaptspecmixturefit(NULL, fits)
+.merge_samples.adaptspecdppmixturefit <- function(x, fits) {  # nolint
+  output <- .merge_samples.adaptspecmixturefit(NULL, fits)  # nolint
   .merge_mcmc_parts(output, fits, c('log_beta1m', 'alpha'))
 }

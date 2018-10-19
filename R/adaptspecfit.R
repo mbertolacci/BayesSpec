@@ -526,7 +526,7 @@ sample_posterior_predictive <- function(fit) {
   output
 }
 
-.merge_samples.adaptspecfit <- function(x, fits) {
+.merge_samples.adaptspecfit <- function(x, fits) {  # nolint
   output <- .merge_mcmc_parts(fits[[1]], fits, c(
     'n_segments',
     'tau_squared',

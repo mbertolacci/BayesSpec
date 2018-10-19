@@ -269,7 +269,7 @@ test_that('metropolis ratio within', {
       sample2,
       x, prior2
     ),
-    0.4132858, tolerance = 1e-5
+    0.007820678, tolerance = 1e-5
   )
 
   # Move the cutpoint up by a small jump, constrained
@@ -283,6 +283,6 @@ test_that('metropolis ratio within', {
       sample2,
       x, prior2
     ),
-    0.4132858, tolerance = 1e-5
+    0.007820678, tolerance = 1e-5
   )
 })

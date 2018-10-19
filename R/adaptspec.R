@@ -135,6 +135,7 @@ adaptspec <- function(
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
+    short_move_max = 1,
     var_inflate = 1,
     warm_up_var_inflate = NULL
   ),
@@ -359,6 +360,10 @@ adaptspec_nu <- function(n_freq, n_bases) {
   if (is.null(tuning$prob_short_move)) {
     tuning$prob_short_move <- 0.8
   }
+  if (is.null(tuning$short_move_max)) {
+    tuning$short_move_max <- 1
+  }
+  tuning$short_move_max <- as.integer(tuning$short_move_max)
   if (is.null(tuning$var_inflate)) {
     tuning$var_inflate <- 1
   }
@@ -369,9 +374,14 @@ adaptspec_nu <- function(n_freq, n_bases) {
 }
 
 .validate_adaptspec_tuning <- function(tuning) {
+  stopifnot(tuning$prob_short_move >= 0 && tuning$prob_short_move <= 1)
+
+  stopifnot(is.integer(tuning$short_move_max))
+  stopifnot(tuning$short_move_max > 0)
+
   stopifnot(is.numeric(tuning$var_inflate))
   stopifnot(!is.na(tuning$var_inflate))
+
   stopifnot(is.numeric(tuning$warm_up_var_inflate))
   stopifnot(!is.na(tuning$warm_up_var_inflate))
-  stopifnot(tuning$prob_short_move >= 0 && tuning$prob_short_move <= 1)
 }

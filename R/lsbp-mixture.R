@@ -16,6 +16,7 @@ adaptspec_lsbp_mixture <- function(
   spline_prior = base_spline_prior,
   component_tuning = list(
     prob_short_move = 0.8,
+    short_move_max = 1,
     var_inflate = 1,
     warm_up_var_inflate = NULL
   ),

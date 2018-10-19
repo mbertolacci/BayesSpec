@@ -291,7 +291,11 @@ adaptspec_nu <- function(n_freq, n_bases) {
 
 .adaptspec_start <- function(start, model, data) {
   if (is.null(start$n_segments)) {
-    start$n_segments <- sample(model$n_segments_min : model$n_segments_max, 1)
+    if (model$n_segments_min == model$n_segments_max) {
+      start$n_segments <- model$n_segments_min
+    } else {
+      start$n_segments <- sample(model$n_segments_min : model$n_segments_max, 1)
+    }
   }
   if (is.null(start$cut_points)) {
     start$cut_points <- rep(nrow(data), model$n_segments_max)
@@ -302,8 +306,8 @@ adaptspec_nu <- function(n_freq, n_bases) {
   }
   if (is.null(start$tau_squared)) {
     start$tau_squared <- rep(0, model$n_segments_max)
-    start$tau_squared[model$n_segments_min : start$n_segments] <- runif(
-      length(model$n_segments_min : start$n_segments),
+    start$tau_squared[1 : start$n_segments] <- runif(
+      length(1 : start$n_segments),
       0,
       model$tau_upper_limit
     )
@@ -314,7 +318,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
       nrow = model$n_segments_max,
       ncol = 1 + model$n_bases
     )
-    for (n_segments in model$n_segments_min : start$n_segments) {
+    for (n_segments in 1 : start$n_segments) {
       start$beta[n_segments, ] <- rnorm(1 + model$n_bases)
     }
     # Runs the optimisation algorithm to find the conditional mode for beta

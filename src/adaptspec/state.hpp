@@ -12,6 +12,7 @@
 #include "prior.hpp"
 #include "beta-hmc.hpp"
 #include "beta-optimiser.hpp"
+#include "statistics.hpp"
 #include "tuning.hpp"
 #include "utils.hpp"
 
@@ -211,6 +212,10 @@ public:
         return logSegmentProposal.segment(0, parameters.nSegments).sum();
     }
 
+    const AdaptSpecStatistics& getStatistics() const {
+        return statistics_;
+    }
+
     static double getMetropolisLogRatio(const AdaptSpecState& current, const AdaptSpecState& proposal) {
         if (current.parameters.nSegments == proposal.parameters.nSegments) {
             return getMetropolisLogRatioWithin_(current, proposal);
@@ -239,6 +244,7 @@ private:
     const AdaptSpecPrior *prior_;
     AdaptSpecTuning tuning_;
     bool warmedUp_;
+    AdaptSpecStatistics statistics_;
 
     void checkParameterValidity_() {
         if (!parameters.isValid(*prior_)) {
@@ -472,6 +478,9 @@ private:
         double alpha = std::min(static_cast<double>(1.0), std::exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
         if (randUniform(rng) < alpha) {
             *this = proposal;
+            if (warmedUp_) statistics_.acceptBetween();
+        } else {
+            if (warmedUp_) statistics_.rejectBetween();
         }
     }
 
@@ -502,6 +511,7 @@ private:
                     );
                     if (-stepSize > parameters.cutPoints[segment]) {
                         // Step would make cut point negative, reject
+                        if (warmedUp_) statistics_.rejectWithin();
                         return;
                     }
                     newCutPoint = parameters.cutPoints[segment] + stepSize;
@@ -511,6 +521,7 @@ private:
                         || (segment > 0 && newCutPoint - parameters.cutPoints[segment - 1] < prior_->tMin)
                     ) {
                         // Segment too short, reject
+                        if (warmedUp_) statistics_.rejectWithin();
                         return;
                     }
 
@@ -519,6 +530,7 @@ private:
                         || parameters.cutPoints[segment + 1] - newCutPoint < prior_->tMin
                     ) {
                         // Next segment too short, reject
+                        if (warmedUp_) statistics_.rejectWithin();
                         return;
                     }
                 } else {
@@ -537,6 +549,9 @@ private:
         double alpha = std::min(static_cast<double>(1.0), std::exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
         if (randUniform(rng) < alpha) {
             *this = proposal;
+            if (warmedUp_) statistics_.acceptWithin();
+        } else {
+            if (warmedUp_) statistics_.rejectWithin();
         }
     }
 
@@ -559,10 +574,14 @@ private:
             rng
         );
 
-        if (betaCurrent == betaNew) return;
+        if (betaCurrent == betaNew) {
+            if (warmedUp_) statistics_.rejectHmc();
+            return;
+        }
 
         parameters.beta.row(segment) = betaNew.transpose();
         updateSegmentDensities(segment);
+        if (warmedUp_) statistics_.acceptHmc();
     }
 
     template<typename RNG>

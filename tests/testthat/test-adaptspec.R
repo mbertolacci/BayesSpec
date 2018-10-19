@@ -18,6 +18,8 @@ test_that('sampler gives sane return samples', {
 
   expect_equal(class(result$cut_points), 'mcmc')
   expect_equal(dim(result$tau_squared), c(50, 4))
+
+  expect_true(!is.null(result$statistics))
 })
 
 test_that('sampler can be initialised with n_segments_min > 1', {

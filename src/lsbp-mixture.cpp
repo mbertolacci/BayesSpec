@@ -177,6 +177,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
     output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
     output["x_missing"] = xMissingSamplesOutput;
     output["final_values"] = sampler.getParametersAsList();
+    output["component_statistics"] = sampler.getComponentStatistics();
 
     return output;
 }

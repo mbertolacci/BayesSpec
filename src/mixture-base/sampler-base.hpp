@@ -113,6 +113,14 @@ public:
         return output;
     }
 
+    Rcpp::List getComponentStatistics() const {
+        Rcpp::List output;
+        for (unsigned int i = 0; i < nComponents_; ++i) {
+            output.push_back(componentStates_[i].state.getStatistics().asList());
+        }
+        return output;
+    }
+
 protected:
     Eigen::MatrixXd& x_;
     const std::vector<Eigen::VectorXi>& missingIndices_;

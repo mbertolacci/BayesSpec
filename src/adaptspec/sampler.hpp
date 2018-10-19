@@ -35,6 +35,10 @@ public:
         return current_.getLogPosterior();
     }
 
+    const AdaptSpecStatistics& getStatistics() const {
+        return current_.getStatistics();
+    }
+
 private:
     AdaptSpecState current_;
 };

@@ -108,6 +108,7 @@ Rcpp::List adaptspec(
     output["log_posterior"] = Rcpp::wrap(logPosteriorSamples);
     output["x_missing"] = xMissingSamplesOutput;
     output["final_values"] = finalValues;
+    output["statistics"] = sampler.getStatistics().asList();
     return output;
 }
 

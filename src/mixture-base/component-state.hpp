@@ -26,9 +26,8 @@ public:
         const std::vector<Eigen::VectorXi>& missingIndices_,
         const AdaptSpecParameters& start,
         const AdaptSpecPrior& prior,
-        double probMM1,
-        double varInflate
-    ) : state(start, x_, missingIndices_, prior, probMM1, varInflate),
+        const AdaptSpecTuning& componentTuning
+    ) : state(start, x_, missingIndices_, prior, componentTuning),
         x(x_),
         missingIndices(missingIndices_),
         lastIsComponent_(x.cols()),
@@ -50,8 +49,8 @@ public:
         }
     }
 
-    void setVarInflate(double newValue) {
-        state.setVarInflate(newValue);
+    void endWarmUp() {
+        state.endWarmUp();
     }
 
     template<typename RNG>

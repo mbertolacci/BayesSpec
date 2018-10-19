@@ -14,18 +14,17 @@ public:
         Eigen::MatrixXd& x,
         const std::vector<Eigen::VectorXi>& missingIndices,
         const AdaptSpecParameters& start,
-        double probMM1,
-        double varInflate,
+        const AdaptSpecTuning& tuning,
         const AdaptSpecPrior& prior
-    ) : current_(start, x, missingIndices, prior, probMM1, varInflate) {}
+    ) : current_(start, x, missingIndices, prior, tuning) {}
 
     template<typename RNG>
     void sample(RNG& rng) {
         current_.sample(rng);
     }
 
-    void setVarInflate(double newValue) {
-        current_.setVarInflate(newValue);
+    void endWarmUp() {
+        current_.endWarmUp();
     }
 
     const AdaptSpecParameters& getCurrent() const {

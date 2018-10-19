@@ -14,7 +14,11 @@ adaptspec_lsbp_mixture <- function(
   component_model = adaptspec_model(),
   mixture_prior = base_mixture_prior,
   spline_prior = base_spline_prior,
-  prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
+  component_tuning = list(
+    prob_short_move = 0.8,
+    var_inflate = 1,
+    warm_up_var_inflate = NULL
+  ),
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,
   start = list(
@@ -172,6 +176,9 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)
 
+  component_tuning <- .adaptspec_tuning(component_tuning)
+  .validate_adaptspec_tuning(component_tuning)
+
   flog.debug(
     'Starting MCMC sampler',
     name = 'BayesSpec.lsbp-mixture'
@@ -183,7 +190,7 @@ adaptspec_lsbp_mixture <- function(
     design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
-    prob_mm1, var_inflate, burn_in_var_inflate,
+    component_tuning,
     first_category_fixed,
     spline_prior$n_bases,
     start,
@@ -198,9 +205,7 @@ adaptspec_lsbp_mixture <- function(
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components
   results$design_matrix <- design_matrix
-
-  results$var_inflate <- var_inflate
-  results$prob_mm1 <- prob_mm1
+  results$component_tuning <- component_tuning
 
   results <- adaptspecmixturefit(results, component_priors)
   class(results) <- c('adaptspeclsbpmixturefit', 'adaptspecmixturefit')

@@ -22,8 +22,7 @@ public:
     MixtureSamplerBase(
         Eigen::MatrixXd& x,
         const std::vector<Eigen::VectorXi>& missingIndices,
-        double probMM1,
-        double varInflate,
+        const AdaptSpecTuning& componentTuning,
         bool firstCategoryFixed,
         const std::vector<AdaptSpecParameters>& componentStart,
         const Eigen::VectorXi& categoriesStart,
@@ -41,14 +40,14 @@ public:
         componentStates_.reserve(nComponents_);
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_.emplace_back(
-                x_, missingIndices_, componentStart[component], componentPriors[component], probMM1, varInflate
+                x_, missingIndices_, componentStart[component], componentPriors[component], componentTuning
             );
         }
     }
 
-    void setVarInflate(double newValue) {
+    void endWarmUp() {
         for (unsigned int component = 0; component < nComponents_; ++component) {
-            componentStates_[component].setVarInflate(newValue);
+            componentStates_[component].endWarmUp();
         }
     }
 

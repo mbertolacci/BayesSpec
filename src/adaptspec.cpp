@@ -17,9 +17,7 @@ Rcpp::List adaptspec(
     Rcpp::NumericMatrix xR,
     Rcpp::List missingIndicesR,
     Rcpp::List priorList,
-    double probMM1,
-    double varInflate,
-    double burnInVarInflate,
+    Rcpp::List tuningList,
     Rcpp::List startR,
     Rcpp::List thin,
     bool showProgress
@@ -43,7 +41,8 @@ Rcpp::List adaptspec(
 
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
     AdaptSpecParameters start = AdaptSpecParameters::fromList(startR, prior);
-    AdaptSpecSampler sampler(x, missingIndices, start, probMM1, burnInVarInflate, prior);
+    AdaptSpecTuning tuning = AdaptSpecTuning::fromList(tuningList);
+    AdaptSpecSampler sampler(x, missingIndices, start, tuning, prior);
 
     AdaptSpecSamples samples(
         nLoop - nWarmUp,
@@ -69,7 +68,7 @@ Rcpp::List adaptspec(
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         if (iteration == nWarmUp) {
-            sampler.setVarInflate(varInflate);
+            sampler.endWarmUp();
         }
 
         sampler.sample(rng);
@@ -148,9 +147,13 @@ Rcpp::List wrapState(const AdaptSpecState& state) {
 AdaptSpecState getStateFromList(
     Rcpp::List parametersList, Eigen::MatrixXd& x, const AdaptSpecPrior& prior
 ) {
+    AdaptSpecTuning tuning;
+    tuning.probShortMove = 0.8;
+    tuning.varInflate = 1;
+    tuning.warmUpVarInflate = 1;
     return AdaptSpecState(
         AdaptSpecParameters::fromList(parametersList, prior),
-        x, prior, 0.8, 1
+        x, prior, tuning
     );
 }
 

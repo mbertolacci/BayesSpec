@@ -24,9 +24,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
     Rcpp::NumericMatrix priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
     double tauPriorASquared, double tauPriorNu,
-    double probMM1,
-    double varInflate,
-    double burnInVarInflate,
+    Rcpp::List componentTuningR,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
     Rcpp::List startR,
@@ -68,11 +66,12 @@ Rcpp::List logisticStickBreakingMixtureBase(
         startR["components"],
         priors
     );
+    AdaptSpecTuning componentTuning = AdaptSpecTuning::fromList(componentTuningR);
 
     logger.debug("Constructing sampler object");
     Sampler sampler(
         x, missingIndices, designMatrix,
-        probMM1, burnInVarInflate, firstCategoryFixed,
+        componentTuning, firstCategoryFixed,
         Rcpp::as<Eigen::MatrixXd>(startR["beta"]),
         Rcpp::as<Eigen::VectorXd>(startR["tau_squared"]),
         componentStarts,
@@ -126,7 +125,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         if (iteration == nWarmUp) {
-            sampler.setVarInflate(varInflate);
+            sampler.endWarmUp();
         }
 
         logger.trace("[Iteration %d] Sampling", iteration);
@@ -193,9 +192,7 @@ Rcpp::List logisticStickBreakingMixture(
     Rcpp::NumericMatrix priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
     double tauPriorASquared, double tauPriorNu,
-    double probMM1,
-    double varInflate,
-    double burnInVarInflate,
+    Rcpp::List componentTuningR,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
     Rcpp::List startR,
@@ -215,9 +212,7 @@ Rcpp::List logisticStickBreakingMixture(
             priorPrecisionR,
             tauPriorASquared,
             tauPriorNu,
-            probMM1,
-            varInflate,
-            burnInVarInflate,
+            componentTuningR,
             firstCategoryFixed,
             nSplineBases,
             startR,
@@ -236,9 +231,7 @@ Rcpp::List logisticStickBreakingMixture(
             priorPrecisionR,
             tauPriorASquared,
             tauPriorNu,
-            probMM1,
-            varInflate,
-            burnInVarInflate,
+            componentTuningR,
             firstCategoryFixed,
             nSplineBases,
             startR,

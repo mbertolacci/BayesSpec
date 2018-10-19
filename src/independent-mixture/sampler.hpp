@@ -15,8 +15,7 @@ public:
     AdaptSpecIndependentMixtureSampler(
         Eigen::MatrixXd& x,
         const std::vector<Eigen::VectorXi>& missingIndices,
-        double probMM1,
-        double varInflate,
+        const AdaptSpecTuning& componentTuning,
         bool firstCategoryFixed,
         const Eigen::VectorXd& weightsStart,
         const std::vector<AdaptSpecParameters>& componentStart,
@@ -25,7 +24,7 @@ public:
         const Eigen::VectorXd& weightsPrior
     ) : Base(
             x, missingIndices,
-            probMM1, varInflate, firstCategoryFixed,
+            componentTuning, firstCategoryFixed,
             componentStart, categoriesStart,
             componentPriors
         ),

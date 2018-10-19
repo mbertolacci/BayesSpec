@@ -19,9 +19,7 @@ Rcpp::List independentMixture(
     Rcpp::List missingIndicesR,
     Rcpp::List priorsR,
     Rcpp::NumericVector weightsPriorR,
-    double probMM1,
-    double varInflate,
-    double burnInVarInflate,
+    Rcpp::List componentTuningR,
     bool firstCategoryFixed,
     Rcpp::List startR,
     Rcpp::List thin,
@@ -56,10 +54,11 @@ Rcpp::List independentMixture(
         startR["components"],
         priors
     );
+    AdaptSpecTuning componentTuning = AdaptSpecTuning::fromList(componentTuningR);
 
     AdaptSpecIndependentMixtureSampler sampler(
         x, missingIndices,
-        probMM1, burnInVarInflate, firstCategoryFixed,
+        componentTuning, firstCategoryFixed,
         Rcpp::as<Eigen::VectorXd>(startR["weights"]),
         componentStarts,
         Rcpp::as<Eigen::VectorXi>(startR["categories"]),
@@ -100,7 +99,7 @@ Rcpp::List independentMixture(
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         if (iteration == nWarmUp) {
-            sampler.setVarInflate(varInflate);
+            sampler.endWarmUp();
         }
 
         sampler.sample(rng);

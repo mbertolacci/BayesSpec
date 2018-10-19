@@ -20,9 +20,7 @@ Rcpp::List dirichletMixture(
     Rcpp::List priorsR,
     double alphaPriorShape,
     double alphaPriorRate,
-    double probMM1,
-    double varInflate,
-    double burnInVarInflate,
+    Rcpp::List componentTuningR,
     bool firstCategoryFixed,
     Rcpp::List startR,
     Rcpp::List thin,
@@ -57,8 +55,10 @@ Rcpp::List dirichletMixture(
         startR["components"],
         priors
     );
+    AdaptSpecTuning componentTuning = AdaptSpecTuning::fromList(componentTuningR);
+
     AdaptSpecDirichletMixtureSampler sampler(
-        x, missingIndices, probMM1, burnInVarInflate, firstCategoryFixed,
+        x, missingIndices, componentTuning, firstCategoryFixed,
         Rcpp::as<Eigen::VectorXd>(startR["log_beta1m"]),
         startR["alpha"],
         componentStarts,
@@ -104,7 +104,7 @@ Rcpp::List dirichletMixture(
     ProgressBar progressBar(nLoop);
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         if (iteration == nWarmUp) {
-            sampler.setVarInflate(varInflate);
+            sampler.endWarmUp();
         }
 
         sampler.sample(rng);

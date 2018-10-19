@@ -12,6 +12,7 @@
 #include "prior.hpp"
 #include "beta-hmc.hpp"
 #include "beta-optimiser.hpp"
+#include "tuning.hpp"
 #include "utils.hpp"
 
 namespace bayesspec {
@@ -56,14 +57,13 @@ public:
         Eigen::MatrixXd& x_,
         const std::vector<Eigen::VectorXi>& missingIndices_,
         const AdaptSpecPrior& prior,
-        double probMM1,
-        double varInflate
+        const AdaptSpecTuning& tuning
     ) : parameters(parameters_),
         x(&x_),
         missingIndices(&missingIndices_),
         prior_(&prior),
-        probMM1_(probMM1),
-        varInflate_(varInflate) {
+        tuning_(tuning),
+        warmedUp_(false) {
         initialise_();
     }
 
@@ -71,19 +71,18 @@ public:
         const AdaptSpecParameters& parameters_,
         Eigen::MatrixXd& x_,
         const AdaptSpecPrior& prior,
-        double probMM1,
-        double varInflate
+        const AdaptSpecTuning& tuning
     ) : parameters(parameters_),
         x(&x_),
         missingIndices(NULL),
         prior_(&prior),
-        probMM1_(probMM1),
-        varInflate_(varInflate) {
+        tuning_(tuning),
+        warmedUp_(false) {
         initialise_();
     }
 
-    void setVarInflate(double newValue) {
-        varInflate_ = newValue;
+    void endWarmUp() {
+        warmedUp_ = true;
     }
 
     void updateLogPriorCutPoints() {
@@ -175,7 +174,7 @@ public:
 
         betaMode.row(segment) = beta.transpose();
 
-        hessian /= varInflate_;
+        hessian /= (warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate);
         precisionCholeskyMode[segment] = hessian.llt().matrixU();
 
         updateSegmentDensities(segment);
@@ -236,8 +235,8 @@ public:
 
 private:
     const AdaptSpecPrior *prior_;
-    double probMM1_;
-    double varInflate_;
+    AdaptSpecTuning tuning_;
+    bool warmedUp_;
 
     void checkParameterValidity_() {
         if (!parameters.isValid(*prior_)) {
@@ -491,7 +490,7 @@ private:
 
             if (nMoves > 1) {
                 unsigned int newCutPoint;
-                if (randUniform(rng) < probMM1_) {
+                if (randUniform(rng) < tuning_.probShortMove) {
                     // Make a small move
                     if (segmentLengths[segment] - prior_->timeStep < prior_->tMin) {
                         // The only way is up (baby)
@@ -726,7 +725,7 @@ private:
         double logMoveCurrent = 0;
         double logMoveProposal = 0;
         if (movedSegment != nSegments
-            && current.probMM1_ > 0
+            && current.tuning_.probShortMove > 0
             && absDiff(current.parameters.cutPoints[movedSegment], proposal.parameters.cutPoints[movedSegment]) == timeStep) {
             // Moved only one step, so the jump might not be symmetrical
 

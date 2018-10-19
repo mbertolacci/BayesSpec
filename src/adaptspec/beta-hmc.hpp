@@ -15,6 +15,10 @@ Eigen::VectorXd sampleBetaHmc(
     const Eigen::MatrixXd& nu,
     double sigmaSquaredAlpha,
     double tauSquared,
+    int lMin,
+    int lMax,
+    double epsilonMin,
+    double epsilonMax,
     RNG& rng
 ) {
     using Eigen::VectorXd;
@@ -28,8 +32,8 @@ Eigen::VectorXd sampleBetaHmc(
     );
 
     // Randomise HMC parameters
-    int L = randInteger(190, 210, rng);
-    double epsilon = 0.01 + (0.1 - 0.01) * randUniform(rng);
+    int l = randInteger(lMin, lMax, rng);
+    double epsilon = epsilonMin + (epsilonMax - epsilonMin) * randUniform(rng);
 
     betaFunctor.setBeta(betaCurrent);
     double currentU = betaFunctor.value();
@@ -45,12 +49,12 @@ Eigen::VectorXd sampleBetaHmc(
     // Make a half step for momentum at the beginning.
     p = p - epsilon * gradient / 2;
     // Alternate full steps for position and momentum
-    for (int i = 0; i < L; ++i) {
+    for (int i = 0; i < l; ++i) {
         // Make a full step for the position
         beta = beta + epsilon * p;
         betaFunctor.setBeta(beta);
         betaFunctor.gradient(gradient);
-        if (i < L - 1) {
+        if (i < l - 1) {
             // Make a full step for the momentum, except at end of trajectory
             p = p - epsilon * gradient;
         }

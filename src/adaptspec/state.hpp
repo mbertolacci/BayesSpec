@@ -196,7 +196,9 @@ public:
     void sample(RNG& rng) {
         sampleBetween_(rng);
         sampleWithin_(rng);
-        sampleHmcWithin_(rng);
+        if (tuning_.useHmcWithin) {
+            sampleHmcWithin_(rng);
+        }
         sampleTauSquared_(rng);
         sampleMissing_(rng);
     }
@@ -550,6 +552,10 @@ private:
             nu[segment],
             prior_->sigmaSquaredAlpha,
             parameters.tauSquared[segment],
+            tuning_.lMin,
+            tuning_.lMax,
+            tuning_.epsilonMin,
+            tuning_.epsilonMax,
             rng
         );
 

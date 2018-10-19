@@ -137,7 +137,12 @@ adaptspec <- function(
     prob_short_move = 0.8,
     short_move_max = 1,
     var_inflate = 1,
-    warm_up_var_inflate = NULL
+    warm_up_var_inflate = NULL,
+    use_hmc_within = TRUE,
+    l_min = 190,
+    l_max = 210,
+    epsilon_min = 0.01,
+    epsilon_max = 0.1
   ),
   # Starting values
   start = list(
@@ -357,31 +362,49 @@ adaptspec_nu <- function(n_freq, n_bases) {
 }
 
 .adaptspec_tuning <- function(tuning) {
-  if (is.null(tuning$prob_short_move)) {
-    tuning$prob_short_move <- 0.8
-  }
-  if (is.null(tuning$short_move_max)) {
-    tuning$short_move_max <- 1
-  }
+  tuning <- .extend_list(list(
+    prob_short_move = 0.8,
+    short_move_max = 1,
+    var_inflate = 1,
+    use_hmc_within = TRUE,
+    l_min = 190,
+    l_max = 210,
+    epsilon_min = 0.01,
+    epsilon_max = 0.1
+  ), tuning)
+
   tuning$short_move_max <- as.integer(tuning$short_move_max)
-  if (is.null(tuning$var_inflate)) {
-    tuning$var_inflate <- 1
-  }
   if (is.null(tuning$warm_up_var_inflate)) {
     tuning$warm_up_var_inflate <- tuning$var_inflate
   }
+  tuning$l_min <- as.integer(tuning$l_min)
+  tuning$l_max <- as.integer(tuning$l_max)
   tuning
 }
 
 .validate_adaptspec_tuning <- function(tuning) {
-  stopifnot(tuning$prob_short_move >= 0 && tuning$prob_short_move <= 1)
+  # NOTE(mgnb): lintr can't tell that these variables exist within the tuning
+  # object
+  # nolint start
+  with(tuning, {
+    stopifnot(prob_short_move >= 0 && prob_short_move <= 1)
 
-  stopifnot(is.integer(tuning$short_move_max))
-  stopifnot(tuning$short_move_max > 0)
+    stopifnot(is.integer(short_move_max))
+    stopifnot(short_move_max > 0)
 
-  stopifnot(is.numeric(tuning$var_inflate))
-  stopifnot(!is.na(tuning$var_inflate))
+    stopifnot(is.numeric(var_inflate))
+    stopifnot(!is.na(var_inflate))
 
-  stopifnot(is.numeric(tuning$warm_up_var_inflate))
-  stopifnot(!is.na(tuning$warm_up_var_inflate))
+    stopifnot(is.numeric(warm_up_var_inflate))
+    stopifnot(!is.na(warm_up_var_inflate))
+
+    stopifnot(is.logical(use_hmc_within))
+    stopifnot(is.integer(l_min))
+    stopifnot(is.integer(l_max))
+    stopifnot(l_min <= l_max)
+    stopifnot(is.numeric(epsilon_min))
+    stopifnot(is.numeric(epsilon_max))
+    stopifnot(epsilon_min <= epsilon_max)
+  })
+  # nolint end
 }

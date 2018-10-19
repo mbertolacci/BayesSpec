@@ -7,7 +7,12 @@ adaptspec_dirichlet_mixture <- function(
     prob_short_move = 0.8,
     short_move_max = 1,
     var_inflate = 1,
-    warm_up_var_inflate = NULL
+    warm_up_var_inflate = NULL,
+    use_hmc_within = TRUE,
+    l_min = 190,
+    l_max = 210,
+    epsilon_min = 0.01,
+    epsilon_max = 0.1
   ),
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,

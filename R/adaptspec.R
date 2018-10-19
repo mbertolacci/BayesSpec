@@ -5,6 +5,34 @@
 #' number of segments and estimating the corresponding local spectra by
 #' smoothing splines.
 #'
+#' @section MCMC tuning parameters:
+#' The \code{tuning} argument allows you to change the tuning parameter of the
+#' reversible-jump MCMC algorithm used to estimate the model. It is a list with
+#' the following entries (and corresponding default values):
+#' \itemize{
+#'   \item \code{prob_short_move} (\code{0.8}): probability of proposing a small
+#'   move of a cutpoint in a within step
+#'   \item \code{short_move_max} (\code{1}): maximum size of small step. When a
+#'   small step is chosen, the proposal is from a discrete uniform with bounds
+#'   \code{[-short_move_max, short_move_max]}
+#'   \item \code{var_inflate} (\code{1}): factor by which to inflate the
+#'   covariance matrix of the spline coefficient proposal
+#'   \item \code{warm_up_var_inflate} (\code{= var_inflate}): as above, but
+#'   applying only during warm-up
+#'   \item \code{use_hmc_within} (\code{TRUE}): whether to also update spline
+#'   parameters using HMC
+#'   \item \code{l_min} (\code{190}): minimum number of leap frog steps to
+#'   take in an HMC iteration. Number of steps is randomly selected from a
+#'   discrete uniform over \code{[l_min, l_max]}
+#'   \item \code{l_max} (\code{210}): maximum number of lead frog steps to
+#'   take in an HMC iteration
+#'   \item \code{epsilon_min} (\code{0.01}): minimum step size in HMC. Step size
+#'   is chosen from a uniform distribution over
+#'   \code{[epsilon_min, epsilon_max]}
+#'   \item \code{epsilon_max} (\code{0.1}): maximum step size in HMC.
+#' }
+#' If a value is omitted or NULL, the default above will be used.
+#'
 #' @param n_loop Number of MCMC iterations to perform
 #' @param n_warm_up Number of warm-up iterations to discard, so that the
 #' number of samples returned is n_loop - n_warm_up
@@ -26,12 +54,7 @@
 #' smoothing spline smoothing parameter
 #' @param n_bases Number of spline basis vectors to use for log spectrum
 #' @param time_step Restricts cut points to times divisible by this number
-#' @param prob_mm1 Tuning parameter for MCMC scheme determining the proposal
-#' for moving cutpoint
-#' @param var_inflate Factor by which to inflate the adaptive proposal
-#' covariance for the smoothing spline parameters
-#' @param burn_in_var_inflate As with var_inflate, but applies only during
-#' the warm up phase
+#' @param tuning Tuning parameters for the MCMC scheme
 #' @param start Starting values for MCMC chain. Initialised randomly if blank.
 #' Can be provided an adaptspecfit object in order to continue a previous chain.
 #' @param thin A list specifying how to thin each output of the MCMC sampler.
@@ -78,9 +101,18 @@
 #'   n_bases = 7,
 #'   time_step = 1,
 #'   # Sampler control
-#'   prob_mm1 = 0.8,
-#'   var_inflate = 1,
-#'   burn_in_var_inflate = var_inflate,
+#'   tuning = list(
+#'     prob_short_move = 0.8,
+#'     short_move_max = 1,
+#'     var_inflate = 1,
+#'     warm_up_var_inflate = NULL,
+#'     use_hmc_within = TRUE,
+#'     l_min = 190,
+#'     l_max = 210,
+#'     epsilon_min = 0.01,
+#'     epsilon_max = 0.1
+#'   ),
+#'   # Starting values
 #'   start = list(
 #'     n_segments = NULL,
 #'     cut_points = NULL,

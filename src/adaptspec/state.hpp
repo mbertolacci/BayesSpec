@@ -12,6 +12,7 @@
 #include "prior.hpp"
 #include "beta-hmc.hpp"
 #include "beta-optimiser.hpp"
+#include "tuning.hpp"
 #include "utils.hpp"
 
 namespace bayesspec {
@@ -56,14 +57,13 @@ public:
         Eigen::MatrixXd& x_,
         const std::vector<Eigen::VectorXi>& missingIndices_,
         const AdaptSpecPrior& prior,
-        double probMM1,
-        double varInflate
+        const AdaptSpecTuning& tuning
     ) : parameters(parameters_),
         x(&x_),
         missingIndices(&missingIndices_),
         prior_(&prior),
-        probMM1_(probMM1),
-        varInflate_(varInflate) {
+        tuning_(tuning),
+        warmedUp_(false) {
         initialise_();
     }
 
@@ -71,19 +71,18 @@ public:
         const AdaptSpecParameters& parameters_,
         Eigen::MatrixXd& x_,
         const AdaptSpecPrior& prior,
-        double probMM1,
-        double varInflate
+        const AdaptSpecTuning& tuning
     ) : parameters(parameters_),
         x(&x_),
         missingIndices(NULL),
         prior_(&prior),
-        probMM1_(probMM1),
-        varInflate_(varInflate) {
+        tuning_(tuning),
+        warmedUp_(false) {
         initialise_();
     }
 
-    void setVarInflate(double newValue) {
-        varInflate_ = newValue;
+    void endWarmUp() {
+        warmedUp_ = true;
     }
 
     void updateLogPriorCutPoints() {
@@ -175,7 +174,7 @@ public:
 
         betaMode.row(segment) = beta.transpose();
 
-        hessian /= varInflate_;
+        hessian /= (warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate);
         precisionCholeskyMode[segment] = hessian.llt().matrixU();
 
         updateSegmentDensities(segment);
@@ -236,8 +235,8 @@ public:
 
 private:
     const AdaptSpecPrior *prior_;
-    double probMM1_;
-    double varInflate_;
+    AdaptSpecTuning tuning_;
+    bool warmedUp_;
 
     void checkParameterValidity_() {
         if (!parameters.isValid(*prior_)) {
@@ -491,17 +490,34 @@ private:
 
             if (nMoves > 1) {
                 unsigned int newCutPoint;
-                if (randUniform(rng) < probMM1_) {
+                if (randUniform(rng) < tuning_.probShortMove) {
                     // Make a small move
-                    if (segmentLengths[segment] - prior_->timeStep < prior_->tMin) {
-                        // The only way is up (baby)
-                        newCutPoint = parameters.cutPoints[segment] + prior_->timeStep * randInteger(0, 1, rng);
-                    } else if (segmentLengths[segment + 1] - prior_->timeStep < prior_->tMin) {
-                        // The only way is down (sadly, no longer a song lyric)
-                        newCutPoint = parameters.cutPoints[segment] + prior_->timeStep * randInteger(-1, 0, rng);
-                    } else {
-                        // Go either way
-                        newCutPoint = parameters.cutPoints[segment] + prior_->timeStep * randInteger(-1, 1, rng);
+
+                    int stepSize = prior_->timeStep * randInteger(
+                        -tuning_.shortMoveMax,
+                        tuning_.shortMoveMax,
+                        rng
+                    );
+                    if (-stepSize > parameters.cutPoints[segment]) {
+                        // Step would make cut point negative, reject
+                        return;
+                    }
+                    newCutPoint = parameters.cutPoints[segment] + stepSize;
+                    if (
+                        (segment == 0 && newCutPoint < prior_->tMin)
+                        || (segment > 0 && newCutPoint <= parameters.cutPoints[segment - 1])
+                        || (segment > 0 && newCutPoint - parameters.cutPoints[segment - 1] < prior_->tMin)
+                    ) {
+                        // Segment too short, reject
+                        return;
+                    }
+
+                    if (
+                        newCutPoint >= parameters.cutPoints[segment + 1]
+                        || parameters.cutPoints[segment + 1] - newCutPoint < prior_->tMin
+                    ) {
+                        // Next segment too short, reject
+                        return;
                     }
                 } else {
                     // Make a big move
@@ -715,44 +731,9 @@ private:
     }
 
     static double getMetropolisLogRatioWithin_(const AdaptSpecState& current, const AdaptSpecState& proposal) {
-        // Within move
-        unsigned int nSegments = current.parameters.nSegments;
-
-        // Find the segment that moved, if any
-        unsigned int movedSegment = findChangedCutPoint_(current, proposal);
-
-        unsigned int timeStep = current.prior_->timeStep;
-
-        double logMoveCurrent = 0;
-        double logMoveProposal = 0;
-        if (movedSegment != nSegments
-            && current.probMM1_ > 0
-            && absDiff(current.parameters.cutPoints[movedSegment], proposal.parameters.cutPoints[movedSegment]) == timeStep) {
-            // Moved only one step, so the jump might not be symmetrical
-
-            logMoveCurrent = -std::log(3);
-            logMoveProposal = -std::log(3);
-            int tMin = current.prior_->tMin;
-            // We know only one or the other can be true, because otherwise
-            // nothing would have moved
-            if (
-                (current.segmentLengths[movedSegment] - timeStep < tMin)
-                || (current.segmentLengths[movedSegment + 1] - timeStep < tMin)
-            ) {
-                logMoveProposal = -std::log(2);
-            }
-            if (
-                (proposal.segmentLengths[movedSegment] - timeStep < tMin)
-                || (proposal.segmentLengths[movedSegment + 1] - timeStep < tMin)
-            ) {
-                logMoveCurrent = -std::log(2);
-            }
-        }
-
         return (
             proposal.getLogPosterior() - current.getLogPosterior()
             + current.getLogSegmentProposal() - proposal.getLogSegmentProposal()
-            + logMoveCurrent - logMoveProposal
         );
     }
 };

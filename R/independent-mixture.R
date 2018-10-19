@@ -3,7 +3,12 @@ adaptspec_independent_mixture <- function(
   n_loop, n_warm_up, data, n_components,
   component_model = adaptspec_model(),
   initial_categories = NULL,
-  prob_mm1 = 0.8, var_inflate = 1, burn_in_var_inflate = var_inflate,
+  component_tuning = list(
+    prob_short_move = 0.8,
+    short_move_max = 1,
+    var_inflate = 1,
+    warm_up_var_inflate = NULL
+  ),
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,
   weights_prior = rep(1, n_components),
@@ -57,12 +62,15 @@ adaptspec_independent_mixture <- function(
   .validate_mixture_start(start, n_components, component_priors, data)
   stopifnot(length(start$weights) == n_components)
 
+  component_tuning <- .adaptspec_tuning(component_tuning)
+  .validate_adaptspec_tuning(component_tuning)
+
   # Run sampler
   results <- .independent_mixture(
     n_loop, n_warm_up, data,
     .zero_index_missing_indices(missing_indices),
     component_priors, weights_prior,
-    prob_mm1, var_inflate, burn_in_var_inflate,
+    component_tuning,
     first_category_fixed,
     start,
     thin,
@@ -72,9 +80,7 @@ adaptspec_independent_mixture <- function(
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
   results$n_components <- n_components
-
-  results$var_inflate <- var_inflate
-  results$prob_mm1 <- prob_mm1
+  results$component_tuning <- component_tuning
 
   results <- adaptspecmixturefit(results, component_priors)
   class(results) <- c('adaptspecindependentmixturefit', 'adaptspecmixturefit')

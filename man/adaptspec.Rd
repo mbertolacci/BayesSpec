@@ -80,15 +80,6 @@ smoothing spline smoothing parameter}
 
 \item{time_step}{Restricts cut points to times divisible by this number}
 
-\item{prob_mm1}{Tuning parameter for MCMC scheme determining the proposal
-for moving cutpoint}
-
-\item{var_inflate}{Factor by which to inflate the adaptive proposal
-covariance for the smoothing spline parameters}
-
-\item{burn_in_var_inflate}{As with var_inflate, but applies only during
-the warm up phase}
-
 \item{start}{Starting values for MCMC chain. Initialised randomly if blank.
 Can be provided an adaptspecfit object in order to continue a previous chain.}
 
@@ -99,6 +90,15 @@ A value of 1 indicates no thinning, 2 keeps every second sample, and so on.}
 
 \item{run_diagnostics}{Whether to run diagnostics afterwards to determine
 whether the chain has reached convergence.}
+
+\item{prob_mm1}{Tuning parameter for MCMC scheme determining the proposal
+for moving cutpoint}
+
+\item{var_inflate}{Factor by which to inflate the adaptive proposal
+covariance for the smoothing spline parameters}
+
+\item{burn_in_var_inflate}{As with var_inflate, but applies only during
+the warm up phase}
 }
 \value{
 An object of class \code{adaptspecfit}. The MCMC samples are available

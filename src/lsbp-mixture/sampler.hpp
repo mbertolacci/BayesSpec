@@ -43,8 +43,7 @@ public:
         Eigen::MatrixXd& x,
         const std::vector<Eigen::VectorXi>& missingIndices,
         const Eigen::MatrixXd& designMatrix,
-        double probMM1,
-        double varInflate,
+        const AdaptSpecTuning& componentTuning,
         bool firstCategoryFixed,
         const Eigen::MatrixXd& betaStart,
         const Eigen::VectorXd& tauSquaredStart,
@@ -57,7 +56,7 @@ public:
         unsigned int nSplineBases
     ) : Base(
             x, missingIndices,
-            probMM1, varInflate, firstCategoryFixed,
+            componentTuning, firstCategoryFixed,
             componentStart, categoriesStart,
             componentPriors
         ),

@@ -133,9 +133,13 @@ adaptspec <- function(
   n_bases = 7,
   time_step = 1,
   # Sampler control
-  prob_mm1 = 0.8,
-  var_inflate = 1,
-  burn_in_var_inflate = var_inflate,
+  tuning = list(
+    prob_short_move = 0.8,
+    short_move_max = 1,
+    var_inflate = 1,
+    warm_up_var_inflate = NULL
+  ),
+  # Starting values
   start = list(
     n_segments = NULL,
     cut_points = NULL,
@@ -171,9 +175,7 @@ adaptspec <- function(
     n_warm_up = n_warm_up,
     data = data,
     detrend = detrend,
-    prob_mm1 = prob_mm1,
-    var_inflate = var_inflate,
-    burn_in_var_inflate = burn_in_var_inflate,
+    tuning = tuning,
     start = start,
     thin = thin,
     show_progress = show_progress,
@@ -216,9 +218,11 @@ adaptspec_sample <- function(
   n_warm_up,
   data,
   detrend = TRUE,
-  prob_mm1 = 0.8,
-  var_inflate = 1,
-  burn_in_var_inflate = var_inflate,
+  tuning = list(
+    prob_mm1 = 0.8,
+    var_inflate = 1,
+    warm_up_var_inflate = NULL
+  ),
   start = list(
     n_segments = NULL,
     cut_points = NULL,
@@ -257,15 +261,16 @@ adaptspec_sample <- function(
   .validate_adaptspec_start(start, model, data)
   .validate_x_missing_start(start, missing_indices)
 
+  tuning <- .adaptspec_tuning(tuning)
+  .validate_adaptspec_tuning(tuning)
+
   results <- .adaptspec(
     n_loop,
     n_warm_up,
     data,
     .zero_index_missing_indices(missing_indices),
     model,
-    prob_mm1,
-    var_inflate,
-    burn_in_var_inflate,
+    tuning,
     start,
     thin,
     show_progress
@@ -274,8 +279,7 @@ adaptspec_sample <- function(
   results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
-  results$prob_mm1 <- prob_mm1
-  results$var_inflate <- var_inflate
+  results$tuning <- tuning
   results$prior <- model
   results <- adaptspecfit(results)
 
@@ -350,4 +354,34 @@ adaptspec_nu <- function(n_freq, n_bases) {
   stopifnot(min(start$tau_squared) >= 0)
   stopifnot(min(start$tau_squared[model$n_segments_min : start$n_segments]) > 0)
   stopifnot(max(start$tau_squared) < model$tau_upper_limit)
+}
+
+.adaptspec_tuning <- function(tuning) {
+  if (is.null(tuning$prob_short_move)) {
+    tuning$prob_short_move <- 0.8
+  }
+  if (is.null(tuning$short_move_max)) {
+    tuning$short_move_max <- 1
+  }
+  tuning$short_move_max <- as.integer(tuning$short_move_max)
+  if (is.null(tuning$var_inflate)) {
+    tuning$var_inflate <- 1
+  }
+  if (is.null(tuning$warm_up_var_inflate)) {
+    tuning$warm_up_var_inflate <- tuning$var_inflate
+  }
+  tuning
+}
+
+.validate_adaptspec_tuning <- function(tuning) {
+  stopifnot(tuning$prob_short_move >= 0 && tuning$prob_short_move <= 1)
+
+  stopifnot(is.integer(tuning$short_move_max))
+  stopifnot(tuning$short_move_max > 0)
+
+  stopifnot(is.numeric(tuning$var_inflate))
+  stopifnot(!is.na(tuning$var_inflate))
+
+  stopifnot(is.numeric(tuning$warm_up_var_inflate))
+  stopifnot(!is.na(tuning$warm_up_var_inflate))
 }

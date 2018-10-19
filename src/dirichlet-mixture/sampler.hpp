@@ -16,8 +16,7 @@ public:
     AdaptSpecDirichletMixtureSampler(
         Eigen::MatrixXd& x,
         const std::vector<Eigen::VectorXi>& missingIndices,
-        double probMM1,
-        double varInflate,
+        const AdaptSpecTuning& componentTuning,
         bool firstCategoryFixed,
         const Eigen::VectorXd& logBeta1mStart,
         double alphaStart,
@@ -28,7 +27,7 @@ public:
         double alphaPriorRate
     ) : Base(
             x, missingIndices,
-            probMM1, varInflate, firstCategoryFixed,
+            componentTuning, firstCategoryFixed,
             componentStart, categoriesStart,
             componentPriors
         ),

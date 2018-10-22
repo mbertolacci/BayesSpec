@@ -150,6 +150,10 @@ AdaptSpecState getStateFromList(
 ) {
     AdaptSpecTuning tuning;
     tuning.probShortMove = 0.8;
+    tuning.shortMoves = Eigen::VectorXi(2);
+    tuning.shortMoves << -1, 1;
+    tuning.shortMoveWeights = Eigen::VectorXd(2);
+    tuning.shortMoveWeights << 0.5, 0.5;
     tuning.varInflate = 1;
     tuning.warmUpVarInflate = 1;
     return AdaptSpecState(

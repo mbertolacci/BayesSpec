@@ -19,16 +19,16 @@
 namespace bayesspec {
 
 inline
-unsigned int absDiff(unsigned int a, unsigned int b) {
-    if (a > b) {
-        std::swap(a, b);
-    }
-    return b - a;
+unsigned int ceilingDivision(unsigned int a, unsigned int b) {
+    return (a + b - 1) / b;
 }
 
 inline
-unsigned int ceilingDivision(unsigned int a, unsigned int b) {
-    return (a + b - 1) / b;
+int indexOf(int needle, const Eigen::VectorXi& haystack) {
+    for (int i = 0; i < haystack.size(); ++i) {
+        if (haystack[i] == needle) return i;
+    }
+    return -1;
 }
 
 class AdaptSpecState {
@@ -504,9 +504,9 @@ private:
                 if (randUniform(rng) < tuning_.probShortMove) {
                     // Make a small move
 
-                    int stepSize = prior_->timeStep * randInteger(
-                        -tuning_.shortMoveMax,
-                        tuning_.shortMoveMax,
+                    int stepSize = prior_->timeStep * randElement(
+                        tuning_.shortMoves,
+                        tuning_.shortMoveWeights,
                         rng
                     );
                     if (-stepSize > parameters.cutPoints[segment]) {
@@ -756,9 +756,39 @@ private:
     }
 
     static double getMetropolisLogRatioWithin_(const AdaptSpecState& current, const AdaptSpecState& proposal) {
+        // Within move
+        unsigned int nSegments = current.parameters.nSegments;
+
+        // Find the segment that moved, if any
+        unsigned int movedSegment = findChangedCutPoint_(current, proposal);
+
+        unsigned int timeStep = current.prior_->timeStep;
+
+        double logMoveCurrent = 0;
+        double logMoveProposal = 0;
+        if (movedSegment != nSegments && current.tuning_.probShortMove > 0) {
+            int stepSize = (
+                proposal.parameters.cutPoints[movedSegment]
+                - current.parameters.cutPoints[movedSegment]
+            ) / timeStep;
+
+            int currentIndex = indexOf(stepSize, current.tuning_.shortMoves);
+            int proposalIndex = indexOf(-stepSize, current.tuning_.shortMoves);
+
+            if (currentIndex != -1 && proposalIndex != -1) {
+                logMoveCurrent = std::log(
+                    current.tuning_.shortMoveWeights[currentIndex]
+                );
+                logMoveProposal = std::log(
+                    current.tuning_.shortMoveWeights[proposalIndex]
+                );
+            }
+        }
+
         return (
             proposal.getLogPosterior() - current.getLogPosterior()
             + current.getLogSegmentProposal() - proposal.getLogSegmentProposal()
+            + logMoveCurrent - logMoveProposal
         );
     }
 };

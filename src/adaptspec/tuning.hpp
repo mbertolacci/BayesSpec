@@ -1,12 +1,15 @@
 #ifndef SRC_ADAPTSPEC_TUNING_HPP_
 #define SRC_ADAPTSPEC_TUNING_HPP_
 
+#include <RcppEigen.h>
+
 namespace bayesspec {
 
 class AdaptSpecTuning {
 public:
     double probShortMove;
-    int shortMoveMax;
+    Eigen::VectorXi shortMoves;
+    Eigen::VectorXd shortMoveWeights;
     double varInflate;
     double warmUpVarInflate;
     bool useHmcWithin;
@@ -18,7 +21,8 @@ public:
     static AdaptSpecTuning fromList(const Rcpp::List& tuningList) {
         AdaptSpecTuning tuning;
         tuning.probShortMove = tuningList["prob_short_move"];
-        tuning.shortMoveMax = tuningList["short_move_max"];
+        tuning.shortMoves = Rcpp::as<Eigen::VectorXi>(tuningList["short_moves"]);
+        tuning.shortMoveWeights = Rcpp::as<Eigen::VectorXd>(tuningList["short_move_weights"]);
         tuning.varInflate = tuningList["var_inflate"];
         tuning.warmUpVarInflate = tuningList["warm_up_var_inflate"];
         tuning.useHmcWithin = tuningList["use_hmc_within"];

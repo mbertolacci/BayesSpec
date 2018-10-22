@@ -40,6 +40,22 @@ Eigen::VectorXd randNormal(unsigned int n, RNG& rng) {
     return output;
 }
 
+template<typename RNG, typename T>
+T randElement(
+    const Eigen::Matrix<T, Eigen::Dynamic, 1>& elements,
+    const Eigen::VectorXd& weights,
+    RNG& rng
+) {
+    double u = randUniform(rng) * weights.sum();
+    for (unsigned int i = 0; i < elements.size(); ++i) {
+        u -= weights[i];
+        if (u <= 0) {
+            return elements[i];
+        }
+    }
+    return elements[elements.size() - 1];
+}
+
 }  // namespace bayesspec
 
 #endif  // SRC_RANDOM_UTILS_HPP_

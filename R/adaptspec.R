@@ -12,9 +12,12 @@
 #' \itemize{
 #'   \item \code{prob_short_move} (\code{0.8}): probability of proposing a small
 #'   move of a cutpoint in a within step
-#'   \item \code{short_move_max} (\code{1}): maximum size of small step. When a
-#'   small step is chosen, the proposal is from a discrete uniform with bounds
-#'   \code{[-short_move_max, short_move_max]}
+#'   \item \code{short_moves} (\code{c(-1, 1)}): set of possible small steps for
+#'   the 'small move' proposal. if using time_step > 1, will be multiplied by
+#'   time_step.
+#'   \item \code{short_move_weights} (\code{c(0.5, 0.5)}) the probability of
+#'   picking each corresponding entry in \code{short_moves}. Need not be
+#'   normalised to sum to one
 #'   \item \code{var_inflate} (\code{1}): factor by which to inflate the
 #'   covariance matrix of the spline coefficient proposal
 #'   \item \code{warm_up_var_inflate} (\code{= var_inflate}): as above, but
@@ -103,7 +106,8 @@
 #'   # Sampler control
 #'   tuning = list(
 #'     prob_short_move = 0.8,
-#'     short_move_max = 1,
+#'     short_moves = c(-1, 1),
+#'     short_move_weights = c(0.5, 0.5),
 #'     var_inflate = 1,
 #'     warm_up_var_inflate = NULL,
 #'     use_hmc_within = TRUE,
@@ -167,7 +171,8 @@ adaptspec <- function(
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
-    short_move_max = 1,
+    short_moves = c(-1, 1),
+    short_move_weights = c(0.5, 0.5),
     var_inflate = 1,
     warm_up_var_inflate = NULL,
     use_hmc_within = TRUE,
@@ -396,7 +401,8 @@ adaptspec_nu <- function(n_freq, n_bases) {
 .adaptspec_tuning <- function(tuning) {
   tuning <- .extend_list(list(
     prob_short_move = 0.8,
-    short_move_max = 1,
+    short_moves = c(-1, 1),
+    short_move_weights = NULL,
     var_inflate = 1,
     use_hmc_within = TRUE,
     l_min = 190,
@@ -405,7 +411,11 @@ adaptspec_nu <- function(n_freq, n_bases) {
     epsilon_max = 0.1
   ), tuning)
 
-  tuning$short_move_max <- as.integer(tuning$short_move_max)
+  tuning$short_moves <- as.integer(tuning$short_moves)
+  if (is.null(tuning$short_move_weights)) {
+    tuning$short_move_weights <- rep(1, length(tuning$short_moves))
+  }
+
   if (is.null(tuning$warm_up_var_inflate)) {
     tuning$warm_up_var_inflate <- tuning$var_inflate
   }
@@ -421,8 +431,11 @@ adaptspec_nu <- function(n_freq, n_bases) {
   with(tuning, {
     stopifnot(prob_short_move >= 0 && prob_short_move <= 1)
 
-    stopifnot(is.integer(short_move_max))
-    stopifnot(short_move_max > 0)
+    stopifnot(is.integer(short_moves))
+    stopifnot(!anyNA(short_moves))
+    stopifnot(is.numeric(short_move_weights))
+    stopifnot(!anyNA(short_move_weights))
+    stopifnot(length(short_moves) == length(short_move_weights))
 
     stopifnot(is.numeric(var_inflate))
     stopifnot(!is.na(var_inflate))

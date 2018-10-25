@@ -12,10 +12,10 @@ public:
           acceptedCutpointWithin_(0),
           nSingleWithin_(0),
           acceptedSingleWithin_(0),
-          nBetween_(0),
-          acceptedBetween_(0),
           nHmcWithin_(0),
-          acceptedHmcWithin_(0) {}
+          acceptedHmcWithin_(0),
+          nBetween_(0),
+          acceptedBetween_(0) {}
 
     void acceptCutpointWithin() {
         ++nCutpointWithin_;

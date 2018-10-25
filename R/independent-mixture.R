@@ -54,12 +54,21 @@ adaptspec_independent_mixture <- function(
   .validate_mixture_component_priors(component_priors, n_components, data)
   stopifnot(length(weights_prior) == n_components)
 
+  component_tuning <- .adaptspec_tuning(component_tuning)
+  .validate_adaptspec_tuning(component_tuning)
+
   ## Starting value set up
   if (inherits(start, 'adaptspecindependentmixturefit')) {
     # If provided a chain, continue it
     start <- start$final_values
   } else {
-    start <- .mixture_start(start, component_priors, data, first_category_fixed)
+    start <- .mixture_start(
+      start,
+      component_priors,
+      data,
+      first_category_fixed,
+      component_tuning
+    )
     if (is.null(start$weights)) {
       start$weights <- runif(n_components)
       start$weights[n_components] <- (
@@ -70,9 +79,6 @@ adaptspec_independent_mixture <- function(
   # Validate starting values
   .validate_mixture_start(start, n_components, component_priors, data)
   stopifnot(length(start$weights) == n_components)
-
-  component_tuning <- .adaptspec_tuning(component_tuning)
-  .validate_adaptspec_tuning(component_tuning)
 
   # Run sampler
   results <- .independent_mixture(

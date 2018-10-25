@@ -26,21 +26,22 @@ BEGIN_RCPP
 END_RCPP
 }
 // getSampleFilled
-Rcpp::List getSampleFilled(Rcpp::NumericMatrix xR, Rcpp::List priorList, Rcpp::List stateList);
-RcppExport SEXP _BayesSpec_getSampleFilled(SEXP xRSEXP, SEXP priorListSEXP, SEXP stateListSEXP) {
+Rcpp::List getSampleFilled(Rcpp::NumericMatrix xR, Rcpp::List priorList, Rcpp::List stateList, Rcpp::List tuningList);
+RcppExport SEXP _BayesSpec_getSampleFilled(SEXP xRSEXP, SEXP priorListSEXP, SEXP stateListSEXP, SEXP tuningListSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type stateList(stateListSEXP);
-    rcpp_result_gen = Rcpp::wrap(getSampleFilled(xR, priorList, stateList));
+    Rcpp::traits::input_parameter< Rcpp::List >::type tuningList(tuningListSEXP);
+    rcpp_result_gen = Rcpp::wrap(getSampleFilled(xR, priorList, stateList, tuningList));
     return rcpp_result_gen;
 END_RCPP
 }
 // getMetropolisLogRatio
-double getMetropolisLogRatio(Rcpp::List currentR, Rcpp::List proposalR, Rcpp::NumericMatrix xR, Rcpp::List priorList);
-RcppExport SEXP _BayesSpec_getMetropolisLogRatio(SEXP currentRSEXP, SEXP proposalRSEXP, SEXP xRSEXP, SEXP priorListSEXP) {
+double getMetropolisLogRatio(Rcpp::List currentR, Rcpp::List proposalR, Rcpp::NumericMatrix xR, Rcpp::List priorList, Rcpp::List tuningList);
+RcppExport SEXP _BayesSpec_getMetropolisLogRatio(SEXP currentRSEXP, SEXP proposalRSEXP, SEXP xRSEXP, SEXP priorListSEXP, SEXP tuningListSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +49,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type proposalR(proposalRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type priorList(priorListSEXP);
-    rcpp_result_gen = Rcpp::wrap(getMetropolisLogRatio(currentR, proposalR, xR, priorList));
+    Rcpp::traits::input_parameter< Rcpp::List >::type tuningList(tuningListSEXP);
+    rcpp_result_gen = Rcpp::wrap(getMetropolisLogRatio(currentR, proposalR, xR, priorList, tuningList));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -291,8 +293,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 9},
-    {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 3},
-    {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 4},
+    {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 4},
+    {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 5},
     {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 12},
     {"_BayesSpec_fftForwardR2C", (DL_FUNC) &_BayesSpec_fftForwardR2C, 1},
     {"_BayesSpec_fftForwardC2C", (DL_FUNC) &_BayesSpec_fftForwardC2C, 1},

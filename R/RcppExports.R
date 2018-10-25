@@ -5,12 +5,12 @@
     .Call('_BayesSpec_adaptspec', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorList, tuningList, startR, thin, showProgress)
 }
 
-.get_sample_filled <- function(xR, priorList, stateList) {
-    .Call('_BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, stateList)
+.get_sample_filled <- function(xR, priorList, stateList, tuningList) {
+    .Call('_BayesSpec_getSampleFilled', PACKAGE = 'BayesSpec', xR, priorList, stateList, tuningList)
 }
 
-.get_metropolis_log_ratio <- function(currentR, proposalR, xR, priorList) {
-    .Call('_BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList)
+.get_metropolis_log_ratio <- function(currentR, proposalR, xR, priorList, tuningList) {
+    .Call('_BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList, tuningList)
 }
 
 .dirichlet_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, componentTuningR, firstCategoryFixed, startR, thin, showProgress = FALSE) {

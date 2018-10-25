@@ -304,18 +304,18 @@ adaptspec_sample <- function(
   # Cannot allow too many segments
   stopifnot(nrow(data) >= (model$n_segments_max * model$t_min))
 
+  tuning <- .adaptspec_tuning(tuning)
+  .validate_adaptspec_tuning(tuning)
+
   if (inherits(start, 'adaptspecfit')) {
     # If provided a chain, continue it
     start <- start$final_values
   } else {
-    start <- .adaptspec_start(start, model, data)
+    start <- .adaptspec_start(start, model, data, tuning)
     start <- .x_missing_start(start, missing_indices)
   }
   .validate_adaptspec_start(start, model, data)
   .validate_x_missing_start(start, missing_indices)
-
-  tuning <- .adaptspec_tuning(tuning)
-  .validate_adaptspec_tuning(tuning)
 
   results <- .adaptspec(
     n_loop,
@@ -346,7 +346,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
   splines_basis1d_demmler_reinsch(seq(0, 0.5, length.out = n_freq), n_bases)
 }
 
-.adaptspec_start <- function(start, model, data) {
+.adaptspec_start <- function(start, model, data, tuning) {
   if (is.null(start$n_segments)) {
     if (model$n_segments_min == model$n_segments_max) {
       start$n_segments <- model$n_segments_min
@@ -380,7 +380,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
     }
     # Runs the optimisation algorithm to find the conditional mode for beta
     data[is.na(data)] <- rnorm(sum(is.na(data)))
-    state <- .get_sample_filled(data, model, start)
+    state <- .get_sample_filled(data, model, start, tuning)
     start$beta <- state$beta_mode
   }
 

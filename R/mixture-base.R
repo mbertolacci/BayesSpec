@@ -26,6 +26,7 @@
   component_priors,
   data,
   first_category_fixed,
+  component_tuning,
   initialise_categories = TRUE
 ) {
   missing_indices <- .missing_indices(data)
@@ -43,7 +44,8 @@
           ,
           start$categories == i - 1,
           drop = FALSE
-        ]
+        ],
+        component_tuning
       )
     }
   )

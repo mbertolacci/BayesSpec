@@ -146,16 +146,11 @@ Rcpp::List wrapState(const AdaptSpecState& state) {
 }
 
 AdaptSpecState getStateFromList(
-    Rcpp::List parametersList, Eigen::MatrixXd& x, const AdaptSpecPrior& prior
+    Rcpp::List parametersList,
+    Eigen::MatrixXd& x,
+    const AdaptSpecPrior& prior,
+    const AdaptSpecTuning& tuning
 ) {
-    AdaptSpecTuning tuning;
-    tuning.probShortMove = 0.8;
-    tuning.shortMoves = Eigen::VectorXi(2);
-    tuning.shortMoves << -1, 1;
-    tuning.shortMoveWeights = Eigen::VectorXd(2);
-    tuning.shortMoveWeights << 0.5, 0.5;
-    tuning.varInflate = 1;
-    tuning.warmUpVarInflate = 1;
     return AdaptSpecState(
         AdaptSpecParameters::fromList(parametersList, prior),
         x, prior, tuning
@@ -166,12 +161,14 @@ AdaptSpecState getStateFromList(
 Rcpp::List getSampleFilled(
     Rcpp::NumericMatrix xR,
     Rcpp::List priorList,
-    Rcpp::List stateList
+    Rcpp::List stateList,
+    Rcpp::List tuningList
 ) {
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    AdaptSpecTuning tuning = AdaptSpecTuning::fromList(tuningList);
     Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
 
-    return wrapState(getStateFromList(stateList, x, prior));
+    return wrapState(getStateFromList(stateList, x, prior, tuning));
 }
 
 // [[Rcpp::export(name=".get_metropolis_log_ratio")]]
@@ -179,12 +176,14 @@ double getMetropolisLogRatio(
     Rcpp::List currentR,
     Rcpp::List proposalR,
     Rcpp::NumericMatrix xR,
-    Rcpp::List priorList
+    Rcpp::List priorList,
+    Rcpp::List tuningList
 ) {
     AdaptSpecPrior prior = AdaptSpecPrior::fromList(priorList);
+    AdaptSpecTuning tuning = AdaptSpecTuning::fromList(tuningList);
     Eigen::MatrixXd x = Rcpp::as< Eigen::MatrixXd >(xR);
-    AdaptSpecState current = getStateFromList(currentR, x, prior);
-    AdaptSpecState proposal = getStateFromList(proposalR, x, prior);
+    AdaptSpecState current = getStateFromList(currentR, x, prior, tuning);
+    AdaptSpecState proposal = getStateFromList(proposalR, x, prior, tuning);
 
     return AdaptSpecState::getMetropolisLogRatio(current, proposal);
 }

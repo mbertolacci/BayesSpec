@@ -11,23 +11,24 @@ prior <- adaptspec_model(
   tau_upper_limit = 2,
   n_bases = 2
 )
+tuning <- .adaptspec_tuning(list(use_hessian_curvature = TRUE))
 
 test_that('initialise', {
   result <- .get_sample_filled(x, prior, .adaptspec_start(
-    list(n_segments = 1), prior, x
-  ))
+    list(n_segments = 1), prior, x, tuning
+  ), tuning)
   expect_equal(result$parameters$cut_points, c(20, 20, 20))
   expect_equal(result$segment_lengths, c(20, 0, 0))
 
   result <- .get_sample_filled(x, prior, .adaptspec_start(
-    list(n_segments = 2), prior, x
-  ))
+    list(n_segments = 2), prior, x, tuning
+  ), tuning)
   expect_equal(result$parameters$cut_points, c(10, 20, 20))
   expect_equal(result$segment_lengths, c(10, 10, 0))
 
   result <- .get_sample_filled(x, prior, .adaptspec_start(
-    list(n_segments = 3), prior, x
-  ))
+    list(n_segments = 3), prior, x, tuning
+  ), tuning)
   expect_equal(result$parameters$cut_points, c(6, 13, 20))
   expect_equal(result$segment_lengths, c(6, 7, 7))
 })
@@ -40,7 +41,8 @@ test_that('fit and densities', {
       beta = matrix(0, nrow = 3, ncol = 3),
       tau_squared = rep(1, 3),
       cut_points = c(20, 20, 20)
-    )
+    ),
+    tuning
   )
 
   # Basis
@@ -88,7 +90,8 @@ test_that('fit and densities', {
       beta = matrix(0, nrow = 3, ncol = 3),
       tau_squared = rep(1, 3),
       cut_points = c(20, 20, 20)
-    )
+    ),
+    tuning
   )
 
   # Basis
@@ -136,8 +139,8 @@ test_that('fit and densities', {
 test_that('the nu matrix is correct for even and odd numbers of observations', {
   y_even <- as.matrix(rnorm(4))
   result_even <- .get_sample_filled(y_even, prior, .adaptspec_start(
-    list(n_segments = 1), prior, y_even
-  ))
+    list(n_segments = 1), prior, y_even, tuning
+  ), tuning)
   expect_equal(result_even$nu[[1]], rbind(
     c(1, 4.501582e-01,  2.250791e-01),
     c(1, 3.183099e-01,  1.378212e-17),
@@ -146,8 +149,8 @@ test_that('the nu matrix is correct for even and odd numbers of observations', {
 
   y_odd <- as.matrix(rnorm(5))
   result_odd <- .get_sample_filled(y_odd, prior, .adaptspec_start(
-    list(n_segments = 1), prior, y_odd
-  ))
+    list(n_segments = 1), prior, y_odd, tuning
+  ), tuning)
   expect_equal(result_odd$nu[[1]], rbind(
     c(1, 0.4501582,  0.22507908),
     c(1, 0.3641856,  0.06955326),
@@ -163,7 +166,8 @@ test_that('log_prior_cut_points', {
       beta = matrix(0, nrow = 3, ncol = 3),
       tau_squared = rep(1, 3),
       cut_points = c(20, 20, 20)
-    )
+    ),
+    tuning
   )
   expect_equal(result$log_prior_cut_points, 0)
 
@@ -174,7 +178,8 @@ test_that('log_prior_cut_points', {
       beta = matrix(0, nrow = 3, ncol = 3),
       tau_squared = rep(1, 3),
       cut_points = c(10, 20, 20)
-    )
+    ),
+    tuning
   )
   expect_equal(result$log_prior_cut_points, -2.944439, tolerance = 1e-5)
 
@@ -185,7 +190,8 @@ test_that('log_prior_cut_points', {
       beta = matrix(0, nrow = 3, ncol = 3),
       tau_squared = rep(1, 3),
       cut_points = c(6, 13, 20)
-    )
+    ),
+    tuning
   )
   expect_equal(result$log_prior_cut_points, -5.455321, tolerance = 1e-5)
 })
@@ -204,7 +210,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       base_sample1,
       base_sample1,
-      x, prior2
+      x, prior2, tuning
     ),
     0
   )
@@ -214,7 +220,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       base_sample1,
       sample1_2,
-      x, prior2
+      x, prior2, tuning
     ),
     2.726997, tolerance = 1e-5
   )
@@ -229,7 +235,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       base_sample2,
       base_sample2,
-      x, prior2
+      x, prior2, tuning
     ),
     0
   )
@@ -241,7 +247,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       base_sample2,
       sample2,
-      x, prior2
+      x, prior2, tuning
     ),
     0.1347071, tolerance = 1e-5
   )
@@ -253,7 +259,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       base_sample2,
       sample2,
-      x, prior2
+      x, prior2, tuning
     ),
     0.03525622, tolerance = 1e-5
   )
@@ -267,7 +273,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       sample1,
       sample2,
-      x, prior2
+      x, prior2, tuning
     ),
     0.007820678, tolerance = 1e-5
   )
@@ -281,7 +287,7 @@ test_that('metropolis ratio within', {
     .get_metropolis_log_ratio(
       sample1,
       sample2,
-      x, prior2
+      x, prior2, tuning
     ),
     0.007820678, tolerance = 1e-5
   )

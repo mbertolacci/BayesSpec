@@ -129,6 +129,9 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(nrow(mixture_prior$precision) == ncol(design_matrix))
   stopifnot(ncol(mixture_prior$precision) == n_components - 1)
 
+  component_tuning <- .adaptspec_tuning(component_tuning)
+  .validate_adaptspec_tuning(component_tuning)
+
   ## Starting value set up
   flog.debug('Finding start values', name = 'BayesSpec.lsbp-mixture')
   if (inherits(start, 'adaptspeclsbpmixturefit')) {
@@ -140,6 +143,7 @@ adaptspec_lsbp_mixture <- function(
       component_priors,
       data,
       first_category_fixed,
+      component_tuning,
       initialise_categories = FALSE
     )
     if (is.null(start$categories)) {
@@ -185,9 +189,6 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)
-
-  component_tuning <- .adaptspec_tuning(component_tuning)
-  .validate_adaptspec_tuning(component_tuning)
 
   flog.debug(
     'Starting MCMC sampler',

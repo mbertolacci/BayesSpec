@@ -56,12 +56,21 @@ adaptspec_dirichlet_mixture <- function(
   # Validate prior
   .validate_mixture_component_priors(component_priors, n_components, data)
 
+  component_tuning <- .adaptspec_tuning(component_tuning)
+  .validate_adaptspec_tuning(component_tuning)
+
   ## Starting value set up
   if (inherits(start, 'adaptspecdppmixturefit')) {
     # If provided a chain, continue it
     start <- start$final_values
   } else {
-    start <- .mixture_start(start, component_priors, data, first_category_fixed)
+    start <- .mixture_start(
+      start,
+      component_priors,
+      data,
+      first_category_fixed,
+      component_tuning
+    )
     if (is.null(start$log_beta1m)) {
       start$log_beta1m <- log(runif(n_components))
       start$log_beta1m[n_components] <- -Inf
@@ -77,9 +86,6 @@ adaptspec_dirichlet_mixture <- function(
   # Validate starting values
   .validate_mixture_start(start, n_components, component_priors, data)
   stopifnot(length(start$log_beta1m) == n_components)
-
-  component_tuning <- .adaptspec_tuning(component_tuning)
-  .validate_adaptspec_tuning(component_tuning)
 
   # Run sampler
   results <- .dirichlet_mixture(

@@ -8,20 +8,31 @@ namespace bayesspec {
 class AdaptSpecStatistics {
 public:
     AdaptSpecStatistics()
-        : nWithin_(0),
-          acceptedWithin_(0),
+        : nCutpointWithin_(0),
+          acceptedCutpointWithin_(0),
+          nSingleWithin_(0),
+          acceptedSingleWithin_(0),
           nBetween_(0),
           acceptedBetween_(0),
-          nHmc_(0),
-          acceptedHmc_(0) {}
+          nHmcWithin_(0),
+          acceptedHmcWithin_(0) {}
 
-    void acceptWithin() {
-        ++nWithin_;
-        ++acceptedWithin_;
+    void acceptCutpointWithin() {
+        ++nCutpointWithin_;
+        ++acceptedCutpointWithin_;
     }
 
-    void rejectWithin() {
-        ++nWithin_;
+    void rejectCutpointWithin() {
+        ++nCutpointWithin_;
+    }
+
+    void acceptSingleWithin() {
+        ++nSingleWithin_;
+        ++acceptedSingleWithin_;
+    }
+
+    void rejectSingleWithin() {
+        ++nSingleWithin_;
     }
 
     void acceptBetween() {
@@ -33,35 +44,40 @@ public:
         ++nBetween_;
     }
 
-    void acceptHmc() {
-        ++nHmc_;
-        ++acceptedHmc_;
+    void acceptHmcWithin() {
+        ++nHmcWithin_;
+        ++acceptedHmcWithin_;
     }
 
-    void rejectHmc() {
-        ++nHmc_;
+    void rejectHmcWithin() {
+        ++nHmcWithin_;
     }
 
     Rcpp::List asList() const {
         Rcpp::List output;
-        output["n_within"] = nWithin_;
-        output["accepted_within"] = acceptedWithin_;
+        output["n_cutpoint_within"] = nCutpointWithin_;
+        output["accepted_cutpoint_within"] = acceptedCutpointWithin_;
+        output["n_single_within"] = nSingleWithin_;
+        output["accepted_single_within"] = acceptedSingleWithin_;
+        output["n_hmc_within"] = nHmcWithin_;
+        output["accepted_hmc_within"] = acceptedHmcWithin_;
         output["n_between"] = nBetween_;
         output["accepted_between"] = acceptedBetween_;
-        output["n_hmc"] = nHmc_;
-        output["accepted_hmc"] = acceptedHmc_;
         return output;
     }
 
 private:
-    unsigned int nWithin_;
-    unsigned int acceptedWithin_;
+    unsigned int nCutpointWithin_;
+    unsigned int acceptedCutpointWithin_;
+
+    unsigned int nSingleWithin_;
+    unsigned int acceptedSingleWithin_;
+
+    unsigned int nHmcWithin_;
+    unsigned int acceptedHmcWithin_;
 
     unsigned int nBetween_;
     unsigned int acceptedBetween_;
-
-    unsigned int nHmc_;
-    unsigned int acceptedHmc_;
 };
 
 }  // namespace bayesspec

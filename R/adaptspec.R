@@ -12,17 +12,19 @@
 #' \itemize{
 #'   \item \code{prob_short_move} (\code{0.8}): probability of proposing a small
 #'   move of a cutpoint in a within step
-#'   \item \code{short_moves} (\code{c(-1, 1)}): set of possible small steps for
-#'   the 'small move' proposal. if using time_step > 1, will be multiplied by
-#'   time_step.
-#'   \item \code{short_move_weights} (\code{c(0.5, 0.5)}) the probability of
-#'   picking each corresponding entry in \code{short_moves}. Need not be
+#'   \item \code{short_moves} (\code{c(-1, 0, 1)}): set of possible small steps
+#'   for the 'small move' proposal. if using time_step > 1, will be multiplied
+#'   by time_step.
+#'   \item \code{short_move_weights} (\code{c(0.5, 0.5, 0.5)}) the probability
+#'   of picking each corresponding entry in \code{short_moves}. Need not be
 #'   normalised to sum to one
 #'   \item \code{var_inflate} (\code{1}): factor by which to inflate the
 #'   covariance matrix of the spline coefficient proposal
 #'   \item \code{warm_up_var_inflate} (\code{= var_inflate}): as above, but
 #'   applying only during warm-up
-#'   \item \code{use_hmc_within} (\code{TRUE}): whether to also update spline
+#'   \item \code{use_single_within} (\code{FALSE}): whether to also update
+#'   spline directly, not just when updating cutpoints
+#'   \item \code{use_hmc_within} (\code{FALSE}): whether to also update spline
 #'   parameters using HMC
 #'   \item \code{l_min} (\code{190}): minimum number of leap frog steps to
 #'   take in an HMC iteration. Number of steps is randomly selected from a
@@ -106,11 +108,12 @@
 #'   # Sampler control
 #'   tuning = list(
 #'     prob_short_move = 0.8,
-#'     short_moves = c(-1, 1),
-#'     short_move_weights = c(0.5, 0.5),
+#'     short_moves = c(-1, 0, 1),
+#'     short_move_weights = c(0.5, 0.5, 0.5),
 #'     var_inflate = 1,
 #'     warm_up_var_inflate = NULL,
-#'     use_hmc_within = TRUE,
+#'     use_single_within = FALSE,
+#'     use_hmc_within = FALSE,
 #'     l_min = 190,
 #'     l_max = 210,
 #'     epsilon_min = 0.01,
@@ -171,11 +174,12 @@ adaptspec <- function(
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
-    short_moves = c(-1, 1),
-    short_move_weights = c(0.5, 0.5),
+    short_moves = c(-1, 0, 1),
+    short_move_weights = c(0.5, 0.5, 0.5),
     var_inflate = 1,
     warm_up_var_inflate = NULL,
-    use_hmc_within = TRUE,
+    use_single_within = FALSE,
+    use_hmc_within = FALSE,
     l_min = 190,
     l_max = 210,
     epsilon_min = 0.01,
@@ -401,10 +405,11 @@ adaptspec_nu <- function(n_freq, n_bases) {
 .adaptspec_tuning <- function(tuning) {
   tuning <- .extend_list(list(
     prob_short_move = 0.8,
-    short_moves = c(-1, 1),
+    short_moves = c(-1, 0, 1),
     short_move_weights = NULL,
     var_inflate = 1,
-    use_hmc_within = TRUE,
+    use_single_within = FALSE,
+    use_hmc_within = FALSE,
     l_min = 190,
     l_max = 210,
     epsilon_min = 0.01,
@@ -430,7 +435,6 @@ adaptspec_nu <- function(n_freq, n_bases) {
   # nolint start
   with(tuning, {
     stopifnot(prob_short_move >= 0 && prob_short_move <= 1)
-
     stopifnot(is.integer(short_moves))
     stopifnot(!anyNA(short_moves))
     stopifnot(is.numeric(short_move_weights))
@@ -439,9 +443,10 @@ adaptspec_nu <- function(n_freq, n_bases) {
 
     stopifnot(is.numeric(var_inflate))
     stopifnot(!is.na(var_inflate))
-
     stopifnot(is.numeric(warm_up_var_inflate))
     stopifnot(!is.na(warm_up_var_inflate))
+
+    stopifnot(is.logical(use_single_within))
 
     stopifnot(is.logical(use_hmc_within))
     stopifnot(is.integer(l_min))

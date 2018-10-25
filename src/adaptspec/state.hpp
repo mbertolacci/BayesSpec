@@ -196,7 +196,10 @@ public:
     template<typename RNG>
     void sample(RNG& rng) {
         sampleBetween_(rng);
-        sampleWithin_(rng);
+        sampleCutpointWithin_(rng);
+        if (tuning_.useSingleWithin) {
+            sampleSingleWithin_(rng);
+        }
         if (tuning_.useHmcWithin) {
             sampleHmcWithin_(rng);
         }
@@ -493,7 +496,7 @@ private:
     }
 
     template<typename RNG>
-    void sampleWithin_(RNG& rng) {
+    void sampleCutpointWithin_(RNG& rng) {
         AdaptSpecState proposal(*this);
 
         if (parameters.nSegments == 1) {
@@ -519,7 +522,7 @@ private:
                     );
                     if (-stepSize > parameters.cutPoints[segment]) {
                         // Step would make cut point negative, reject
-                        if (warmedUp_) statistics_.rejectWithin();
+                        if (warmedUp_) statistics_.rejectCutpointWithin();
                         return;
                     }
                     newCutPoint = parameters.cutPoints[segment] + stepSize;
@@ -529,7 +532,7 @@ private:
                         || (segment > 0 && newCutPoint - parameters.cutPoints[segment - 1] < prior_->tMin)
                     ) {
                         // Segment too short, reject
-                        if (warmedUp_) statistics_.rejectWithin();
+                        if (warmedUp_) statistics_.rejectCutpointWithin();
                         return;
                     }
 
@@ -538,7 +541,7 @@ private:
                         || parameters.cutPoints[segment + 1] - newCutPoint < prior_->tMin
                     ) {
                         // Next segment too short, reject
-                        if (warmedUp_) statistics_.rejectWithin();
+                        if (warmedUp_) statistics_.rejectCutpointWithin();
                         return;
                     }
                 } else {
@@ -557,10 +560,27 @@ private:
         double alpha = std::min(static_cast<double>(1.0), std::exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
         if (randUniform(rng) < alpha) {
             *this = proposal;
-            if (warmedUp_) statistics_.acceptWithin();
+            if (warmedUp_) statistics_.acceptCutpointWithin();
         } else {
-            if (warmedUp_) statistics_.rejectWithin();
+            if (warmedUp_) statistics_.rejectCutpointWithin();
         }
+    }
+
+    template<typename RNG>
+    void sampleSingleWithin_(RNG& rng) {
+        AdaptSpecState proposal(*this);
+        unsigned int segment = randInteger(0, parameters.nSegments - 1, rng);
+
+        proposal.sampleBetaProposal_(segment, rng);
+
+        double alpha = std::min(static_cast<double>(1.0), std::exp(AdaptSpecState::getMetropolisLogRatio(*this, proposal)));
+        if (randUniform(rng) < alpha) {
+            *this = proposal;
+            if (warmedUp_) statistics_.acceptSingleWithin();
+        } else {
+            if (warmedUp_) statistics_.rejectSingleWithin();
+        }
+
     }
 
     template<typename RNG>
@@ -583,11 +603,11 @@ private:
         );
 
         if (betaCurrent == betaNew) {
-            if (warmedUp_) statistics_.rejectHmc();
+            if (warmedUp_) statistics_.rejectHmcWithin();
             return;
         }
 
-        if (warmedUp_) statistics_.acceptHmc();
+        if (warmedUp_) statistics_.acceptHmcWithin();
 
         setSegmentBeta_(segment, betaNew);
     }

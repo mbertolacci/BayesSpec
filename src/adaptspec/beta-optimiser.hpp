@@ -15,7 +15,9 @@ public:
         periodogram_(periodogram),
         nu_(nu),
         sigmaSquaredAlpha_(sigmaSquaredAlpha),
-        tauSquared_(tauSquared) {}
+        tauSquared_(tauSquared),
+        fisherReady_(false),
+        hessianReady_(false) {}
 
     void setBeta(const Eigen::VectorXd& beta) {
         beta_ = beta;
@@ -32,6 +34,8 @@ public:
             fHat_[n_ / 2] *= 0.5;
             devExp_.row(n_ / 2) = devExp_.row(n_ / 2) * 0.5;
         }
+
+        hessianReady_ = false;
     }
 
     double value() const {
@@ -65,20 +69,41 @@ public:
         gradient *= -1.0;
     }
 
-    void hessian(Eigen::MatrixXd& hessian) const {
-        // Likelihood contribution
-        hessian.fill(0);
-        for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
-            hessian.noalias() -= nu_.transpose() * devExp_.col(series).asDiagonal() * nu_;
+    const Eigen::LLT<Eigen::MatrixXd>& fisherLLT() {
+        if (!fisherReady_) {
+            Eigen::MatrixXd fisher = periodogram_.cols() * nu_.transpose() * nu_;
+            fisher(0, 0) += 1.0 / sigmaSquaredAlpha_;
+            for (unsigned int j = 1; j < nu_.cols(); ++j) {
+                fisher(j, j) += 1.0 / tauSquared_;
+            }
+            fisherLLT_.compute(fisher);
+            fisherReady_ = true;
         }
 
-        // Prior contribution
-        hessian(0, 0) -= 1.0 / sigmaSquaredAlpha_;
-        for (unsigned int j = 1; j < beta_.size(); ++j) {
-            hessian(j, j) -= 1.0 / tauSquared_;
+        return fisherLLT_;
+    }
+
+    const Eigen::LLT<Eigen::MatrixXd>& hessianLLT() {
+        if (!hessianReady_) {
+            // Likelihood contribution
+            Eigen::MatrixXd hessian(nu_.cols(), nu_.cols());
+            hessian.fill(0);
+            for (unsigned int series = 0; series < periodogram_.cols(); ++series) {
+                hessian.noalias() += nu_.transpose() * devExp_.col(series).asDiagonal() * nu_;
+            }
+
+            // Prior contribution
+            hessian(0, 0) += 1.0 / sigmaSquaredAlpha_;
+            for (unsigned int j = 1; j < beta_.size(); ++j) {
+                hessian(j, j) += 1.0 / tauSquared_;
+            }
+
+            // Update LLT
+            hessianLLT_.compute(hessian);
+            hessianReady_ = true;
         }
 
-        hessian *= -1.0;
+        return hessianLLT_;
     }
 
 private:
@@ -88,11 +113,16 @@ private:
     const double sigmaSquaredAlpha_;
     const double tauSquared_;
 
-
     // Mutables
     Eigen::VectorXd beta_;
     Eigen::VectorXd fHat_;
     Eigen::MatrixXd devExp_;
+
+    bool fisherReady_;
+    Eigen::LLT<Eigen::MatrixXd> fisherLLT_;
+
+    bool hessianReady_;
+    Eigen::LLT<Eigen::MatrixXd> hessianLLT_;
 };
 
 class BetaOptimiser {
@@ -101,7 +131,7 @@ public:
         RUNNING = 0,
         CONVERGED = 1,
         MAX_ITERATIONS_REACHED = 2,
-        HESSIAN_NOT_POSITIVE_DEFINITE = 3
+        CURVATURE_NOT_POSITIVE_DEFINITE = 3
     };
 
     BetaOptimiser(
@@ -109,27 +139,26 @@ public:
         const Eigen::MatrixXd& periodogram,
         const Eigen::MatrixXd& nu,
         double sigmaSquaredAlpha,
-        double tauSquared
+        double tauSquared,
+        bool useHessian
     ) : functor_(n, periodogram, nu, sigmaSquaredAlpha, tauSquared),
         currentIteration_(0),
         currentBeta_(nu.cols()),
         currentGradient_(nu.cols()),
-        currentHessian_(nu.cols(), nu.cols()),
         lastRate_(1.0),
         lastDirection_(nu.cols()),
         tolerance_(sqrtEpsilon()),
         armijoC_(0.01),
-        armijoRho_(0.5) {
+        armijoRho_(0.5),
+        useHessian_(useHessian) {
         lastDirection_.fill(1);
     }
 
-    Status run(Eigen::VectorXd& beta, Eigen::VectorXd& gradient, Eigen::MatrixXd& hessian) {
+    Status run(Eigen::VectorXd& beta, Eigen::VectorXd& gradient, Eigen::MatrixXd& curvatureU) {
         currentBeta_ = beta;
         functor_.setBeta(currentBeta_);
         currentValue_ = functor_.value();
         functor_.gradient(currentGradient_);
-        functor_.hessian(currentHessian_);
-        hessianLLT_.compute(currentHessian_);
 
         while (status_() == RUNNING) {
             takeSingleStep_();
@@ -137,16 +166,15 @@ public:
 
         beta = currentBeta_;
         gradient = currentGradient_;
-        hessian = currentHessian_;
+        curvatureU = curvatureLLT_().matrixU();
         return status_();
     }
 
-    friend std::ostream& operator<< (std::ostream& stream, const BetaOptimiser& optimiser) {
+    friend std::ostream& operator<< (std::ostream& stream, BetaOptimiser& optimiser) {
         stream << "currentIteration_ = " << optimiser.currentIteration_ << "\n";
         stream << "currentBeta_ =\n" << optimiser.currentBeta_.transpose() << "\n";
         stream << "currentValue_ = " << optimiser.currentValue_ << "\n";
         stream << "currentGradient_ =\n" << optimiser.currentGradient_.transpose() << "\n";
-        stream << "currentHessian_ =\n" << optimiser.currentHessian_ << "\n";
         stream << "tolerance_ = " << optimiser.tolerance_ << "\n";
         stream << "lastDirection_ =\n" << optimiser.lastDirection_.transpose() << "\n";
         stream << "lastRate_ = " << optimiser.lastRate_ << "\n";
@@ -162,8 +190,6 @@ private:
     Eigen::VectorXd currentBeta_;
     double currentValue_;
     Eigen::VectorXd currentGradient_;
-    Eigen::MatrixXd currentHessian_;
-    Eigen::LLT<Eigen::MatrixXd> hessianLLT_;
     double lastRate_;
     Eigen::VectorXd lastDirection_;
 
@@ -171,18 +197,27 @@ private:
     double armijoC_;
     double armijoRho_;
 
-    Status status_() const {
+    bool useHessian_;
+
+    const Eigen::LLT<Eigen::MatrixXd>& curvatureLLT_() {
+        if (useHessian_) {
+            return functor_.hessianLLT();
+        }
+        return functor_.fisherLLT();
+    }
+
+    Status status_() {
         // Stop if gradient very small
         if (currentGradient_.lpNorm<Eigen::Infinity>() < tolerance_) return CONVERGED;
         // Stop if last step was very small
         if ((lastRate_ * lastDirection_).lpNorm<Eigen::Infinity>() < tolerance_) return CONVERGED;
         if (currentIteration_ == maxIterations_) return MAX_ITERATIONS_REACHED;
-        if (hessianLLT_.info() != Eigen::Success) return HESSIAN_NOT_POSITIVE_DEFINITE;
+        if (curvatureLLT_().info() != Eigen::Success) return CURVATURE_NOT_POSITIVE_DEFINITE;
         return RUNNING;
     }
 
     void takeSingleStep_() {
-        lastDirection_ = hessianLLT_.solve(-currentGradient_);
+        lastDirection_ = curvatureLLT_().solve(-currentGradient_);
 
         // Perform back-tracking line-search
         lastRate_ = 1.0;
@@ -199,11 +234,9 @@ private:
             currentValue_ = functor_.value();
         }
 
-        // Set the new beta and update gradient and hessian
+        // Set the new beta and update gradient
         currentBeta_ += lastRate_ * lastDirection_;
         functor_.gradient(currentGradient_);
-        functor_.hessian(currentHessian_);
-        hessianLLT_.compute(currentHessian_);
 
         ++currentIteration_;
     }

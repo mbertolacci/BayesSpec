@@ -37,6 +37,8 @@
 #'   is chosen from a uniform distribution over
 #'   \code{[epsilon_min, epsilon_max]}
 #'   \item \code{epsilon_max} (\code{0.1}): maximum step size in HMC.
+#'   \item \code{use_hessian_curvature} (\code{FALSE}): whether to use the
+#'   hessian or the Fisher information for curvature of spline fit
 #' }
 #' If a value is omitted or NULL, the default above will be used.
 #'
@@ -121,6 +123,7 @@
 #'     l_max = 210,
 #'     epsilon_min = 0.01,
 #'     epsilon_max = 0.1
+#'     use_hessian_curvature = FALSE
 #'   ),
 #'   # Starting values
 #'   start = list(
@@ -186,7 +189,8 @@ adaptspec <- function(
     l_min = 190,
     l_max = 210,
     epsilon_min = 0.01,
-    epsilon_max = 0.1
+    epsilon_max = 0.1,
+    use_hessian_curvature = FALSE
   ),
   # Starting values
   start = list(
@@ -459,6 +463,8 @@ adaptspec_nu <- function(n_freq, n_bases) {
     stopifnot(is.numeric(epsilon_min))
     stopifnot(is.numeric(epsilon_max))
     stopifnot(epsilon_min <= epsilon_max)
+
+    stopifnot(is.logical(use_hessian_curvature))
   })
   # nolint end
 }

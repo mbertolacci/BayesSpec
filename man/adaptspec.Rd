@@ -35,6 +35,7 @@ adaptspec(
     use_cutpoint_within = TRUE,
     use_single_within = FALSE,
     use_hmc_within = FALSE,
+    use_hessian_curvature = FALSE
   ),
   # Starting values
   start = list(
@@ -164,6 +165,8 @@ the following entries (and corresponding default values):
   is chosen from a uniform distribution over
   \code{[epsilon_min, epsilon_max]}
   \item \code{epsilon_max} (\code{0.1}): maximum step size in HMC.
+  \item \code{use_hessian_curvature} (\code{FALSE}): whether to use the
+  hessian or the Fisher information for curvature of spline fit
 }
 If a value is omitted or NULL, the default above will be used.
 }

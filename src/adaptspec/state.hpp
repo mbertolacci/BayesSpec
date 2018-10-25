@@ -154,18 +154,18 @@ public:
             periodogram[segment],
             nu[segment],
             prior_->sigmaSquaredAlpha,
-            parameters.tauSquared[segment]
+            parameters.tauSquared[segment],
+            tuning_.useHessianCurvature
         );
 
         // Outputs
         Eigen::VectorXd beta(parameters.beta.row(segment).transpose());
         Eigen::VectorXd gradient(prior_->nBases + 1);
-        Eigen::MatrixXd hessian(prior_->nBases + 1, prior_->nBases + 1);
-        int status = optimiser.run(beta, gradient, hessian);
+        int status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
         if (status != 1) {
             // Reattempt optimisation from a zero start
             beta.fill(0);
-            status = optimiser.run(beta, gradient, hessian);
+            status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
             if (status != 1) {
                 Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
                 Rcpp::Rcout << "Current state =\n" << *this << "\n";
@@ -174,9 +174,9 @@ public:
         }
 
         betaMode.row(segment) = beta.transpose();
-
-        hessian /= (warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate);
-        precisionCholeskyMode[segment] = hessian.llt().matrixU();
+        precisionCholeskyMode[segment] /= std::sqrt(
+            warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate
+        );
 
         updateSegmentDensities(segment);
     }

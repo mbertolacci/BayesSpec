@@ -15,7 +15,8 @@ adaptspec_independent_mixture <- function(
     l_min = 190,
     l_max = 210,
     epsilon_min = 0.01,
-    epsilon_max = 0.1
+    epsilon_max = 0.1,
+    use_hessian_curvature = FALSE
   ),
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,

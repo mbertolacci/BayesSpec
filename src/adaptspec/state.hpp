@@ -354,6 +354,8 @@ private:
     }
 
     void moveCutpoint_(unsigned int segment, unsigned int newCutPoint) {
+        if (parameters.cutPoints[segment] == newCutPoint) return;
+
         parameters.cutPoints[segment] = newCutPoint;
         segmentLengths[segment] = segment == 0 ? newCutPoint : newCutPoint - parameters.cutPoints[segment - 1];
         segmentLengths[segment + 1] = parameters.cutPoints[segment + 1] - newCutPoint;

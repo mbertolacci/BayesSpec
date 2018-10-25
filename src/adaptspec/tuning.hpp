@@ -12,6 +12,7 @@ public:
     Eigen::VectorXd shortMoveWeights;
     double varInflate;
     double warmUpVarInflate;
+    bool useCutpointWithin;
     bool useSingleWithin;
     bool useHmcWithin;
     int lMin;
@@ -26,6 +27,7 @@ public:
         tuning.shortMoveWeights = Rcpp::as<Eigen::VectorXd>(tuningList["short_move_weights"]);
         tuning.varInflate = tuningList["var_inflate"];
         tuning.warmUpVarInflate = tuningList["warm_up_var_inflate"];
+        tuning.useCutpointWithin = tuningList["use_cutpoint_within"];
         tuning.useSingleWithin = tuningList["use_single_within"];
         tuning.useHmcWithin = tuningList["use_hmc_within"];
         tuning.lMin = tuningList["l_min"];

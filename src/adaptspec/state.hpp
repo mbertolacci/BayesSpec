@@ -196,7 +196,9 @@ public:
     template<typename RNG>
     void sample(RNG& rng) {
         sampleBetween_(rng);
-        sampleCutpointWithin_(rng);
+        if (tuning_.useCutpointWithin) {
+           sampleCutpointWithin_(rng);
+        }
         if (tuning_.useSingleWithin) {
             sampleSingleWithin_(rng);
         }

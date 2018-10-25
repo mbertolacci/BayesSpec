@@ -9,6 +9,7 @@ adaptspec_independent_mixture <- function(
     short_move_weights = c(0.5, 0.5, 0.5),
     var_inflate = 1,
     warm_up_var_inflate = NULL,
+    use_cutpoint_within = TRUE,
     use_single_within = FALSE,
     use_hmc_within = FALSE,
     l_min = 190,

@@ -22,6 +22,8 @@
 #'   covariance matrix of the spline coefficient proposal
 #'   \item \code{warm_up_var_inflate} (\code{= var_inflate}): as above, but
 #'   applying only during warm-up
+#'   \item \code{use_cutpoint_within} (\code{TRUE}): whether to propose the
+#'   cutpoints. One would very rarely want to disable this.
 #'   \item \code{use_single_within} (\code{FALSE}): whether to also update
 #'   spline directly, not just when updating cutpoints
 #'   \item \code{use_hmc_within} (\code{FALSE}): whether to also update spline
@@ -112,6 +114,7 @@
 #'     short_move_weights = c(0.5, 0.5, 0.5),
 #'     var_inflate = 1,
 #'     warm_up_var_inflate = NULL,
+#'     use_cutpoint_within = TRUE,
 #'     use_single_within = FALSE,
 #'     use_hmc_within = FALSE,
 #'     l_min = 190,
@@ -408,6 +411,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
     short_moves = c(-1, 0, 1),
     short_move_weights = NULL,
     var_inflate = 1,
+    use_cutpoint_within = TRUE,
     use_single_within = FALSE,
     use_hmc_within = FALSE,
     l_min = 190,

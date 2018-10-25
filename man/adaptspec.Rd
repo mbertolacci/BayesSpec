@@ -28,13 +28,13 @@ adaptspec(
     short_move_weights = c(0.5, 0.5, 0.5),
     var_inflate = 1,
     warm_up_var_inflate = NULL,
-    l_min = 190,
-    l_max = 210,
-    epsilon_min = 0.01,
-    epsilon_max = 0.1
     use_cutpoint_within = TRUE,
     use_single_within = FALSE,
     use_hmc_within = FALSE,
+    l_min = 1,
+    l_max = 10,
+    epsilon_min = 0.1,
+    epsilon_max = 1,
     use_hessian_curvature = FALSE
   ),
   # Starting values
@@ -156,15 +156,15 @@ the following entries (and corresponding default values):
   spline directly, not just when updating cutpoints
   \item \code{use_hmc_within} (\code{FALSE}): whether to also update spline
   parameters using HMC
-  \item \code{l_min} (\code{190}): minimum number of leap frog steps to
+  \item \code{l_min} (\code{1}): minimum number of leap frog steps to
   take in an HMC iteration. Number of steps is randomly selected from a
   discrete uniform over \code{[l_min, l_max]}
-  \item \code{l_max} (\code{210}): maximum number of lead frog steps to
+  \item \code{l_max} (\code{10}): maximum number of lead frog steps to
   take in an HMC iteration
-  \item \code{epsilon_min} (\code{0.01}): minimum step size in HMC. Step size
+  \item \code{epsilon_min} (\code{0.1}): minimum step size in HMC. Step size
   is chosen from a uniform distribution over
   \code{[epsilon_min, epsilon_max]}
-  \item \code{epsilon_max} (\code{0.1}): maximum step size in HMC.
+  \item \code{epsilon_max} (\code{1}): maximum step size in HMC.
   \item \code{use_hessian_curvature} (\code{FALSE}): whether to use the
   hessian or the Fisher information for curvature of spline fit
 }

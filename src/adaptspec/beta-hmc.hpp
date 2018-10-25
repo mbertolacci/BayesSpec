@@ -39,7 +39,8 @@ Eigen::VectorXd sampleBetaHmc(
     double currentU = betaFunctor.value();
     VectorXd gradientCurrent(betaCurrent.size());
     betaFunctor.gradient(gradientCurrent);
-    VectorXd currentP = randNormal(betaCurrent.size(), rng);
+    VectorXd currentZ = randNormal(betaCurrent.size(), rng);
+    VectorXd currentP = betaFunctor.fisherLLT().matrixL() * currentZ;
 
     // Starting values
     VectorXd beta(betaCurrent);
@@ -51,7 +52,7 @@ Eigen::VectorXd sampleBetaHmc(
     // Alternate full steps for position and momentum
     for (int i = 0; i < l; ++i) {
         // Make a full step for the position
-        beta = beta + epsilon * p;
+        beta = beta + epsilon * betaFunctor.fisherLLT().solve(p);
         betaFunctor.setBeta(beta);
         betaFunctor.gradient(gradient);
         if (i < l - 1) {
@@ -64,9 +65,12 @@ Eigen::VectorXd sampleBetaHmc(
     // Negate momentum at end of trajectory to make the proposal symmetric
     p = -p;
 
-    double currentK = 0.5 * currentP.array().square().sum();
+    // NOTE(mgnb): safe to do this because the fisher matrix is constant
+    Eigen::VectorXd z = betaFunctor.fisherLLT().matrixL().solve(p);
+
+    double currentK = 0.5 * currentZ.array().square().sum();
     double proposedU = betaFunctor.value();
-    double proposedK = 0.5 * p.array().square().sum();
+    double proposedK = 0.5 * z.array().square().sum();
 
     if (randUniform(rng) < std::exp(currentU - proposedU + currentK - proposedK)) {
         return beta;

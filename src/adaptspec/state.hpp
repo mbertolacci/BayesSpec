@@ -330,6 +330,13 @@ private:
         }
     }
 
+    void setSegmentBeta_(unsigned int segment, const Eigen::VectorXd& betaNew) {
+        parameters.beta.row(segment) = betaNew.transpose();
+        checkParameterValidity_();
+        updateSegmentDensities(segment);
+        missingDistributionsNeedUpdate[segment] = true;
+    }
+
     template<typename RNG>
     void sampleBetaProposal_(unsigned int segment, RNG& rng) {
         Eigen::VectorXd unitNormals(betaMode.cols());
@@ -337,14 +344,13 @@ private:
         for (unsigned int i = 0; i < unitNormals.size(); ++i) {
             unitNormals[i] = distribution(rng);
         }
-        parameters.beta.row(segment) = betaMode.row(segment)
+
+        Eigen::VectorXd betaNew = betaMode.row(segment)
             + precisionCholeskyMode[segment].template triangularView<Eigen::Upper>().solve(
                 unitNormals
             ).transpose();
 
-        checkParameterValidity_();
-        updateSegmentDensities(segment);
-        missingDistributionsNeedUpdate[segment] = true;
+        setSegmentBeta_(segment, betaNew);
     }
 
     void moveCutpoint_(unsigned int segment, unsigned int newCutPoint) {
@@ -579,9 +585,9 @@ private:
             return;
         }
 
-        parameters.beta.row(segment) = betaNew.transpose();
-        updateSegmentDensities(segment);
         if (warmedUp_) statistics_.acceptHmc();
+
+        setSegmentBeta_(segment, betaNew);
     }
 
     template<typename RNG>

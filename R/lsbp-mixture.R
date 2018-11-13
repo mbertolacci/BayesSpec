@@ -268,6 +268,74 @@ component_probabilities.adaptspeclsbpmixturefit <- function(results) {
   aperm(p, c(2, 1, 3))
 }
 
+#' @export
+diagnostic_plots.adaptspeclsbpmixturefit <- function(fit, ...) {
+  component_plots <- diagnostic_plots.adaptspecmixturefit(
+    fit,
+    top = 'Spectra splines',
+    ...
+  )
+  tau_squared_df <- do.call(rbind, lapply(
+    seq_len(ncol(fit$tau_squared)),
+    function(i) {
+      data.frame(
+        iteration = as.vector(time(fit$tau_squared)),
+        component = i,
+        value = as.vector(fit$tau_squared[, i]),
+        stringsAsFactors = FALSE
+      )
+    }
+  ))
+  tau_squared_plot <- ggplot2::ggplot(
+    tau_squared_df,
+    ggplot2::aes(iteration, value)
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap(
+      ~ component,
+      scales = 'free_y',
+      labeller = ggplot2::label_both,
+      ncol = 1
+    ) +
+    ggplot2::ggtitle('Tau squared')
+
+  get_beta_df <- function(i) {
+    do.call(rbind, lapply(
+      seq_len(dim(fit$beta)[3]),
+      function(j) {
+        data.frame(
+          iteration = as.vector(time(fit$beta)),
+          component = j,
+          column = i,
+          value = as.vector(fit$beta[, i, j]),
+          stringsAsFactors = FALSE
+        )
+      }
+    ))
+  }
+  beta_df <- do.call(rbind, lapply(1 : 5, get_beta_df))
+  beta_plot <- ggplot2::ggplot(
+    beta_df,
+    ggplot2::aes(iteration, value)
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap(
+      ~ component + column,
+      scales = 'free',
+      labeller = ggplot2::label_both,
+      ncol = 5
+    ) +
+    ggplot2::ggtitle('Beta')
+
+  gridExtra::grid.arrange(
+    component_plots,
+    tau_squared_plot,
+    beta_plot,
+    widths = c(12, 1, 4),
+    ncol = 3
+  )
+}
+
 .merge_samples.adaptspeclsbpmixturefit <- function(x, fits) {  # nolint
   output <- .merge_samples.adaptspecmixturefit(NULL, fits)  # nolint
   .merge_mcmc_parts(output, fits, c('tau_squared', 'beta'))

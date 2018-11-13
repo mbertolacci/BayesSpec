@@ -59,8 +59,11 @@ diagnostics.adaptspecmixturefit <- function(fit, ...) {
 #' @export
 diagnostic_plots.adaptspecmixturefit <- function(fit, top = NULL, ...) {
   component_plots <- lapply(1 : fit$n_components, function(component) {
-    diagnostic_plots(fit$components[[component]], ...) +
-      ggplot2::ggtitle(sprintf('Component %d', component))
+    diagnostic_plots(
+      fit$components[[component]],
+      top = sprintf('Component %d', component),
+      ...
+    )
   })
   do.call(
     gridExtra::grid.arrange,

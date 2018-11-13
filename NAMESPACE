@@ -2,6 +2,7 @@
 
 S3method(component_probabilities,adaptspeclsbpmixturefit)
 S3method(diagnostic_plots,adaptspecfit)
+S3method(diagnostic_plots,adaptspeclsbpmixturefit)
 S3method(diagnostic_plots,adaptspecmixturefit)
 S3method(diagnostic_warnings,adaptspecfit)
 S3method(diagnostic_warnings,adaptspecmixturefit)

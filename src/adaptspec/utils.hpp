@@ -57,7 +57,7 @@ public:
                     n,
                     thisX.data(),
                     reinterpret_cast<fftw_complex *>(frequencies.data()),
-                    FFTW_ESTIMATE
+                    FFTW_ESTIMATE | FFTW_DESTROY_INPUT
                 );
             }
         #else

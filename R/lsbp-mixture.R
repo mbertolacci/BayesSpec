@@ -63,6 +63,8 @@ adaptspec_lsbp_mixture <- function(
   missing_indices <- prepared_data$missing_indices
   design_matrix <- as.matrix(design_matrix)
 
+  n_time_series <- ncol(data)
+
   ## Prior set up
   # Mixture components
   component_priors <- .mixture_component_priors(component_model, n_components)
@@ -117,7 +119,7 @@ adaptspec_lsbp_mixture <- function(
   if (is.null(mixture_prior$precision)) {
     # For spline fits, these will later be overwritten by estimated of tau
     mixture_prior$precision <- matrix(
-      1 / 100,
+      1 / 4,
       nrow = ncol(design_matrix),
       ncol = n_components - 1
     )
@@ -147,21 +149,7 @@ adaptspec_lsbp_mixture <- function(
       component_tuning,
       initialise_categories = FALSE
     )
-    if (is.null(start$categories)) {
-      start$categories <- sample.int(
-        n_components,
-        nrow(design_matrix),
-        replace = TRUE
-      ) - 1
-    }
-    if (is.null(start$beta)) {
-      start$beta <- matrix(
-        rnorm(ncol(design_matrix) * (n_components - 1)),
-        nrow = ncol(design_matrix),
-        ncol = n_components - 1
-      )
-    }
-    if (is.null(start$tau_squared)) {
+    if (spline_prior$n_bases > 0 && is.null(start$tau_squared)) {
       while (TRUE) {
         start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
           n_components - 1,
@@ -171,6 +159,36 @@ adaptspec_lsbp_mixture <- function(
           break
         }
       }
+      spline_indices <- (
+        nrow(mixture_prior$precision) - spline_prior$n_bases + 1
+      ) : nrow(mixture_prior$precision)
+      # Update the mixture prior with the chosen precisions
+      for (k in seq_along(start$tau_squared)) {
+        mixture_prior$precision[spline_indices, k] <- 1 / start$tau_squared[k]
+      }
+    }
+    if (is.null(start$beta)) {
+      start$beta <- matrix(
+        NA,
+        nrow = ncol(design_matrix),
+        ncol = n_components - 1
+      )
+      for (k in seq_len(ncol(start$beta))) {
+        start$beta[, k] <- rnorm(
+          ncol(design_matrix),
+          sd = 1 / sqrt(mixture_prior$precision[, k])
+        )
+      }
+    }
+    if (is.null(start$categories)) {
+      start$categories <- sample.int(
+        n_components,
+        n_time_series,
+        replace = TRUE
+      ) - 1
+    }
+    if (first_category_fixed) {
+      start$categories[1] <- 0
     }
   }
 
@@ -191,7 +209,7 @@ adaptspec_lsbp_mixture <- function(
     data,
     check_categories = FALSE
   )
-  stopifnot(length(start$categories) == nrow(design_matrix))
+  stopifnot(length(start$categories) == n_time_series)
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)
@@ -204,7 +222,8 @@ adaptspec_lsbp_mixture <- function(
   results <- .lsbp_mixture(
     n_loop, n_warm_up, data,
     .zero_index_missing_indices(missing_indices),
-    design_matrix, component_priors,
+    design_matrix[1 : n_time_series, , drop = FALSE],
+    component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
     mixture_prior$tau_prior_upper,
@@ -224,6 +243,8 @@ adaptspec_lsbp_mixture <- function(
   results$n_components <- n_components
   results$design_matrix <- design_matrix
   results$component_tuning <- component_tuning
+  results$mixture_prior <- mixture_prior
+  results$spline_prior <- spline_prior
 
   results <- adaptspecmixturefit(results, component_priors)
   class(results) <- c('adaptspeclsbpmixturefit', 'adaptspecmixturefit')

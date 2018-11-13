@@ -3,6 +3,7 @@
 
 #include <RcppEigen.h>
 
+#include "../random/truncated-inverse-gamma.hpp"
 #include "../random/utils.hpp"
 
 #include "../whittle-likelihood.hpp"
@@ -624,34 +625,16 @@ private:
             double alpha = static_cast<double>(prior_->nBases) / 2.0 + prior_->tauPriorA;
             double beta = parameters.beta.row(segment).segment(1, prior_->nBases).array().square().sum() / 2.0 + prior_->tauPriorB;
 
-            // Draw from right-truncated inverse gamma distribution
-            double logConst1 = R::pgamma(
-                1 / prior_->tauUpperLimit,
+            parameters.tauSquared[segment] = TruncatedInverseGammaDistribution(
                 alpha,
-                1 / beta,
-                // Gets upper tail probability
-                0,
-                // Gets log probability
-                1
-            );
-            double u = randUniform(rng);
-            double logConst2 = std::log(u) + logConst1;
-            parameters.tauSquared[segment] = 1 / R::qgamma(
-                logConst2,
-                alpha,
-                1 / beta,
-                // Specifies first argument is upper tail probability
-                0,
-                // Specifies first argument is log probability
-                1
-            );
+                beta,
+                prior_->tauUpperLimit
+            )(rng);
 
             if (parameters.tauSquared[segment] == 0) {
                 Rcpp::Rcout << "Sample of tauSquared[" << segment << "] failed\n"
                     << "  alpha = " << alpha << "\n"
-                    << "  beta = " << beta << "\n"
-                    << "  logConst1 = " << logConst1 << "\n"
-                    << "  logConst2 = " << logConst2 << "\n";
+                    << "  beta = " << beta << "\n";
                 Rcpp::Rcout << "Current state =\n" << *this << "\n";
                 Rcpp::stop("Sample of tauSquared failed");
             }

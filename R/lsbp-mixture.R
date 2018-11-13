@@ -1,6 +1,7 @@
 base_mixture_prior <- list(
-  tau_prior_a_squared = 100,
-  tau_prior_nu = 3
+  tau_prior_a_squared = 10,
+  tau_prior_nu = 3,
+  tau_prior_upper = 10000
 )
 
 base_spline_prior <- list(
@@ -161,10 +162,15 @@ adaptspec_lsbp_mixture <- function(
       )
     }
     if (is.null(start$tau_squared)) {
-      start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
-        n_components - 1,
-        mixture_prior$tau_prior_nu
-      ))
+      while (TRUE) {
+        start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
+          n_components - 1,
+          mixture_prior$tau_prior_nu
+        ))
+        if (all(start$tau_squared <= mixture_prior$tau_prior_upper)) {
+          break
+        }
+      }
     }
   }
 
@@ -201,6 +207,7 @@ adaptspec_lsbp_mixture <- function(
     design_matrix, component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
+    mixture_prior$tau_prior_upper,
     component_tuning,
     first_category_fixed,
     spline_prior$n_bases,

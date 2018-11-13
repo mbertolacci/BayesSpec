@@ -52,7 +52,7 @@ public:
         const std::vector<AdaptSpecPrior>& componentPriors,
         const Eigen::MatrixXd& priorMean,
         const Eigen::MatrixXd& priorPrecision,
-        double tauPriorASquared, double tauPriorNu,
+        double tauPriorASquared, double tauPriorNu, double tauPriorUpper,
         unsigned int nSplineBases
     ) : Base(
             x, missingIndices,
@@ -65,6 +65,7 @@ public:
         priorPrecision_(priorPrecision),
         tauPriorASquared_(tauPriorASquared),
         tauPriorNu_(tauPriorNu),
+        tauPriorUpper_(tauPriorUpper),
         parameters_(betaStart),
         tauSquared_(tauSquaredStart),
         nSplineBases_(nSplineBases) {
@@ -83,6 +84,7 @@ public:
             this->counts_,
             tauPriorNu_,
             tauPriorASquared_,
+            tauPriorUpper_,
             nSplineBases_,
             rng
         );
@@ -123,6 +125,7 @@ private:
     Eigen::MatrixXd priorPrecision_;
     double tauPriorASquared_;
     double tauPriorNu_;
+    double tauPriorUpper_;
 
     Eigen::MatrixXd parameters_;
     Eigen::VectorXd tauSquared_;

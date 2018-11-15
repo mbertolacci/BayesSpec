@@ -120,8 +120,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // logisticStickBreakingMixture
-Rcpp::List logisticStickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, Rcpp::List componentTuningR, bool firstCategoryFixed, unsigned int nSplineBases, Rcpp::List startR, Rcpp::List thin, bool showProgress, bool mpi);
-RcppExport SEXP _BayesSpec_logisticStickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP componentTuningRSEXP, SEXP firstCategoryFixedSEXP, SEXP nSplineBasesSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP, SEXP mpiSEXP) {
+Rcpp::List logisticStickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, double tauPriorUpper, Rcpp::List componentTuningR, bool firstCategoryFixed, unsigned int nSplineBases, Rcpp::List startR, Rcpp::List thin, bool showProgress, bool mpi);
+RcppExport SEXP _BayesSpec_logisticStickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP tauPriorUpperSEXP, SEXP componentTuningRSEXP, SEXP firstCategoryFixedSEXP, SEXP nSplineBasesSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP, SEXP mpiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -135,6 +135,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type priorPrecisionR(priorPrecisionRSEXP);
     Rcpp::traits::input_parameter< double >::type tauPriorASquared(tauPriorASquaredSEXP);
     Rcpp::traits::input_parameter< double >::type tauPriorNu(tauPriorNuSEXP);
+    Rcpp::traits::input_parameter< double >::type tauPriorUpper(tauPriorUpperSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type componentTuningR(componentTuningRSEXP);
     Rcpp::traits::input_parameter< bool >::type firstCategoryFixed(firstCategoryFixedSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nSplineBases(nSplineBasesSEXP);
@@ -142,7 +143,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
     Rcpp::traits::input_parameter< bool >::type mpi(mpiSEXP);
-    rcpp_result_gen = Rcpp::wrap(logisticStickBreakingMixture(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi));
+    rcpp_result_gen = Rcpp::wrap(logisticStickBreakingMixture(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -198,8 +199,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // timeVaryingSpectraSamples
-NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep);
-RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP) {
+NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep, std::string frequencyTransform);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP, SEXP frequencyTransformSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -208,7 +209,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nFrequencies(nFrequenciesSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type timeStep(timeStepSEXP);
-    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies, timeStep));
+    Rcpp::traits::input_parameter< std::string >::type frequencyTransform(frequencyTransformSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -299,12 +301,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_fftForwardR2C", (DL_FUNC) &_BayesSpec_fftForwardR2C, 1},
     {"_BayesSpec_fftForwardC2C", (DL_FUNC) &_BayesSpec_fftForwardC2C, 1},
     {"_BayesSpec_independentMixture", (DL_FUNC) &_BayesSpec_independentMixture, 11},
-    {"_BayesSpec_logisticStickBreakingMixture", (DL_FUNC) &_BayesSpec_logisticStickBreakingMixture, 17},
+    {"_BayesSpec_logisticStickBreakingMixture", (DL_FUNC) &_BayesSpec_logisticStickBreakingMixture, 18},
     {"_BayesSpec_randGamma", (DL_FUNC) &_BayesSpec_randGamma, 3},
     {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
     {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
-    {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 5},
+    {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 6},
     {"_BayesSpec_timeVaryingSpectraMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanCategories, 2},
     {"_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities, 2},
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},

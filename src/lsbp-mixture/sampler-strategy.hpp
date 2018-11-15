@@ -4,6 +4,7 @@
 #include <RcppEigen.h>
 
 #include "../random/inverse-gamma.hpp"
+#include "../random/truncated-inverse-gamma.hpp"
 #include "../random/polyagamma.hpp"
 #include "../random/utils.hpp"
 
@@ -25,6 +26,7 @@ protected:
         const Eigen::VectorXi& counts,
         double tauPriorNu,
         double tauPriorASquared,
+        double tauPriorUpper,
         unsigned int nSplineBases,
         RNG& rng
     ) {
@@ -57,6 +59,7 @@ protected:
                 parameters,
                 tauPriorNu,
                 tauPriorASquared,
+                tauPriorUpper,
                 nSplineBases,
                 rng
             );
@@ -111,6 +114,7 @@ protected:
         const Eigen::MatrixXd& parameters,
         double tauPriorNu,
         double tauPriorASquared,
+        double tauPriorUpper,
         unsigned int nSplineBases,
         RNG& rng
     ) {
@@ -122,9 +126,10 @@ protected:
             )(rng);
             double residuals = parameters.col(component).segment(splineStartIndex, nSplineBases).array().square().sum();
 
-            tauSquared[component] = InverseGammaDistribution(
+            tauSquared[component] = TruncatedInverseGammaDistribution(
                 (static_cast<double>(nSplineBases) + tauPriorNu) / 2.0,
-                residuals / 2.0 + tauPriorNu / a
+                residuals / 2.0 + tauPriorNu / a,
+                tauPriorUpper
             )(rng);
         }
     }

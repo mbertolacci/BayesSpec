@@ -22,6 +22,7 @@ protected:
         const Eigen::VectorXi& counts,
         double tauPriorNu,
         double tauPriorASquared,
+        double tauPriorUpper,
         unsigned int nSplineBases,
         RNG& rng
     ) {
@@ -36,6 +37,7 @@ protected:
                 counts,
                 tauPriorNu,
                 tauPriorASquared,
+                tauPriorUpper,
                 nSplineBases,
                 rng
             );

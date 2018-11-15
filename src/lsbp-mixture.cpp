@@ -23,7 +23,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
     Rcpp::List priorsR,
     Rcpp::NumericMatrix priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
-    double tauPriorASquared, double tauPriorNu,
+    double tauPriorASquared, double tauPriorNu, double tauPriorUpper,
     Rcpp::List componentTuningR,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
@@ -77,7 +77,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
         componentStarts,
         Rcpp::as<Eigen::VectorXi>(startR["categories"]),
         priors, priorMean, priorPrecision,
-        tauPriorASquared, tauPriorNu,
+        tauPriorASquared, tauPriorNu, tauPriorUpper,
         nSplineBases
     );
 
@@ -192,7 +192,7 @@ Rcpp::List logisticStickBreakingMixture(
     Rcpp::List priorsR,
     Rcpp::NumericMatrix priorMeanR,
     Rcpp::NumericMatrix priorPrecisionR,
-    double tauPriorASquared, double tauPriorNu,
+    double tauPriorASquared, double tauPriorNu, double tauPriorUpper,
     Rcpp::List componentTuningR,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
@@ -213,6 +213,7 @@ Rcpp::List logisticStickBreakingMixture(
             priorPrecisionR,
             tauPriorASquared,
             tauPriorNu,
+            tauPriorUpper,
             componentTuningR,
             firstCategoryFixed,
             nSplineBases,
@@ -232,6 +233,7 @@ Rcpp::List logisticStickBreakingMixture(
             priorPrecisionR,
             tauPriorASquared,
             tauPriorNu,
+            tauPriorUpper,
             componentTuningR,
             firstCategoryFixed,
             nSplineBases,

@@ -1,6 +1,7 @@
 base_mixture_prior <- list(
-  tau_prior_a_squared = 100,
-  tau_prior_nu = 3
+  tau_prior_a_squared = 10,
+  tau_prior_nu = 3,
+  tau_prior_upper = 10000
 )
 
 base_spline_prior <- list(
@@ -62,6 +63,8 @@ adaptspec_lsbp_mixture <- function(
   missing_indices <- prepared_data$missing_indices
   design_matrix <- as.matrix(design_matrix)
 
+  n_time_series <- ncol(data)
+
   ## Prior set up
   # Mixture components
   component_priors <- .mixture_component_priors(component_model, n_components)
@@ -116,7 +119,7 @@ adaptspec_lsbp_mixture <- function(
   if (is.null(mixture_prior$precision)) {
     # For spline fits, these will later be overwritten by estimated of tau
     mixture_prior$precision <- matrix(
-      1 / 100,
+      1 / 4,
       nrow = ncol(design_matrix),
       ncol = n_components - 1
     )
@@ -146,25 +149,46 @@ adaptspec_lsbp_mixture <- function(
       component_tuning,
       initialise_categories = FALSE
     )
-    if (is.null(start$categories)) {
-      start$categories <- sample.int(
-        n_components,
-        nrow(design_matrix),
-        replace = TRUE
-      ) - 1
+    if (spline_prior$n_bases > 0 && is.null(start$tau_squared)) {
+      while (TRUE) {
+        start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
+          n_components - 1,
+          mixture_prior$tau_prior_nu
+        ))
+        if (all(start$tau_squared <= mixture_prior$tau_prior_upper)) {
+          break
+        }
+      }
+      spline_indices <- (
+        nrow(mixture_prior$precision) - spline_prior$n_bases + 1
+      ) : nrow(mixture_prior$precision)
+      # Update the mixture prior with the chosen precisions
+      for (k in seq_along(start$tau_squared)) {
+        mixture_prior$precision[spline_indices, k] <- 1 / start$tau_squared[k]
+      }
     }
     if (is.null(start$beta)) {
       start$beta <- matrix(
-        rnorm(ncol(design_matrix) * (n_components - 1)),
+        NA,
         nrow = ncol(design_matrix),
         ncol = n_components - 1
       )
+      for (k in seq_len(ncol(start$beta))) {
+        start$beta[, k] <- rnorm(
+          ncol(design_matrix),
+          sd = 1 / sqrt(mixture_prior$precision[, k])
+        )
+      }
     }
-    if (is.null(start$tau_squared)) {
-      start$tau_squared <- abs(sqrt(mixture_prior$tau_prior_a_squared) * rt(
-        n_components - 1,
-        mixture_prior$tau_prior_nu
-      ))
+    if (is.null(start$categories)) {
+      start$categories <- sample.int(
+        n_components,
+        n_time_series,
+        replace = TRUE
+      ) - 1
+    }
+    if (first_category_fixed) {
+      start$categories[1] <- 0
     }
   }
 
@@ -185,7 +209,7 @@ adaptspec_lsbp_mixture <- function(
     data,
     check_categories = FALSE
   )
-  stopifnot(length(start$categories) == nrow(design_matrix))
+  stopifnot(length(start$categories) == n_time_series)
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
   stopifnot(length(start$tau_squared) == n_components - 1)
@@ -198,9 +222,11 @@ adaptspec_lsbp_mixture <- function(
   results <- .lsbp_mixture(
     n_loop, n_warm_up, data,
     .zero_index_missing_indices(missing_indices),
-    design_matrix, component_priors,
+    design_matrix[1 : n_time_series, , drop = FALSE],
+    component_priors,
     mixture_prior$mean, mixture_prior$precision,
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
+    mixture_prior$tau_prior_upper,
     component_tuning,
     first_category_fixed,
     spline_prior$n_bases,
@@ -217,6 +243,8 @@ adaptspec_lsbp_mixture <- function(
   results$n_components <- n_components
   results$design_matrix <- design_matrix
   results$component_tuning <- component_tuning
+  results$mixture_prior <- mixture_prior
+  results$spline_prior <- spline_prior
 
   results <- adaptspecmixturefit(results, component_priors)
   class(results) <- c('adaptspeclsbpmixturefit', 'adaptspecmixturefit')
@@ -259,6 +287,74 @@ component_probabilities.adaptspeclsbpmixturefit <- function(results) {
 
   # Permute to something sensible
   aperm(p, c(2, 1, 3))
+}
+
+#' @export
+diagnostic_plots.adaptspeclsbpmixturefit <- function(fit, ...) {
+  component_plots <- diagnostic_plots.adaptspecmixturefit(
+    fit,
+    top = 'Spectra splines',
+    ...
+  )
+  tau_squared_df <- do.call(rbind, lapply(
+    seq_len(ncol(fit$tau_squared)),
+    function(i) {
+      data.frame(
+        iteration = as.vector(time(fit$tau_squared)),
+        component = i,
+        value = as.vector(fit$tau_squared[, i]),
+        stringsAsFactors = FALSE
+      )
+    }
+  ))
+  tau_squared_plot <- ggplot2::ggplot(
+    tau_squared_df,
+    ggplot2::aes(iteration, value)
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap(
+      ~ component,
+      scales = 'free_y',
+      labeller = ggplot2::label_both,
+      ncol = 1
+    ) +
+    ggplot2::ggtitle('Tau squared')
+
+  get_beta_df <- function(i) {
+    do.call(rbind, lapply(
+      seq_len(dim(fit$beta)[3]),
+      function(j) {
+        data.frame(
+          iteration = as.vector(time(fit$beta)),
+          component = j,
+          column = i,
+          value = as.vector(fit$beta[, i, j]),
+          stringsAsFactors = FALSE
+        )
+      }
+    ))
+  }
+  beta_df <- do.call(rbind, lapply(1 : 5, get_beta_df))
+  beta_plot <- ggplot2::ggplot(
+    beta_df,
+    ggplot2::aes(iteration, value)
+  ) +
+    ggplot2::geom_line() +
+    ggplot2::facet_wrap(
+      ~ component + column,
+      scales = 'free',
+      labeller = ggplot2::label_both,
+      ncol = 5
+    ) +
+    ggplot2::ggtitle('Beta')
+
+  gridExtra::grid.arrange(
+    component_plots,
+    tau_squared_plot,
+    beta_plot,
+    widths = c(12, 1, 4),
+    ncol = 3
+  )
 }
 
 .merge_samples.adaptspeclsbpmixturefit <- function(x, fits) {  # nolint

@@ -97,35 +97,50 @@ summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
 
 #' @describeIn adaptspecfit MCMC diagnostic plots to assess convergence.
 #' @export
-diagnostic_plots.adaptspecfit <- function(fit) {
-  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'beta'))
+diagnostic_plots.adaptspecfit <- function(fit, ...) {
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'beta', 'tau_squared'))
   n_iterations <- length(fit_lcm$n_segments)
 
-  data <- do.call(rbind, lapply(
-    sort(unique(fit_lcm$n_segments)),
-    function(n_segments) {
-      indices <- which(fit_lcm$n_segments == n_segments)
+  plot_traces <- function(beta_i) {
+    data <- do.call(rbind, lapply(
+      sort(unique(fit_lcm$n_segments)),
+      function(n_segments) {
+        indices <- which(fit_lcm$n_segments == n_segments)
 
-      do.call(rbind, lapply(1 : n_segments, function(segment) {
-        value <- rep(NA, n_iterations)
-        value[indices] <- fit_lcm$beta[indices, segment, 1]
-        data.frame(
-          iteration = as.vector(time(fit_lcm$n_segments)),
-          n_segments = factor(n_segments),
-          segment = factor(segment),
-          value = value
-        )
-      }))
-    })
-  )
-
-  ggplot2::ggplot(data, ggplot2::aes(iteration, value)) +
-    ggplot2::geom_line(na.rm = TRUE) +
-    ggplot2::facet_grid(
-      segment ~ n_segments,
-      scales = 'free',
-      labeller = ggplot2::label_both
+        do.call(rbind, lapply(1 : n_segments, function(segment) {
+          value <- rep(NA, n_iterations)
+          if (!is.null(beta_i)) {
+            value[indices] <- fit_lcm$beta[indices, segment, beta_i]
+          } else {
+            value[indices] <- fit_lcm$tau_squared[indices, segment]
+          }
+          data.frame(
+            iteration = as.vector(time(fit_lcm$n_segments)),
+            n_segments = factor(n_segments),
+            segment = factor(segment),
+            value = value
+          )
+        }))
+      })
     )
+
+    ggplot2::ggplot(data, ggplot2::aes(iteration, value)) +
+      ggplot2::geom_line(na.rm = TRUE) +
+      ggplot2::facet_grid(
+        segment ~ n_segments,
+        scales = 'free',
+        labeller = ggplot2::label_both
+      )
+  }
+
+  gridExtra::grid.arrange(
+    plot_traces(1) + ggplot2::ggtitle('beta[1]'),
+    plot_traces(2) + ggplot2::ggtitle('beta[2]'),
+    plot_traces(3) + ggplot2::ggtitle('beta[3]'),
+    plot_traces(NULL) + ggplot2::ggtitle('tau_squared'),
+    ncol = 4,
+    ...
+  )
 }
 
 #' @describeIn adaptspecfit Outputs MCMC diagnostics statistics to help assess
@@ -295,7 +310,15 @@ segment_log_spectra_mean <- function(
     n_frequencies <- length(frequencies)
   }
   # Compute fits of the spectra
-  nu <- splines_basis1d_demmler_reinsch(frequencies, fit$prior$n_bases)
+  if (fit$prior$frequency_transform == 'cbrt') {
+    transformed_frequencies <- frequencies ^ (1 / 3)
+  } else {
+    transformed_frequencies <- frequencies
+  }
+  nu <- splines_basis1d_demmler_reinsch(
+    transformed_frequencies,
+    fit$prior$n_bases
+  )
 
   fit_lcm <- .thin_to_lcm(fit, c('beta', 'n_segments'))
 
@@ -332,7 +355,15 @@ segment_spectra_mean <- function(
     n_frequencies <- length(frequencies)
   }
   # Compute fits of the spectra
-  nu <- splines_basis1d_demmler_reinsch(frequencies, fit$prior$n_bases)
+  if (fit$prior$frequency_transform == 'cbrt') {
+    transformed_frequencies <- frequencies ^ (1 / 3)
+  } else {
+    transformed_frequencies <- frequencies
+  }
+  nu <- splines_basis1d_demmler_reinsch(
+    transformed_frequencies,
+    fit$prior$n_bases
+  )
 
   fit_lcm <- .thin_to_lcm(fit, c('beta', 'n_segments'))
 
@@ -389,7 +420,7 @@ time_varying_spectra_samples.adaptspecfit <- function(
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'beta'))
   output <- .time_varying_spectra_samples(
     fit_lcm$n_segments, fit_lcm$cut_points, fit_lcm$beta,
-    n_frequencies, time_step
+    n_frequencies, time_step, fit$prior$frequency_transform
   )
   attr(output, 'times') <- (
     1 + (0 : (dim(output)[3] - 1)) * time_step

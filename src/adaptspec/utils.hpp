@@ -9,6 +9,7 @@
     #include <unsupported/Eigen/FFT>
 #endif
 
+#include "prior.hpp"
 #include "../splines.hpp"
 
 namespace bayesspec {
@@ -16,10 +17,23 @@ namespace bayesspec {
 class AdaptSpecUtils {
 public:
     static
-    Eigen::MatrixXd calculateNu(unsigned int n, unsigned int nBases) {
+    Eigen::MatrixXd calculateNu(
+        unsigned int n,
+        unsigned int nBases,
+        AdaptSpecPrior::FrequencyTransform frequencyTransform
+    ) {
         unsigned int maxFrequency = n / 2;
+        Eigen::VectorXd frequencies = (
+            Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency)
+            / static_cast<double>(n)
+        );
+        if (frequencyTransform == AdaptSpecPrior::CUBE_ROOT) {
+            for (int i = 0; i < frequencies.size(); ++i) {
+                frequencies[i] = std::cbrt(frequencies[i]);
+            }
+        }
         return splineBasis1dDemmlerReinsch(
-            Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency) / static_cast<double>(n),
+            frequencies,
             nBases
         );
     }
@@ -43,7 +57,7 @@ public:
                     n,
                     thisX.data(),
                     reinterpret_cast<fftw_complex *>(frequencies.data()),
-                    FFTW_ESTIMATE
+                    FFTW_ESTIMATE | FFTW_DESTROY_INPUT
                 );
             }
         #else

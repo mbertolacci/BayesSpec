@@ -29,8 +29,8 @@
     .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, componentTuningR, firstCategoryFixed, startR, thin, showProgress)
 }
 
-.lsbp_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi) {
-    .Call('_BayesSpec_logisticStickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi)
+.lsbp_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi) {
+    .Call('_BayesSpec_logisticStickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi)
 }
 
 .rand_gamma <- function(n, shape, scale) {
@@ -50,8 +50,8 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }
 
-.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies, timeStep) {
-    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies, timeStep)
+.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform) {
+    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform)
 }
 
 .time_varying_spectra_mixture_mean_categories <- function(componentSamples, categories) {

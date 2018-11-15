@@ -14,7 +14,7 @@
 
 \method{summary}{adaptspecfit}(fit, iterations_threshold = 0)
 
-\method{diagnostic_plots}{adaptspecfit}(fit)
+\method{diagnostic_plots}{adaptspecfit}(fit, ...)
 
 \method{diagnostics}{adaptspecfit}(fit, iterations_threshold = 0)
 

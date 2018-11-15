@@ -6,6 +6,11 @@
 namespace bayesspec {
 
 struct AdaptSpecPrior {
+    enum FrequencyTransform {
+        IDENTITY,
+        CUBE_ROOT
+    };
+
     unsigned int nSegmentsMin;
     unsigned int nSegmentsMax;
     unsigned int tMin;
@@ -15,6 +20,7 @@ struct AdaptSpecPrior {
     double tauUpperLimit;
     unsigned int nBases;
     unsigned int timeStep;
+    FrequencyTransform frequencyTransform;
 
     AdaptSpecPrior(
         unsigned int nSegmentsMin_,
@@ -25,7 +31,8 @@ struct AdaptSpecPrior {
         double tauPriorB_,
         double tauUpperLimit_,
         unsigned int nBases_,
-        unsigned int timeStep_
+        unsigned int timeStep_,
+        FrequencyTransform frequencyTransform_
     ) : nSegmentsMin(nSegmentsMin_),
         nSegmentsMax(nSegmentsMax_),
         tMin(tMin_),
@@ -34,9 +41,15 @@ struct AdaptSpecPrior {
         tauPriorB(tauPriorB_),
         tauUpperLimit(tauUpperLimit_),
         nBases(nBases_),
-        timeStep(timeStep_) {}
+        timeStep(timeStep_),
+        frequencyTransform(frequencyTransform_) {}
 
     static AdaptSpecPrior fromList(const Rcpp::List& priorList) {
+        std::string frequencyTransformName = priorList["frequency_transform"];
+        FrequencyTransform frequencyTransform = AdaptSpecPrior::IDENTITY;
+        if (frequencyTransformName == "cbrt") {
+            frequencyTransform = AdaptSpecPrior::CUBE_ROOT;
+        }
         return AdaptSpecPrior(
             priorList["n_segments_min"],
             priorList["n_segments_max"],
@@ -46,7 +59,8 @@ struct AdaptSpecPrior {
             priorList["tau_prior_b"],
             priorList["tau_upper_limit"],
             priorList["n_bases"],
-            priorList["time_step"]
+            priorList["time_step"],
+            frequencyTransform
         );
     }
 

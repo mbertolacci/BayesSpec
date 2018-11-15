@@ -63,6 +63,8 @@
 #' smoothing spline smoothing parameter
 #' @param n_bases Number of spline basis vectors to use for log spectrum
 #' @param time_step Restricts cut points to times divisible by this number
+#' @param frequency_transform How to transform frequencies prior to fitting
+#' smoothing spline. Defaults to no transformation.
 #' @param tuning Tuning parameters for the MCMC scheme
 #' @param start Starting values for MCMC chain. Initialised randomly if blank.
 #' Can be provided an adaptspecfit object in order to continue a previous chain.
@@ -109,6 +111,7 @@
 #'   tau_upper_limit = 10000,
 #'   n_bases = 7,
 #'   time_step = 1,
+#'   frequency_transform = c('identity', 'cbrt'),
 #'   # Sampler control
 #'   tuning = list(
 #'     prob_short_move = 0.8,
@@ -177,6 +180,7 @@ adaptspec <- function(
   tau_upper_limit = 10000,
   n_bases = 7,
   time_step = 1,
+  frequency_transform = c('identity', 'cbrt'),
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
@@ -212,6 +216,7 @@ adaptspec <- function(
   # Extra
   run_diagnostics = TRUE
 ) {
+  frequency_transform <- match.arg(frequency_transform)
   adaptspec_sample(
     adaptspec_model(
       n_segments_min = n_segments_min,
@@ -222,7 +227,8 @@ adaptspec <- function(
       tau_prior_b = tau_prior_b,
       tau_upper_limit = tau_upper_limit,
       n_bases = n_bases,
-      time_step = time_step
+      time_step = time_step,
+      frequency_transform = frequency_transform
     ),
     n_loop = n_loop,
     n_warm_up = n_warm_up,
@@ -246,9 +252,11 @@ adaptspec_model <- function(
   tau_prior_b = 0,
   tau_upper_limit = 10000,
   n_bases = 7,
-  time_step = 1
+  time_step = 1,
+  frequency_transform = c('identity', 'cbrt')
 ) {
   stopifnot(t_min %% time_step == 0)
+  frequency_transform <- match.arg(frequency_transform)
   model <- list(
     n_segments_min = n_segments_min,
     n_segments_max = n_segments_max,
@@ -258,7 +266,8 @@ adaptspec_model <- function(
     tau_prior_b = tau_prior_b,
     tau_upper_limit = tau_upper_limit,
     n_bases = n_bases,
-    time_step = time_step
+    time_step = time_step,
+    frequency_transform = frequency_transform
   )
   class(model) <- 'adaptspecmodel'
   return(model)

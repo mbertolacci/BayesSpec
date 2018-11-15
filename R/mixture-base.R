@@ -33,6 +33,9 @@
   n_components <- length(component_priors)
   if (initialise_categories && is.null(start$categories)) {
     start$categories <- sample.int(n_components, ncol(data), replace = TRUE) - 1
+    if (first_category_fixed) {
+      start$categories[1] <- 0
+    }
   }
   start$components <- lapply(
     seq_len(length(component_priors)),
@@ -51,9 +54,6 @@
   )
   start <- .x_missing_start(start, missing_indices)
 
-  if (first_category_fixed) {
-    start$categories[1] <- 0
-  }
 
   start
 }

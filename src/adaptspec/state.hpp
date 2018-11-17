@@ -109,6 +109,10 @@ public:
             ).array().square().sum()
             - 0.5 * (1 + prior_->nBases) * std::log(2 * M_PI);
 
+        // NOTE(mgnb): the following likelihood and prior must include the
+        // normalising constant, because in the log posterior they are
+        // multiplied by the number of segments, which is a parameter
+
         logSegmentLikelihood[segment] = logWhittleLikelihood(
             nu[segment] * parameters.beta.row(segment).transpose(),
             periodogram[segment],
@@ -121,8 +125,30 @@ public:
             - parameters.beta.row(segment).segment(1, prior_->nBases).array().square().sum() / (2 * parameters.tauSquared[segment])
             - 0.5 * prior_->nBases * std::log(parameters.tauSquared[segment])
             - 0.5 * (1 + prior_->nBases) * std::log(2 * M_PI)
-            - std::log(prior_->tauUpperLimit)
         );
+        if (prior_->tauPriorB > 0) {
+            // Truncated inverse gamma
+            logSegmentPrior[segment] += (
+                // Log density
+                prior_->tauPriorA * std::log(prior_->tauPriorB)
+                - std::lgamma(prior_->tauPriorA)
+                - (prior_->tauPriorA + 1) * std::log(parameters.tauSquared[segment])
+                - prior_->tauPriorB / parameters.tauSquared[segment]
+                // Log normalising constant
+                - R::pgamma(
+                    1 / prior_->tauUpperLimit,
+                    prior_->tauPriorA,
+                    1 / prior_->tauPriorB,
+                    // Gets upper tail probability
+                    0,
+                    // Gets log probability
+                    1
+                )
+            );
+        } else {
+            // Uniform
+            logSegmentPrior[segment] -= std::log(prior_->tauUpperLimit);
+        }
     }
 
     void updateMissingValuesDistributions(unsigned int segment) {

@@ -240,6 +240,13 @@ public:
         sampleMissing_(rng);
     }
 
+    template<typename RNG>
+    void proposeSpectra(RNG& rng) {
+        for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
+            sampleBetaProposal_(segment, rng);
+        }
+    }
+
     double getLogPosterior() const {
         return logSegmentLikelihood.segment(0, parameters.nSegments).sum() + logSegmentPrior.segment(0, parameters.nSegments).sum() + logPriorCutPoints;
     }

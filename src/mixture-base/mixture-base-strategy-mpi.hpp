@@ -101,7 +101,7 @@ private:
                 Eigen::VectorXd xMissing(nMissing);
                 if (rank == senderRank) {
                     for (unsigned int i = 0; i < nMissing; ++i) {
-                        xMissing[i] = componentState.x(
+                        xMissing[i] = componentState.x->operator()(
                             componentState.missingIndices[timeSeries][i],
                             timeSeries
                         );
@@ -110,7 +110,7 @@ private:
                 MPI::broadcast(xMissing, senderRank);
                 if (rank != senderRank) {
                     for (unsigned int i = 0; i < nMissing; ++i) {
-                        componentState.x(
+                        componentState.x->operator()(
                             componentState.missingIndices[timeSeries][i],
                             timeSeries
                         ) = xMissing[i];

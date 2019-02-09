@@ -120,8 +120,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // logisticStickBreakingMixture
-Rcpp::List logisticStickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, double tauPriorUpper, Rcpp::List componentTuningR, bool firstCategoryFixed, unsigned int nSplineBases, Rcpp::List startR, Rcpp::List thin, bool showProgress, bool mpi);
-RcppExport SEXP _BayesSpec_logisticStickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP tauPriorUpperSEXP, SEXP componentTuningRSEXP, SEXP firstCategoryFixedSEXP, SEXP nSplineBasesSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP, SEXP mpiSEXP) {
+Rcpp::List logisticStickBreakingMixture(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::NumericMatrix designMatrixR, Rcpp::List priorsR, Rcpp::NumericMatrix priorMeanR, Rcpp::NumericMatrix priorPrecisionR, double tauPriorASquared, double tauPriorNu, double tauPriorUpper, Rcpp::List componentTuningR, Rcpp::List lsbpTuningR, bool firstCategoryFixed, unsigned int nSplineBases, Rcpp::List startR, Rcpp::List thin, bool showProgress, bool mpi);
+RcppExport SEXP _BayesSpec_logisticStickBreakingMixture(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP designMatrixRSEXP, SEXP priorsRSEXP, SEXP priorMeanRSEXP, SEXP priorPrecisionRSEXP, SEXP tauPriorASquaredSEXP, SEXP tauPriorNuSEXP, SEXP tauPriorUpperSEXP, SEXP componentTuningRSEXP, SEXP lsbpTuningRSEXP, SEXP firstCategoryFixedSEXP, SEXP nSplineBasesSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP, SEXP mpiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -137,13 +137,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type tauPriorNu(tauPriorNuSEXP);
     Rcpp::traits::input_parameter< double >::type tauPriorUpper(tauPriorUpperSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type componentTuningR(componentTuningRSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type lsbpTuningR(lsbpTuningRSEXP);
     Rcpp::traits::input_parameter< bool >::type firstCategoryFixed(firstCategoryFixedSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nSplineBases(nSplineBasesSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type startR(startRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
     Rcpp::traits::input_parameter< bool >::type mpi(mpiSEXP);
-    rcpp_result_gen = Rcpp::wrap(logisticStickBreakingMixture(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi));
+    rcpp_result_gen = Rcpp::wrap(logisticStickBreakingMixture(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, lsbpTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -301,7 +302,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_fftForwardR2C", (DL_FUNC) &_BayesSpec_fftForwardR2C, 1},
     {"_BayesSpec_fftForwardC2C", (DL_FUNC) &_BayesSpec_fftForwardC2C, 1},
     {"_BayesSpec_independentMixture", (DL_FUNC) &_BayesSpec_independentMixture, 11},
-    {"_BayesSpec_logisticStickBreakingMixture", (DL_FUNC) &_BayesSpec_logisticStickBreakingMixture, 18},
+    {"_BayesSpec_logisticStickBreakingMixture", (DL_FUNC) &_BayesSpec_logisticStickBreakingMixture, 19},
     {"_BayesSpec_randGamma", (DL_FUNC) &_BayesSpec_randGamma, 3},
     {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},

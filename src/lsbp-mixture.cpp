@@ -25,6 +25,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
     Rcpp::NumericMatrix priorPrecisionR,
     double tauPriorASquared, double tauPriorNu, double tauPriorUpper,
     Rcpp::List componentTuningR,
+    Rcpp::List lsbpTuningR,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
     Rcpp::List startR,
@@ -78,7 +79,10 @@ Rcpp::List logisticStickBreakingMixtureBase(
         Rcpp::as<Eigen::VectorXi>(startR["categories"]),
         priors, priorMean, priorPrecision,
         tauPriorASquared, tauPriorNu, tauPriorUpper,
-        nSplineBases
+        nSplineBases,
+        lsbpTuningR["n_swap_moves"],
+        lsbpTuningR["swap_move_length"],
+        lsbpTuningR["n_split_merge_moves"]
     );
 
     std::vector<AdaptSpecSamples> samples = AdaptSpecSamples::fromPriors(
@@ -178,6 +182,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
     output["x_missing"] = xMissingSamplesOutput;
     output["final_values"] = sampler.getParametersAsList();
     output["component_statistics"] = sampler.getComponentStatistics();
+    output["statistics"] = sampler.getStatisticsAsList();
 
     return output;
 }
@@ -194,6 +199,7 @@ Rcpp::List logisticStickBreakingMixture(
     Rcpp::NumericMatrix priorPrecisionR,
     double tauPriorASquared, double tauPriorNu, double tauPriorUpper,
     Rcpp::List componentTuningR,
+    Rcpp::List lsbpTuningR,
     bool firstCategoryFixed,
     unsigned int nSplineBases,
     Rcpp::List startR,
@@ -215,6 +221,7 @@ Rcpp::List logisticStickBreakingMixture(
             tauPriorNu,
             tauPriorUpper,
             componentTuningR,
+            lsbpTuningR,
             firstCategoryFixed,
             nSplineBases,
             startR,
@@ -235,6 +242,7 @@ Rcpp::List logisticStickBreakingMixture(
             tauPriorNu,
             tauPriorUpper,
             componentTuningR,
+            lsbpTuningR,
             firstCategoryFixed,
             nSplineBases,
             startR,

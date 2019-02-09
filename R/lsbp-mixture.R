@@ -30,6 +30,11 @@ adaptspec_lsbp_mixture <- function(
     epsilon_max = 1,
     use_hessian_curvature = FALSE
   ),
+  lsbp_tuning = list(
+    n_swap_moves = 1,
+    swap_move_length = 3,
+    n_split_merge_moves = 0
+  ),
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,
   start = list(
@@ -55,6 +60,7 @@ adaptspec_lsbp_mixture <- function(
   mpi = FALSE
 ) {
   thin <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$thin), thin)
+  lsbp_tuning <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$lsbp_tuning), lsbp_tuning)
 
   flog.debug('Preparing data', name = 'BayesSpec.lsbp-mixture')
   prepared_data <- .prepare_data(data, detrend)
@@ -228,6 +234,7 @@ adaptspec_lsbp_mixture <- function(
     mixture_prior$tau_prior_a_squared, mixture_prior$tau_prior_nu,
     mixture_prior$tau_prior_upper,
     component_tuning,
+    lsbp_tuning,
     first_category_fixed,
     spline_prior$n_bases,
     start,

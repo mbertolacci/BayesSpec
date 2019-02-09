@@ -34,7 +34,8 @@ public:
         categories_(categoriesStart),
         allLogWeights_(categoriesStart.size(), nComponents_),
         counts_(nComponents_),
-        dataCounts_(nComponents_) {
+        dataCounts_(nComponents_),
+        isWarmedUp_(false) {
         updateCounts_();
 
         componentStates_.reserve(nComponents_);
@@ -46,9 +47,14 @@ public:
     }
 
     void endWarmUp() {
+        isWarmedUp_ = true;
         for (unsigned int component = 0; component < nComponents_; ++component) {
             componentStates_[component].endWarmUp();
         }
+    }
+
+    bool isWarmedUp() const {
+        return isWarmedUp_;
     }
 
     template<typename RNG>
@@ -133,7 +139,7 @@ protected:
     Eigen::VectorXi counts_;
     Eigen::VectorXi dataCounts_;
 
-private:
+    bool isWarmedUp_;
 
     void updateCounts_() {
         dataCounts_.fill(0);

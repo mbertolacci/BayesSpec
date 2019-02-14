@@ -58,6 +58,13 @@ Rcpp::List logisticStickBreakingMixtureBase(
         }
     }
 
+    Eigen::VectorXd tauSquaredStart(nComponents - 1);
+    if (nSplineBases > 0) {
+        tauSquaredStart = Rcpp::as<Eigen::VectorXd>(startR["tau_squared"]);
+    } else {
+        tauSquaredStart.fill(0);
+    }
+
     Eigen::MatrixXd designMatrix = Rcpp::as<Eigen::MatrixXd>(designMatrixR);
     Eigen::MatrixXd priorMean = Rcpp::as<Eigen::MatrixXd>(priorMeanR);
     Eigen::MatrixXd priorPrecision = Rcpp::as<Eigen::MatrixXd>(priorPrecisionR);
@@ -74,7 +81,7 @@ Rcpp::List logisticStickBreakingMixtureBase(
         x, missingIndices, designMatrix,
         componentTuning, firstCategoryFixed,
         Rcpp::as<Eigen::MatrixXd>(startR["beta"]),
-        Rcpp::as<Eigen::VectorXd>(startR["tau_squared"]),
+        tauSquaredStart,
         componentStarts,
         Rcpp::as<Eigen::VectorXi>(startR["categories"]),
         priors, priorMean, priorPrecision,

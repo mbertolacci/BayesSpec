@@ -218,7 +218,9 @@ adaptspec_lsbp_mixture <- function(
   stopifnot(length(start$categories) == n_time_series)
   stopifnot(nrow(start$beta) == ncol(design_matrix))
   stopifnot(ncol(start$beta) == n_components - 1)
-  stopifnot(length(start$tau_squared) == n_components - 1)
+  if (spline_prior$n_bases > 0) {
+    stopifnot(length(start$tau_squared) == n_components - 1)
+  }
 
   flog.debug(
     'Starting MCMC sampler',

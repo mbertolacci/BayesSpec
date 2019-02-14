@@ -125,11 +125,14 @@ public:
     }
 
     double getWeightsLogPrior_() const {
-        return (
+        double output = (
             priorPrecision_.array().log().sum() / 2.0
             - ((parameters_ - priorMean_).array().square() * priorPrecision_.array()).sum() / 2.0
-            - (tauPriorNu_ + 1) / 2.0 * (1.0 + tauSquared_.array() / (tauPriorNu_ * tauPriorASquared_)).log().sum()
         );
+        if (nSplineBases_ > 0) {
+            output -= (tauPriorNu_ + 1) / 2.0 * (1.0 + tauSquared_.array() / (tauPriorNu_ * tauPriorASquared_)).log().sum();
+        }
+        return output;
     }
 
     Rcpp::List getWeightsParametersAsList() const {

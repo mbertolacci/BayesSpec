@@ -195,6 +195,7 @@ public:
             status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
             if (status != 1) {
                 Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
+                Rcpp::Rcout << "segment = " << segment << "\n";
                 Rcpp::Rcout << "Current state =\n" << *this << "\n";
                 Rcpp::stop("Optimiser failed");
             }

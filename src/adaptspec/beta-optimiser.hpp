@@ -155,6 +155,7 @@ public:
     }
 
     Status run(Eigen::VectorXd& beta, Eigen::VectorXd& gradient, Eigen::MatrixXd& curvatureU) {
+        currentIteration_ = 0;
         currentBeta_ = beta;
         functor_.setBeta(currentBeta_);
         currentValue_ = functor_.value();

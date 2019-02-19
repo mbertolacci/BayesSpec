@@ -39,6 +39,10 @@ public:
         return current_.getStatistics();
     }
 
+    void debugOutput() const {
+        Rcpp::Rcout << current_;
+    }
+
 private:
     AdaptSpecState current_;
 };

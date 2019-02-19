@@ -213,6 +213,7 @@ adaptspec <- function(
     x_missing = 1
   ),
   show_progress = FALSE,
+  debug = FALSE,
   # Extra
   run_diagnostics = TRUE
 ) {
@@ -238,6 +239,7 @@ adaptspec <- function(
     start = start,
     thin = thin,
     show_progress = show_progress,
+    debug = debug,
     run_diagnostics = run_diagnostics
   )
 }
@@ -297,10 +299,12 @@ adaptspec_sample <- function(
     beta = 1,
     tau_squared = 1,
     cut_points = 1,
+    mu = 1,
     log_posterior = 1,
     x_missing = 1
   ),
   show_progress = FALSE,
+  debug = FALSE,
   run_diagnostics = TRUE
 ) {
   thin <- .extend_list(eval(formals(adaptspec_sample)$thin), thin)
@@ -335,7 +339,8 @@ adaptspec_sample <- function(
     tuning,
     start,
     thin,
-    show_progress
+    show_progress,
+    debug
   )
 
   results$missing_indices <- missing_indices

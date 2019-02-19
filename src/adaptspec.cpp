@@ -20,7 +20,8 @@ Rcpp::List adaptspec(
     Rcpp::List tuningList,
     Rcpp::List startR,
     Rcpp::List thin,
-    bool showProgress
+    bool showProgress,
+    bool debug
 ) {
     std::mt19937_64 rng(static_cast<uint_fast64_t>(UINT_FAST64_MAX * R::unif_rand()));
 
@@ -69,6 +70,10 @@ Rcpp::List adaptspec(
     for (unsigned int iteration = 0; iteration < nLoop; ++iteration) {
         if (iteration == nWarmUp) {
             sampler.endWarmUp();
+        }
+
+        if (debug) {
+            sampler.debugOutput();
         }
 
         sampler.sample(rng);

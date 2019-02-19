@@ -16,6 +16,7 @@ public:
       unsigned int betaThin,
       unsigned int tauSquaredThin,
       unsigned int cutPointsThin,
+      unsigned int muThin,
       const AdaptSpecPrior& prior
     ) : nSegments_(nSamples, nSegmentsThin),
         beta_(nSamples, betaThin, {
@@ -23,18 +24,20 @@ public:
             1 + prior.nBases
         }),
         tauSquared_(nSamples, tauSquaredThin, prior.nSegmentsMax, true),
-        cutPoints_(nSamples, cutPointsThin, prior.nSegmentsMax, true) {}
+        cutPoints_(nSamples, cutPointsThin, prior.nSegmentsMax, true),
+        mu_(nSamples, muThin, prior.nSegmentsMax, true) {}
 
     AdaptSpecSamples(
       unsigned int nSamples,
       const AdaptSpecPrior& prior
-    ) : AdaptSpecSamples(nSamples, 1, 1, 1, 1, prior) {}
+    ) : AdaptSpecSamples(nSamples, 1, 1, 1, 1, 1, prior) {}
 
     void save(const AdaptSpecParameters& parameters) {
         nSegments_.save(parameters.nSegments);
         beta_.save(parameters.beta);
         tauSquared_.save(parameters.tauSquared);
         cutPoints_.save(parameters.cutPoints);
+        mu_.save(parameters.mu);
     }
 
     Rcpp::List asList() const {
@@ -43,6 +46,7 @@ public:
         output["beta"] = Rcpp::wrap(beta_);
         output["tau_squared"] = Rcpp::wrap(tauSquared_);
         output["cut_points"] = Rcpp::wrap(cutPoints_);
+        output["mu"] = Rcpp::wrap(mu_);
         return output;
     }
 
@@ -52,6 +56,7 @@ public:
         unsigned int betaThin,
         unsigned int tauSquaredThin,
         unsigned int cutPointsThin,
+        unsigned int muThin,
         const std::vector<AdaptSpecPrior>& priors
     ) {
         std::vector<AdaptSpecSamples> output;
@@ -62,6 +67,7 @@ public:
                 betaThin,
                 tauSquaredThin,
                 cutPointsThin,
+                muThin,
                 priors[i]
             );
         }
@@ -84,6 +90,7 @@ private:
     Samples<double> beta_;
     Samples<double> tauSquared_;
     Samples<unsigned int> cutPoints_;
+    Samples<double> mu_;
 };
 
 }  // namespace bayesspec

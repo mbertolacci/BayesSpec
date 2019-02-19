@@ -93,9 +93,7 @@ public:
         state.x = &thisX;
         state.missingIndices = &thisMissingIndices;
         if (hasChanged) {
-            for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-                state.updateSegmentFit(segment);
-            }
+            updateAllSegments_();
         }
 
         AdaptSpecParameters oldParameters = state.parameters;
@@ -148,9 +146,7 @@ public:
         }
         state.x = &thisX;
         if (hasChanged) {
-            for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-                state.updateSegmentFit(segment);
-            }
+            updateAllSegments_();
         }
 
         AdaptSpecParameters oldParameters = state.parameters;
@@ -167,6 +163,18 @@ private:
     BoolArray lastIsComponent_;
     bool isFirstSample_;
     unsigned int nSegmentsMax_;
+
+    void updateAllSegments_() {
+        for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
+            state.means[segment] = x->block(
+                state.parameters.cutPoints[segment] - state.segmentLengths[segment],
+                0,
+                state.segmentLengths[segment],
+                state.x->cols()
+            ).mean();
+            state.updateSegmentFit(segment);
+        }
+    }
 
     void updateInternals_(
         const Eigen::Array<bool, Eigen::Dynamic, 1>& isComponent,
@@ -194,7 +202,10 @@ private:
             if (hasMatchingSegment) {
                 allPeriodograms[segment] = oldAllPeriodograms[matchingOldSegment];
 
-                if (state.parameters.beta.row(segment) == oldParameters.beta.row(matchingOldSegment)) {
+                if (
+                    state.parameters.beta.row(segment) == oldParameters.beta.row(matchingOldSegment)
+                    && state.parameters.mu[segment] == oldParameters.mu[segment]
+                ) {
                     // Same beta as well, so log likelihood is unchanged
                     allLogSegmentLikelihoods.col(segment) = oldAllLogSegmentLikelihoods.col(matchingOldSegment);
                     mustUpdateLikelihoods = false;
@@ -218,6 +229,13 @@ private:
             }
 
             if (mustUpdateLikelihoods) {
+                AdaptSpecUtils::updatePeriodogramWithMean(
+                    allPeriodograms[segment],
+                    *x,
+                    state.parameters.cutPoints[segment],
+                    state.segmentLengths[segment],
+                    state.parameters.mu[segment]
+                );
                 allLogSegmentLikelihoods.col(segment) = logWhittleLikelihood(
                     state.nu[segment] * state.parameters.beta.row(segment).transpose(),
                     allPeriodograms[segment],

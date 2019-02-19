@@ -4,6 +4,7 @@
 #include <RcppEigen.h>
 
 #include "../random/truncated-inverse-gamma.hpp"
+#include "../random/truncated-normal.hpp"
 #include "../random/utils.hpp"
 
 #include "../whittle-likelihood.hpp"
@@ -32,6 +33,11 @@ int indexOf(int needle, const Eigen::VectorXi& haystack) {
     return -1;
 }
 
+inline
+double square(double x) {
+    return x * x;
+}
+
 class AdaptSpecState {
 public:
     AdaptSpecParameters parameters;
@@ -39,9 +45,12 @@ public:
     Eigen::VectorXd segmentLengths;
     std::vector<Eigen::MatrixXd> nu;
     std::vector<Eigen::MatrixXd> periodogram;
+    Eigen::VectorXd means;
 
     Eigen::MatrixXd betaMode;
     std::vector<Eigen::MatrixXd> precisionCholeskyMode;
+    Eigen::VectorXd muModeMean;
+    Eigen::VectorXd muModeVariance;
 
     std::vector<bool> missingDistributionsNeedUpdate;
     std::vector< std::vector<WhittleMissingValuesDistribution> > missingDistributions;
@@ -101,6 +110,16 @@ public:
     }
 
     void updateSegmentDensities(unsigned int segment) {
+        if (prior_->segmentMeans) {
+            AdaptSpecUtils::updatePeriodogramWithMean(
+                periodogram[segment],
+                *x,
+                parameters.cutPoints[segment],
+                segmentLengths[segment],
+                parameters.mu[segment]
+            );
+        }
+
         logSegmentProposal[segment] = precisionCholeskyMode[segment].diagonal().array().log().sum()
             - 0.5 * (
                 precisionCholeskyMode[segment].template triangularView<Eigen::Upper>() * (
@@ -108,6 +127,15 @@ public:
                 ).transpose()
             ).array().square().sum()
             - 0.5 * (1 + prior_->nBases) * std::log(2 * M_PI);
+
+        if (prior_->segmentMeans) {
+            logSegmentProposal[segment] += (
+                - 0.5 * square(
+                    parameters.mu[segment] - muModeMean[segment]
+                ) / muModeVariance[segment]
+                - std::log(prior_->muUpper - prior_->muLower)
+            );
+        }
 
         // NOTE(mgnb): the following likelihood and prior must include the
         // normalising constant, because in the log posterior they are
@@ -149,6 +177,9 @@ public:
             // Uniform
             logSegmentPrior[segment] -= std::log(prior_->tauUpperLimit);
         }
+        if (prior_->segmentMeans) {
+            logSegmentPrior[segment] -= std::log(prior_->muUpper - prior_->muLower);
+        }
     }
 
     void updateMissingValuesDistributions(unsigned int segment) {
@@ -170,15 +201,30 @@ public:
             missingDistributions[segment][series].update(
                 x->col(series).segment(segmentLower, segmentLengths[segment]),
                 segmentMissingIndices,
-                segmentSpectrum
+                segmentSpectrum,
+                parameters.mu[segment]
             );
         }
     }
 
     void updateSegmentFit(unsigned int segment) {
+        // This periodogram is as though x has its mean subtracted. The first
+        // row is not simply zero because the different columns of x may have
+        // different means
+        Eigen::MatrixXd inputPeriodogram = periodogram[segment];
+        if (prior_->segmentMeans) {
+            AdaptSpecUtils::updatePeriodogramWithMean(
+                inputPeriodogram,
+                *x,
+                parameters.cutPoints[segment],
+                segmentLengths[segment],
+                means[segment]
+            );
+        }
+
         BetaOptimiser optimiser(
             segmentLengths[segment],
-            periodogram[segment],
+            inputPeriodogram,
             nu[segment],
             prior_->sigmaSquaredAlpha,
             parameters.tauSquared[segment],
@@ -206,6 +252,13 @@ public:
             warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate
         );
 
+        if (prior_->segmentMeans) {
+            muModeMean[segment] = means[segment];
+            muModeVariance[segment] = std::exp((
+                nu[segment].row(0).array() * betaMode.row(segment).array()
+            ).sum()) / static_cast<double>(x->cols() * segmentLengths[segment]);
+        }
+
         updateSegmentDensities(segment);
     }
 
@@ -221,6 +274,16 @@ public:
             parameters.cutPoints[segment],
             segmentLength
         );
+        if (prior_->segmentMeans) {
+            means[segment] = x->cols() > 0
+                ? x->block(
+                    parameters.cutPoints[segment] - segmentLengths[segment],
+                    0,
+                    segmentLengths[segment],
+                    x->cols()
+                ).mean()
+                : 0;
+        }
 
         updateSegmentFit(segment);
     }
@@ -236,6 +299,9 @@ public:
         }
         if (tuning_.useHmcWithin) {
             sampleHmcWithin_(rng);
+        }
+        if (prior_->segmentMeans) {
+            sampleMu_(rng);
         }
         sampleTauSquared_(rng);
         sampleMissing_(rng);
@@ -260,6 +326,10 @@ public:
         return statistics_;
     }
 
+    const AdaptSpecPrior& getPrior() const {
+        return *prior_;
+    }
+
     static double getMetropolisLogRatio(const AdaptSpecState& current, const AdaptSpecState& proposal) {
         if (current.parameters.nSegments == proposal.parameters.nSegments) {
             return getMetropolisLogRatioWithin_(current, proposal);
@@ -272,6 +342,7 @@ public:
     friend std::ostream& operator<< (std::ostream& stream, const AdaptSpecState& state) {
         stream << "nSegments = " << state.parameters.nSegments << "\n";
         stream << "cutPoints = " << state.parameters.cutPoints.transpose() << "\n";
+        stream << "mu = " << state.parameters.mu.segment(0, state.parameters.nSegments).transpose() << "\n";
         stream << "beta = " << state.parameters.beta.topRows(state.parameters.nSegments) << "\n";
         stream << "tauSquared = " << state.parameters.tauSquared.segment(0, state.parameters.nSegments).transpose() << "\n";
         stream << "segmentLengths = " << state.segmentLengths.transpose() << "\n";
@@ -280,7 +351,10 @@ public:
         stream << "logSegmentPrior = " << state.logSegmentPrior.segment(0, state.parameters.nSegments).transpose() << "\n";
         stream << "logPriorCutPoints = " << state.logPriorCutPoints << "\n";
         stream << "betaMode = " << state.betaMode.topRows(state.parameters.nSegments) << "\n";
-        stream << "xSum = " << state.x->sum() << "\n";
+        if (state.prior_->segmentMeans) {
+            stream << "muModeMean = " << state.muModeMean.segment(0, state.parameters.nSegments).transpose() << "\n";
+            stream << "muModeVariance = " << state.muModeVariance.segment(0, state.parameters.nSegments).transpose() << "\n";
+        }
         return stream;
     }
 
@@ -300,6 +374,7 @@ private:
     void initialise_() {
         nu.resize(prior_->nSegmentsMax);
         periodogram.resize(prior_->nSegmentsMax);
+        means.resize(prior_->nSegmentsMax);
 
         betaMode.resize(prior_->nSegmentsMax, 1 + prior_->nBases);
         betaMode.fill(0);
@@ -307,6 +382,8 @@ private:
         for (unsigned int segment = 0; segment < prior_->nSegmentsMax; ++segment) {
             precisionCholeskyMode[segment].fill(0);
         }
+        muModeMean.resize(prior_->nSegmentsMax);
+        muModeVariance.resize(prior_->nSegmentsMax);
 
         logSegmentProposal.resize(prior_->nSegmentsMax);
         logSegmentProposal.fill(0);
@@ -374,8 +451,9 @@ private:
         }
     }
 
-    void setSegmentBeta_(unsigned int segment, const Eigen::VectorXd& betaNew) {
+    void setSegmentBeta_(unsigned int segment, const Eigen::VectorXd& betaNew, double muNew) {
         parameters.beta.row(segment) = betaNew.transpose();
+        parameters.mu[segment] = muNew;
         checkParameterValidity_();
         updateSegmentDensities(segment);
         missingDistributionsNeedUpdate[segment] = true;
@@ -394,7 +472,26 @@ private:
                 unitNormals
             ).transpose();
 
-        setSegmentBeta_(segment, betaNew);
+        double muNew;
+        if (prior_->segmentMeans) {
+            if (x->cols() == 0) {
+                muNew = std::uniform_real_distribution<double>(
+                    prior_->muLower,
+                    prior_->muUpper
+                )(rng);
+            } else {
+                muNew = TruncatedNormalDistribution(
+                    muModeMean[segment],
+                    std::sqrt(muModeVariance[segment]),
+                    prior_->muLower,
+                    prior_->muUpper
+                )(rng);
+            }
+        } else {
+            muNew = parameters.mu[segment];
+        }
+
+        setSegmentBeta_(segment, betaNew, muNew);
     }
 
     void moveCutpoint_(unsigned int segment, unsigned int newCutPoint) {
@@ -418,11 +515,15 @@ private:
             parameters.beta.row(segment) = parameters.beta.row(segment - 1);
             parameters.tauSquared[segment] = parameters.tauSquared[segment - 1];
             parameters.cutPoints[segment] = parameters.cutPoints[segment - 1];
+            parameters.mu[segment] = parameters.mu[segment - 1];
             segmentLengths[segment] = segmentLengths[segment - 1];
             nu[segment] = nu[segment - 1];
             periodogram[segment] = periodogram[segment - 1];
+            means[segment] = means[segment - 1];
             betaMode.row(segment) = betaMode.row(segment - 1);
             precisionCholeskyMode[segment] = precisionCholeskyMode[segment - 1];
+            muModeMean[segment] = muModeMean[segment - 1];
+            muModeVariance[segment] = muModeVariance[segment - 1];
             missingDistributionsNeedUpdate[segment] = missingDistributionsNeedUpdate[segment - 1];
             missingDistributions[segment] = missingDistributions[segment - 1];
             logSegmentProposal[segment] = logSegmentProposal[segment - 1];
@@ -469,11 +570,15 @@ private:
             parameters.beta.row(segment) = parameters.beta.row(segment + 1);
             parameters.tauSquared[segment] = parameters.tauSquared[segment + 1];
             parameters.cutPoints[segment] = parameters.cutPoints[segment + 1];
+            parameters.mu[segment] = parameters.mu[segment + 1];
             segmentLengths[segment] = segmentLengths[segment + 1];
             nu[segment] = nu[segment + 1];
             periodogram[segment] = periodogram[segment + 1];
+            means[segment] = means[segment + 1];
             betaMode.row(segment) = betaMode.row(segment + 1);
             precisionCholeskyMode[segment] = precisionCholeskyMode[segment + 1];
+            muModeMean[segment] = muModeMean[segment + 1];
+            muModeVariance[segment] = muModeVariance[segment + 1];
             missingDistributionsNeedUpdate[segment] = missingDistributionsNeedUpdate[segment + 1];
             missingDistributions[segment] = missingDistributions[segment + 1];
             logSegmentProposal[segment] = logSegmentProposal[segment + 1];
@@ -483,6 +588,7 @@ private:
         segmentLengths[parameters.nSegments] = 0;
         parameters.tauSquared[parameters.nSegments] = 0;
         parameters.beta.row(parameters.nSegments).fill(0);
+        parameters.mu[parameters.nSegments] = 0;
 
         checkParameterValidity_();
         updateLogPriorCutPoints();
@@ -650,7 +756,40 @@ private:
 
         if (warmedUp_) statistics_.acceptHmcWithin();
 
-        setSegmentBeta_(segment, betaNew);
+        setSegmentBeta_(segment, betaNew, parameters.mu[segment]);
+    }
+
+    template<typename RNG>
+    void sampleMu_(RNG& rng) {
+        for (unsigned int segment = 0; segment < parameters.nSegments; ++segment) {
+            if (x->cols() == 0) {
+                parameters.mu[segment] = std::uniform_real_distribution<double>(
+                    prior_->muLower,
+                    prior_->muUpper
+                )(rng);
+            } else {
+                double mean = x->block(
+                    parameters.cutPoints[segment] - segmentLengths[segment],
+                    0,
+                    segmentLengths[segment],
+                    x->cols()
+                ).mean();
+                double variance = std::exp((
+                    nu[segment].row(0).array() * betaMode.row(segment).array()
+                ).sum()) / static_cast<double>(x->cols() * segmentLengths[segment]);
+
+                parameters.mu[segment] = TruncatedNormalDistribution(
+                    mean,
+                    std::sqrt(variance),
+                    prior_->muLower,
+                    prior_->muUpper
+                )(rng);
+            }
+
+            checkParameterValidity_();
+            updateSegmentFit(segment);
+            missingDistributionsNeedUpdate[segment] = true;
+        }
     }
 
     template<typename RNG>

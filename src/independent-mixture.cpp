@@ -72,6 +72,7 @@ Rcpp::List independentMixture(
         thin["beta"],
         thin["tau_squared"],
         thin["cut_points"],
+        thin["mu"],
         priors
     );
     Samples<unsigned int> categoriesSamples(

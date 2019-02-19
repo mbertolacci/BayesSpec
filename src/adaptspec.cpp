@@ -51,6 +51,7 @@ Rcpp::List adaptspec(
         thin["beta"],
         thin["tau_squared"],
         thin["cut_points"],
+        thin["mu"],
         prior
     );
     Samples<double> logPosteriorSamples(
@@ -127,6 +128,7 @@ Rcpp::List wrapState(const AdaptSpecState& state) {
     parameters["beta"] = Rcpp::wrap(state.parameters.beta);
     parameters["tau_squared"] = Rcpp::wrap(state.parameters.tauSquared);
     parameters["cut_points"] = Rcpp::wrap(state.parameters.cutPoints);
+    parameters["mu"] = Rcpp::wrap(state.parameters.mu);
     output["parameters"] = parameters;
 
     output["segment_lengths"] = Rcpp::wrap(state.segmentLengths);

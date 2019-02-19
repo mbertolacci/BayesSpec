@@ -37,6 +37,7 @@ adaptspec_dirichlet_mixture <- function(
     beta = 1,
     tau_squared = 1,
     cut_points = 1,
+    mu = 1,
     log_posterior = 1,
     x_missing = 1
   ),

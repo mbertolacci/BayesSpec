@@ -50,6 +50,18 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }
 
+.time_varying_mean_samples <- function(nSegments, cutPoints, mu, timeStep) {
+    .Call('_BayesSpec_timeVaryingMeanSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, mu, timeStep)
+}
+
+.time_varying_mean_mixture_mean_categories <- function(componentSamples, categories) {
+    .Call('_BayesSpec_timeVaryingMeanMixtureMeanCategories', PACKAGE = 'BayesSpec', componentSamples, categories)
+}
+
+.time_varying_mean_mixture_mean_probabilities <- function(componentSamples, probabilities) {
+    .Call('_BayesSpec_timeVaryingMeanMixtureMeanProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
+}
+
 .time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform) {
     .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform)
 }
@@ -74,7 +86,7 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_logWhittleLikelihoodBetaDeriv', PACKAGE = 'BayesSpec', betaR, nuR, periodogramR, n)
 }
 
-.sample_whittle_missing <- function(xR, missingIndicesR, halfSpectrumR) {
-    .Call('_BayesSpec_sampleWhittleMissingR', PACKAGE = 'BayesSpec', xR, missingIndicesR, halfSpectrumR)
+.sample_whittle_missing <- function(xR, missingIndicesR, halfSpectrumR, mu) {
+    .Call('_BayesSpec_sampleWhittleMissingR', PACKAGE = 'BayesSpec', xR, missingIndicesR, halfSpectrumR, mu)
 }
 

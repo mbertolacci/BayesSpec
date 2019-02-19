@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // adaptspec
-Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, Rcpp::List tuningList, Rcpp::List startR, Rcpp::List thin, bool showProgress);
-RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP tuningListSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP) {
+Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, Rcpp::List tuningList, Rcpp::List startR, Rcpp::List thin, bool showProgress, bool debug);
+RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP tuningListSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type startR(startRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, tuningList, startR, thin, showProgress));
+    Rcpp::traits::input_parameter< bool >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, tuningList, startR, thin, showProgress, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -295,7 +296,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 9},
+    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 10},
     {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 4},
     {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 5},
     {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 12},

@@ -119,16 +119,13 @@ merge_samples <- function(values) {
   } else {
     class(output) <- 'mcmca'
   }
-  first_mcpar <- attr(values[[1]], 'mcpar')
-  end <- (
-    (length(values) - 1) * (first_mcpar[3] - 1) +
-    sum(sapply(values, function(value) attr(value, 'mcpar')[2]))
-  )
-  attr(output, 'mcpar') <- c(
-    first_mcpar[1],
-    end,
-    first_mcpar[3]
-  )
+  n_output <- NULL
+  if (is.null(dim(output))) {
+    n_output <- length(output)
+  } else {
+    n_output <- dim(output)[1]
+  }
+  attr(output, 'mcpar') <- c(1, n_output, 1)
   output
 }
 

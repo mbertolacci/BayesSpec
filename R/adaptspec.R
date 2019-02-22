@@ -65,6 +65,10 @@
 #' @param time_step Restricts cut points to times divisible by this number
 #' @param frequency_transform How to transform frequencies prior to fitting
 #' smoothing spline. Defaults to no transformation.
+#' @param segment_means Whether to assume the mean is zero in each segment
+#' (FALSE, the default), or estimate segment means
+#' @param mu_lower Lower bound of uniform for segment means
+#' @param mu_upper Upper bound of uniform for segment means
 #' @param tuning Tuning parameters for the MCMC scheme
 #' @param start Starting values for MCMC chain. Initialised randomly if blank.
 #' Can be provided an adaptspecfit object in order to continue a previous chain.
@@ -83,6 +87,8 @@
 #'   segment 1 cut point in column 1, and so on. Cells to the right of the
 #'   number of segments in that iteration are set to the length of the time
 #'   series.
+#'   \item \code{mu}: Numeric matrix with samples of segment means. Layout is
+#'   as for `cut_points`.
 #'   \item \code{tau_squared}: Numeric matrix with samples of smoothing spline
 #'   smoothing parameters. Layout is as for `cut_points`.
 #'   \item \code{beta}: Three dimensional array with samples of smoothing spline
@@ -112,6 +118,9 @@
 #'   n_bases = 7,
 #'   time_step = 1,
 #'   frequency_transform = c('identity', 'cbrt'),
+#'   segment_means = FALSE,
+#'   mu_lower = -1000,
+#'   mu_upper = 1000,
 #'   # Sampler control
 #'   tuning = list(
 #'     prob_short_move = 0.8,
@@ -181,6 +190,9 @@ adaptspec <- function(
   n_bases = 7,
   time_step = 1,
   frequency_transform = c('identity', 'cbrt'),
+  segment_means = FALSE,
+  mu_lower = -1000,
+  mu_upper = 1000,
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
@@ -209,6 +221,7 @@ adaptspec <- function(
     beta = 1,
     tau_squared = 1,
     cut_points = 1,
+    mu = 1,
     log_posterior = 1,
     x_missing = 1
   ),
@@ -229,7 +242,10 @@ adaptspec <- function(
       tau_upper_limit = tau_upper_limit,
       n_bases = n_bases,
       time_step = time_step,
-      frequency_transform = frequency_transform
+      frequency_transform = frequency_transform,
+      segment_means = segment_means,
+      mu_lower = mu_lower,
+      mu_upper = mu_upper
     ),
     n_loop = n_loop,
     n_warm_up = n_warm_up,
@@ -255,7 +271,10 @@ adaptspec_model <- function(
   tau_upper_limit = 10000,
   n_bases = 7,
   time_step = 1,
-  frequency_transform = c('identity', 'cbrt')
+  frequency_transform = c('identity', 'cbrt'),
+  segment_means = FALSE,
+  mu_lower = -1000,
+  mu_upper = 1000
 ) {
   stopifnot(t_min %% time_step == 0)
   frequency_transform <- match.arg(frequency_transform)
@@ -269,7 +288,10 @@ adaptspec_model <- function(
     tau_upper_limit = tau_upper_limit,
     n_bases = n_bases,
     time_step = time_step,
-    frequency_transform = frequency_transform
+    frequency_transform = frequency_transform,
+    segment_means = segment_means,
+    mu_lower = mu_lower,
+    mu_upper = mu_upper
   )
   class(model) <- 'adaptspecmodel'
   return(model)
@@ -382,6 +404,18 @@ adaptspec_nu <- function(n_freq, n_bases) {
       0,
       model$tau_upper_limit
     )
+  }
+  if (is.null(start$mu)) {
+    start$mu <- rep(0, model$n_segments_max)
+    if (model$segment_means) {
+      start$mu[1 : start$n_segments] <- sapply(1 : start$n_segments, function(segment) {
+        mean(data[
+          (
+            if (segment == 1) 1 else (start$cut_points[segment - 1] + 1)
+          ) : start$cut_points[segment],
+        ], na.rm = TRUE)
+      })
+    }
   }
   if (is.null(start$beta)) {
     start$beta <- matrix(

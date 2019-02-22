@@ -21,6 +21,9 @@ struct AdaptSpecPrior {
     unsigned int nBases;
     unsigned int timeStep;
     FrequencyTransform frequencyTransform;
+    bool segmentMeans;
+    double muLower;
+    double muUpper;
 
     AdaptSpecPrior(
         unsigned int nSegmentsMin_,
@@ -32,7 +35,10 @@ struct AdaptSpecPrior {
         double tauUpperLimit_,
         unsigned int nBases_,
         unsigned int timeStep_,
-        FrequencyTransform frequencyTransform_
+        FrequencyTransform frequencyTransform_,
+        bool segmentMeans_,
+        double muLower_,
+        double muUpper_
     ) : nSegmentsMin(nSegmentsMin_),
         nSegmentsMax(nSegmentsMax_),
         tMin(tMin_),
@@ -42,7 +48,10 @@ struct AdaptSpecPrior {
         tauUpperLimit(tauUpperLimit_),
         nBases(nBases_),
         timeStep(timeStep_),
-        frequencyTransform(frequencyTransform_) {}
+        frequencyTransform(frequencyTransform_),
+        segmentMeans(segmentMeans_),
+        muLower(muLower_),
+        muUpper(muUpper_) {}
 
     static AdaptSpecPrior fromList(const Rcpp::List& priorList) {
         std::string frequencyTransformName = priorList["frequency_transform"];
@@ -60,7 +69,10 @@ struct AdaptSpecPrior {
             priorList["tau_upper_limit"],
             priorList["n_bases"],
             priorList["time_step"],
-            frequencyTransform
+            frequencyTransform,
+            priorList["segment_means"],
+            priorList["mu_lower"],
+            priorList["mu_upper"]
         );
     }
 

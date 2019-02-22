@@ -49,6 +49,7 @@ window.adaptspecfit <- function(fit, ...) {
     fit$log_posterior <- window(fit$log_posterior, ...)
   }
   fit$beta <- window(fit$beta, ...)
+  fit$mu <- window(fit$mu, ...)
   fit$x_missing <- lapply(fit$x_missing, function(x_missing) {
     if (is.null(x_missing)) {
       x_missing
@@ -480,6 +481,58 @@ time_varying_spectra_mean.adaptspecfit <- function(
   attr(output, 'times') <- (
     1 + (0 : (dim(output)[2] - 1)) * time_step
   )
+  output
+}
+
+#' Samples of the time varying mean from an adaptspecfit object
+#'
+#' This method calculates samples from the time varying mean modelled by
+#' \code{\link{adaptspec}}. If \code{segment_means = FALSE} for the fit,
+#' the mean will be zero everywhere.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param time_step Time varying mean is calculated only at times
+#' divisible by this number. Reduces the size of the output.
+#' @return A matrix. First dimension is sample, second dimension is time.
+#' Attribute 'times' contain the corresponding times (use \code{str()} to
+#' inspect this object to see).
+#' @export
+time_varying_mean_samples.adaptspecfit <- function(
+  fit,
+  time_step = 1
+) {
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'mu'))
+  output <- .time_varying_mean_samples(
+    fit$n_segments,
+    fit$cut_points,
+    fit$mu,
+    time_step
+  )
+  attr(output, 'times') <- 1 + (0 : (ncol(output) - 1)) * time_step
+  output
+}
+
+
+#' Posterior mean estimate of the time varying mean from an adaptspecfit object
+#'
+#' This method calculates the posterior mean of the time varying mean modelled
+#' by \code{\link{adaptspec}}.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param time_step Time varying mean is calculated only at times divisible by
+#' this number. Reduces the size of the output.
+#' @return A vector. The attribute 'times' contain the corresponding times
+#' (use \code{str()} to inspect this object to see).
+#' @seealso \code{time_varying_mean_samples} for samples of the time-varying
+#' mean
+#' @export
+time_varying_mean_mean.adaptspecfit <- function(
+  fit,
+  time_step = 1
+) {
+  samples <- time_varying_mean_samples(fit, time_step)
+  output <- colMeans(samples)
+  attr(output, 'times') <- attr(samples, 'times')
   output
 }
 

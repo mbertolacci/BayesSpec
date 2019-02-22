@@ -22,6 +22,9 @@ adaptspec(
   n_bases = 7,
   time_step = 1,
   frequency_transform = c('identity', 'cbrt'),
+  segment_means = FALSE,
+  mu_lower = -1000,
+  mu_upper = 1000,
   # Sampler control
   tuning = list(
     prob_short_move = 0.8,
@@ -97,6 +100,13 @@ smoothing spline smoothing parameter}
 \item{frequency_transform}{How to transform frequencies prior to fitting
 smoothing spline. Defaults to no transformation.}
 
+\item{segment_means}{Whether to assume the mean is zero in each segment
+(FALSE, the default), or estimate segment means}
+
+\item{mu_lower}{Lower bound of uniform for segment means}
+
+\item{mu_upper}{Upper bound of uniform for segment means}
+
 \item{tuning}{Tuning parameters for the MCMC scheme}
 
 \item{start}{Starting values for MCMC chain. Initialised randomly if blank.
@@ -120,6 +130,8 @@ under the following list entries, each of which are of class
   segment 1 cut point in column 1, and so on. Cells to the right of the
   number of segments in that iteration are set to the length of the time
   series.
+  \item \code{mu}: Numeric matrix with samples of segment means. Layout is
+  as for `cut_points`.
   \item \code{tau_squared}: Numeric matrix with samples of smoothing spline
   smoothing parameters. Layout is as for `cut_points`.
   \item \code{beta}: Three dimensional array with samples of smoothing spline

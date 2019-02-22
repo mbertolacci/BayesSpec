@@ -84,6 +84,43 @@ public:
 
         return periodogram;
     }
+
+    static
+    void updatePeriodogramWithMean(
+        Eigen::MatrixXd& periodogram,
+        const Eigen::MatrixXd& x,
+        int cutPoint,
+        int n,
+        double mean
+    ) {
+        periodogram.row(0) = n * (
+            x
+                .block(cutPoint - n, 0, n, x.cols())
+                .colwise()
+                .mean()
+                .array()
+            - mean
+        ).square().matrix();
+    }
+
+    static
+    Eigen::MatrixXd periodogramWithMean(
+        const Eigen::MatrixXd& periodogram,
+        const Eigen::MatrixXd& x,
+        int cutPoint,
+        int n,
+        double mean
+    ) {
+        Eigen::MatrixXd output(periodogram);
+        updatePeriodogramWithMean(
+            output,
+            x,
+            cutPoint,
+            n,
+            mean
+        );
+        return output;
+    }
 };
 
 }  // namespace bayesspec

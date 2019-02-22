@@ -18,11 +18,16 @@ public:
     Eigen::MatrixXd beta;
     Eigen::VectorXd tauSquared;
     Eigen::VectorXi cutPoints;
+    Eigen::VectorXd mu;
 
     AdaptSpecParameters(const AdaptSpecPrior& prior) {
         beta.resize(prior.nSegmentsMax, 1 + prior.nBases);
         tauSquared.resize(prior.nSegmentsMax);
         cutPoints.resize(prior.nSegmentsMax);
+        mu.resize(prior.nSegmentsMax);
+        if (!prior.segmentMeans) {
+            mu.fill(0);
+        }
     }
 
     bool isValid(const AdaptSpecPrior& prior) {
@@ -57,6 +62,15 @@ public:
                 return false;
             }
         }
+
+        if (prior.segmentMeans) {
+            // mu within bounds
+            for (unsigned int segment = 0; segment < nSegments; ++segment) {
+                if (mu[segment] < prior.muLower || mu[segment] > prior.muUpper) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
@@ -66,6 +80,7 @@ public:
         output["beta"] = Rcpp::wrap(beta);
         output["cut_points"] = Rcpp::wrap(cutPoints);
         output["tau_squared"] = Rcpp::wrap(tauSquared);
+        output["mu"] = Rcpp::wrap(mu);
         return output;
     }
 
@@ -78,6 +93,9 @@ public:
         start.beta = Rcpp::as<Eigen::MatrixXd>(startList["beta"]);
         start.cutPoints = Rcpp::as<Eigen::VectorXi>(startList["cut_points"]);
         start.tauSquared = Rcpp::as<Eigen::VectorXd>(startList["tau_squared"]);
+        if (prior.segmentMeans) {
+            start.mu = Rcpp::as<Eigen::VectorXd>(startList["mu"]);
+        }
 
         if (!start.isValid(prior)) {
             throw std::runtime_error("Invalid starting values");

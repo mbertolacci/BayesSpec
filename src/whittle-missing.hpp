@@ -17,15 +17,17 @@ public:
     WhittleMissingValuesDistribution(
         const Eigen::VectorXd& x,
         const std::vector<int>& missingIndices,
-        const Eigen::VectorXd& halfSpectrum
+        const Eigen::VectorXd& halfSpectrum,
+        double mu
     ) {
-        update(x, missingIndices, halfSpectrum);
+        update(x, missingIndices, halfSpectrum, mu);
     }
 
     void update(
         const Eigen::VectorXd& x,
         const std::vector<int>& missingIndices,
-        const Eigen::VectorXd& halfSpectrum
+        const Eigen::VectorXd& halfSpectrum,
+        double mu
     ) {
         using Eigen::MatrixXd;
         using Eigen::VectorXd;
@@ -50,7 +52,7 @@ public:
 
         VectorXcd fftOutput(n);
 
-        VectorXd xWithMissingZero(x);
+        VectorXd xWithMissingZero((x.array() - mu).matrix());
         for (int i = 0; i < missingIndices_.size(); ++i) {
             xWithMissingZero[missingIndices_[i]] = 0;
         }
@@ -78,7 +80,10 @@ public:
         }
 
         missingPrecisionLLT_.compute(missingPrecision);
-        missingMean_ = -missingPrecisionLLT_.solve(crossCovTimesNotMissing);
+        missingMean_ = (
+            -missingPrecisionLLT_.solve(crossCovTimesNotMissing).array()
+            + mu
+        ).matrix();
     }
 
     template<typename RNG>

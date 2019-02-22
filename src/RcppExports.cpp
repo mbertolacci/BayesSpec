@@ -7,8 +7,8 @@
 using namespace Rcpp;
 
 // adaptspec
-Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, Rcpp::List tuningList, Rcpp::List startR, Rcpp::List thin, bool showProgress);
-RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP tuningListSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP) {
+Rcpp::List adaptspec(unsigned int nLoop, unsigned int nWarmUp, Rcpp::NumericMatrix xR, Rcpp::List missingIndicesR, Rcpp::List priorList, Rcpp::List tuningList, Rcpp::List startR, Rcpp::List thin, bool showProgress, bool debug);
+RcppExport SEXP _BayesSpec_adaptspec(SEXP nLoopSEXP, SEXP nWarmUpSEXP, SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP priorListSEXP, SEXP tuningListSEXP, SEXP startRSEXP, SEXP thinSEXP, SEXP showProgressSEXP, SEXP debugSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::List >::type startR(startRSEXP);
     Rcpp::traits::input_parameter< Rcpp::List >::type thin(thinSEXP);
     Rcpp::traits::input_parameter< bool >::type showProgress(showProgressSEXP);
-    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, tuningList, startR, thin, showProgress));
+    Rcpp::traits::input_parameter< bool >::type debug(debugSEXP);
+    rcpp_result_gen = Rcpp::wrap(adaptspec(nLoop, nWarmUp, xR, missingIndicesR, priorList, tuningList, startR, thin, showProgress, debug));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -199,6 +200,44 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// timeVaryingMeanSamples
+NumericMatrix timeVaryingMeanSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericMatrix mu, unsigned int timeStep);
+RcppExport SEXP _BayesSpec_timeVaryingMeanSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP muSEXP, SEXP timeStepSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type nSegments(nSegmentsSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type cutPoints(cutPointsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type timeStep(timeStepSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingMeanSamples(nSegments, cutPoints, mu, timeStep));
+    return rcpp_result_gen;
+END_RCPP
+}
+// timeVaryingMeanMixtureMeanCategories
+NumericMatrix timeVaryingMeanMixtureMeanCategories(NumericVector componentSamples, IntegerMatrix categories);
+RcppExport SEXP _BayesSpec_timeVaryingMeanMixtureMeanCategories(SEXP componentSamplesSEXP, SEXP categoriesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type categories(categoriesSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingMeanMixtureMeanCategories(componentSamples, categories));
+    return rcpp_result_gen;
+END_RCPP
+}
+// timeVaryingMeanMixtureMeanProbabilities
+NumericMatrix timeVaryingMeanMixtureMeanProbabilities(NumericVector componentSamples, NumericVector probabilities);
+RcppExport SEXP _BayesSpec_timeVaryingMeanMixtureMeanProbabilities(SEXP componentSamplesSEXP, SEXP probabilitiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probabilities(probabilitiesSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingMeanMixtureMeanProbabilities(componentSamples, probabilities));
+    return rcpp_result_gen;
+END_RCPP
+}
 // timeVaryingSpectraSamples
 NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep, std::string frequencyTransform);
 RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP, SEXP frequencyTransformSEXP) {
@@ -281,21 +320,22 @@ BEGIN_RCPP
 END_RCPP
 }
 // sampleWhittleMissingR
-Rcpp::NumericVector sampleWhittleMissingR(Rcpp::NumericVector xR, Rcpp::IntegerVector missingIndicesR, Rcpp::NumericVector halfSpectrumR);
-RcppExport SEXP _BayesSpec_sampleWhittleMissingR(SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP halfSpectrumRSEXP) {
+Rcpp::NumericVector sampleWhittleMissingR(Rcpp::NumericVector xR, Rcpp::IntegerVector missingIndicesR, Rcpp::NumericVector halfSpectrumR, double mu);
+RcppExport SEXP _BayesSpec_sampleWhittleMissingR(SEXP xRSEXP, SEXP missingIndicesRSEXP, SEXP halfSpectrumRSEXP, SEXP muSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type xR(xRSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type missingIndicesR(missingIndicesRSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type halfSpectrumR(halfSpectrumRSEXP);
-    rcpp_result_gen = Rcpp::wrap(sampleWhittleMissingR(xR, missingIndicesR, halfSpectrumR));
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    rcpp_result_gen = Rcpp::wrap(sampleWhittleMissingR(xR, missingIndicesR, halfSpectrumR, mu));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 9},
+    {"_BayesSpec_adaptspec", (DL_FUNC) &_BayesSpec_adaptspec, 10},
     {"_BayesSpec_getSampleFilled", (DL_FUNC) &_BayesSpec_getSampleFilled, 4},
     {"_BayesSpec_getMetropolisLogRatio", (DL_FUNC) &_BayesSpec_getMetropolisLogRatio, 5},
     {"_BayesSpec_dirichletMixture", (DL_FUNC) &_BayesSpec_dirichletMixture, 12},
@@ -307,13 +347,16 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
     {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
+    {"_BayesSpec_timeVaryingMeanSamples", (DL_FUNC) &_BayesSpec_timeVaryingMeanSamples, 4},
+    {"_BayesSpec_timeVaryingMeanMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingMeanMixtureMeanCategories, 2},
+    {"_BayesSpec_timeVaryingMeanMixtureMeanProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingMeanMixtureMeanProbabilities, 2},
     {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 6},
     {"_BayesSpec_timeVaryingSpectraMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanCategories, 2},
     {"_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities, 2},
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},
     {"_BayesSpec_logWhittleLikelihoodBeta", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBeta, 4},
     {"_BayesSpec_logWhittleLikelihoodBetaDeriv", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBetaDeriv, 4},
-    {"_BayesSpec_sampleWhittleMissingR", (DL_FUNC) &_BayesSpec_sampleWhittleMissingR, 3},
+    {"_BayesSpec_sampleWhittleMissingR", (DL_FUNC) &_BayesSpec_sampleWhittleMissingR, 4},
     {NULL, NULL, 0}
 };
 

@@ -357,7 +357,7 @@ adaptspec_sample <- function(
 
 #' @export
 adaptspec_nu <- function(n_freq, n_bases) {
-  splines_basis1d_demmler_reinsch(seq(0, 0.5, length.out = n_freq), n_bases)
+  splines_basis1d_demmler_reinsch(2 * seq(0, 0.5, length.out = n_freq), n_bases)
 }
 
 .adaptspec_start <- function(start, model, data, tuning) {

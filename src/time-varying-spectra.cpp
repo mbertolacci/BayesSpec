@@ -36,10 +36,10 @@ NumericVector timeVaryingSpectraSamples(
     VectorXd transformedFrequencies(nFrequencies);
     if (frequencyTransform == "cbrt") {
         for (int i = 0; i < frequencies.size(); ++i) {
-            transformedFrequencies[i] = std::cbrt(frequencies[i]);
+            transformedFrequencies[i] = std::cbrt(2 * frequencies[i]);
         }
     } else {
-        transformedFrequencies = frequencies;
+        transformedFrequencies = 2 * frequencies;
     }
     Eigen::MatrixXd nuHat = splineBasis1dDemmlerReinsch(transformedFrequencies, nBases);
     VectorXd segmentBeta(nBeta);

@@ -23,7 +23,7 @@ public:
         AdaptSpecPrior::FrequencyTransform frequencyTransform
     ) {
         unsigned int maxFrequency = n / 2;
-        Eigen::VectorXd frequencies = (
+        Eigen::VectorXd frequencies = 2.0 * (
             Eigen::VectorXd::LinSpaced(maxFrequency + 1, 0, maxFrequency)
             / static_cast<double>(n)
         );

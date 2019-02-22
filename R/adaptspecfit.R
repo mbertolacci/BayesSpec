@@ -484,6 +484,18 @@ time_varying_spectra_mean.adaptspecfit <- function(
   output
 }
 
+#' Samples of the time varying mean from an adaptspecfit object
+#'
+#' This method calculates samples from the time varying mean modelled by
+#' \code{\link{adaptspec}}. If \code{segment_means = FALSE} for the fit,
+#' the mean will be zero everywhere.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param time_step Time varying mean is calculated only at times
+#' divisible by this number. Reduces the size of the output.
+#' @return A matrix. First dimension is sample, second dimension is time.
+#' Attribute 'times' contain the corresponding times (use \code{str()} to
+#' inspect this object to see).
 #' @export
 time_varying_mean_samples.adaptspecfit <- function(
   fit,
@@ -500,6 +512,19 @@ time_varying_mean_samples.adaptspecfit <- function(
   output
 }
 
+
+#' Posterior mean estimate of the time varying mean from an adaptspecfit object
+#'
+#' This method calculates the posterior mean of the time varying mean modelled
+#' by \code{\link{adaptspec}}.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param time_step Time varying mean is calculated only at times divisible by
+#' this number. Reduces the size of the output.
+#' @return A vector. The attribute 'times' contain the corresponding times
+#' (use \code{str()} to inspect this object to see).
+#' @seealso \code{time_varying_mean_samples} for samples of the time-varying
+#' mean
 #' @export
 time_varying_mean_mean.adaptspecfit <- function(
   fit,

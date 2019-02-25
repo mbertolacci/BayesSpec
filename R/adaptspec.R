@@ -415,6 +415,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
           ) : start$cut_points[segment],
         ], na.rm = TRUE)
       })
+      start$mu[!is.finite(start$mu)] <- 0
     }
   }
   if (is.null(start$beta)) {

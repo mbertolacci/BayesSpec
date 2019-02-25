@@ -115,6 +115,7 @@ Rcpp::List adaptspec(
     output["x_missing"] = xMissingSamplesOutput;
     output["final_values"] = finalValues;
     output["statistics"] = sampler.getStatistics().asList();
+    output["warm_up_statistics"] = sampler.getWarmUpStatistics().asList();
     return output;
 }
 

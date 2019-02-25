@@ -35,6 +35,10 @@ public:
         return current_.getLogPosterior();
     }
 
+    const AdaptSpecStatistics& getWarmUpStatistics() const {
+        return current_.getWarmUpStatistics();
+    }
+
     const AdaptSpecStatistics& getStatistics() const {
         return current_.getStatistics();
     }

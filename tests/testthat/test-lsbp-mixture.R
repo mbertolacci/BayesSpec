@@ -17,6 +17,7 @@ test_that('sampler gives sane return samples', {
   expect_equal(length(result$components), 2)
   expect_equal(nrow(result$categories), 50)
   expect_true(!is.null(result$component_statistics))
+  expect_true(!is.null(result$component_warm_up_statistics))
 })
 
 test_that('sampler can take longer design matrix than data width', {

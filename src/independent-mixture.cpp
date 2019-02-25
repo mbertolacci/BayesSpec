@@ -149,6 +149,7 @@ Rcpp::List independentMixture(
     output["x_missing"] = xMissingSamplesOutput;
     output["final_values"] = sampler.getParametersAsList();
     output["component_statistics"] = sampler.getComponentStatistics();
+    output["component_warm_up_statistics"] = sampler.getComponentWarmUpStatistics();
 
     return output;
 }

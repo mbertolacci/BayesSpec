@@ -322,6 +322,10 @@ public:
         return logSegmentProposal.segment(0, parameters.nSegments).sum();
     }
 
+    const AdaptSpecStatistics& getWarmUpStatistics() const {
+        return warmUpStatistics_;
+    }
+
     const AdaptSpecStatistics& getStatistics() const {
         return statistics_;
     }
@@ -362,6 +366,7 @@ private:
     const AdaptSpecPrior *prior_;
     AdaptSpecTuning tuning_;
     bool warmedUp_;
+    AdaptSpecStatistics warmUpStatistics_;
     AdaptSpecStatistics statistics_;
 
     void checkParameterValidity_() {
@@ -637,8 +642,10 @@ private:
         if (randUniform(rng) < alpha) {
             *this = proposal;
             if (warmedUp_) statistics_.acceptBetween();
+            else warmUpStatistics_.acceptBetween();
         } else {
             if (warmedUp_) statistics_.rejectBetween();
+            else warmUpStatistics_.rejectBetween();
         }
     }
 
@@ -670,6 +677,7 @@ private:
                     if (-stepSize > parameters.cutPoints[segment]) {
                         // Step would make cut point negative, reject
                         if (warmedUp_) statistics_.rejectCutpointWithin();
+                        else warmUpStatistics_.rejectCutpointWithin();
                         return;
                     }
                     newCutPoint = parameters.cutPoints[segment] + stepSize;
@@ -680,6 +688,7 @@ private:
                     ) {
                         // Segment too short, reject
                         if (warmedUp_) statistics_.rejectCutpointWithin();
+                        else warmUpStatistics_.rejectCutpointWithin();
                         return;
                     }
 
@@ -689,6 +698,7 @@ private:
                     ) {
                         // Next segment too short, reject
                         if (warmedUp_) statistics_.rejectCutpointWithin();
+                        else warmUpStatistics_.rejectCutpointWithin();
                         return;
                     }
                 } else {
@@ -708,8 +718,10 @@ private:
         if (randUniform(rng) < alpha) {
             *this = proposal;
             if (warmedUp_) statistics_.acceptCutpointWithin();
+            else warmUpStatistics_.acceptCutpointWithin();
         } else {
             if (warmedUp_) statistics_.rejectCutpointWithin();
+            else warmUpStatistics_.rejectCutpointWithin();
         }
     }
 
@@ -724,8 +736,10 @@ private:
         if (randUniform(rng) < alpha) {
             *this = proposal;
             if (warmedUp_) statistics_.acceptSingleWithin();
+            else warmUpStatistics_.acceptSingleWithin();
         } else {
             if (warmedUp_) statistics_.rejectSingleWithin();
+            else warmUpStatistics_.rejectSingleWithin();
         }
 
     }
@@ -751,10 +765,12 @@ private:
 
         if (betaCurrent == betaNew) {
             if (warmedUp_) statistics_.rejectHmcWithin();
+            else warmUpStatistics_.rejectHmcWithin();
             return;
         }
 
         if (warmedUp_) statistics_.acceptHmcWithin();
+        else warmUpStatistics_.acceptHmcWithin();
 
         setSegmentBeta_(segment, betaNew, parameters.mu[segment]);
     }

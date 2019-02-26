@@ -359,6 +359,10 @@ public:
             stream << "muModeMean = " << state.muModeMean.segment(0, state.parameters.nSegments).transpose() << "\n";
             stream << "muModeVariance = " << state.muModeVariance.segment(0, state.parameters.nSegments).transpose() << "\n";
         }
+        for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
+            stream << "periodogram[" << segment << "].topRows(5) =\n" << state.periodogram[segment].topRows(5) << "\n";
+            stream << "periodogram[" << segment << "].bottomRows(5) =\n" << state.periodogram[segment].bottomRows(5) << "\n";
+        }
         return stream;
     }
 

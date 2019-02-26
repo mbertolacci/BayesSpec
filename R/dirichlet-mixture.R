@@ -16,7 +16,7 @@ adaptspec_dirichlet_mixture <- function(
     l_max = 10,
     epsilon_min = 0.1,
     epsilon_max = 1,
-    use_hessian_curvature = FALSE
+    use_hessian_curvature = TRUE
   ),
   first_category_fixed = FALSE,
   plotting = FALSE, detrend = TRUE,

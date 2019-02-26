@@ -28,7 +28,7 @@ adaptspec_lsbp_mixture <- function(
     l_max = 10,
     epsilon_min = 0.1,
     epsilon_max = 1,
-    use_hessian_curvature = FALSE
+    use_hessian_curvature = TRUE
   ),
   lsbp_tuning = list(
     n_swap_moves = 1,

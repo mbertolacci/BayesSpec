@@ -643,7 +643,8 @@ sample_posterior_predictive <- function(fit) {
     'tau_squared',
     'cut_points',
     'log_posterior',
-    'beta'
+    'beta',
+    'mu'
   ))
   output$x_missing <- .merge_x_missing(fits)
   output

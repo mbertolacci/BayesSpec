@@ -92,6 +92,7 @@ adaptspec_independent_mixture <- function(
     thin,
     show_progress
   )
+  results$n_time_series <- ncol(data)
   results$missing_indices <- missing_indices
   results$detrend <- detrend
   results$detrend_fits <- detrend_fits
@@ -116,4 +117,19 @@ window.adaptspecindependentmixturefit <- function(fit, ...) {
 .merge_samples.adaptspecindependentmixturefit <- function(x, fits) {  # nolint
   output <- .merge_samples.adaptspecmixturefit(NULL, fits)  # nolint
   .merge_mcmc_parts(output, fits, c('weights'))
+}
+
+#' @export
+component_probabilities.adaptspecindependentmixturefit <- function(results) {
+  p <- array(0, dim = c(
+    nrow(results$weights),
+    results$n_time_series,
+    ncol(results$weights)
+  ))
+
+  for (i in 1 : results$n_time_series) {
+    p[, i, ] <- results$weights
+  }
+
+  p
 }

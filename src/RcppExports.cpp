@@ -188,6 +188,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rtnorm
+Rcpp::NumericVector rtnorm(int n, Rcpp::NumericVector mean, Rcpp::NumericVector sd, Rcpp::NumericVector lower, Rcpp::NumericVector upper);
+RcppExport SEXP _BayesSpec_rtnorm(SEXP nSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type upper(upperSEXP);
+    rcpp_result_gen = Rcpp::wrap(rtnorm(n, mean, sd, lower, upper));
+    return rcpp_result_gen;
+END_RCPP
+}
 // splines_basis1d_demmler_reinsch
 Rcpp::NumericMatrix splines_basis1d_demmler_reinsch(Rcpp::NumericVector xR, unsigned int nBases);
 RcppExport SEXP _BayesSpec_splines_basis1d_demmler_reinsch(SEXP xRSEXP, SEXP nBasesSEXP) {
@@ -370,6 +385,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_randGamma", (DL_FUNC) &_BayesSpec_randGamma, 3},
     {"_BayesSpec_rlogbeta", (DL_FUNC) &_BayesSpec_rlogbeta, 3},
     {"_BayesSpec_rloggamma", (DL_FUNC) &_BayesSpec_rloggamma, 3},
+    {"_BayesSpec_rtnorm", (DL_FUNC) &_BayesSpec_rtnorm, 5},
     {"_BayesSpec_splines_basis1d_demmler_reinsch", (DL_FUNC) &_BayesSpec_splines_basis1d_demmler_reinsch, 2},
     {"_BayesSpec_timeVaryingMeanSamples", (DL_FUNC) &_BayesSpec_timeVaryingMeanSamples, 4},
     {"_BayesSpec_timeVaryingMeanMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingMeanMixtureMeanCategories, 2},

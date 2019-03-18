@@ -45,6 +45,10 @@ rloggamma <- function(n, shape, logScale) {
     .Call('_BayesSpec_rloggamma', PACKAGE = 'BayesSpec', n, shape, logScale)
 }
 
+rtnorm <- function(n, mean, sd, lower, upper) {
+    .Call('_BayesSpec_rtnorm', PACKAGE = 'BayesSpec', n, mean, sd, lower, upper)
+}
+
 #' @export
 splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)

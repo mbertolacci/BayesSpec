@@ -4,6 +4,7 @@
 \alias{adaptspecfit}
 \alias{window.adaptspecfit}
 \alias{summary.adaptspecfit}
+\alias{ntimes.adaptspecfit}
 \alias{diagnostic_plots.adaptspecfit}
 \alias{diagnostics.adaptspecfit}
 \alias{diagnostic_warnings.adaptspecfit}
@@ -13,6 +14,8 @@
 \method{window}{adaptspecfit}(fit, ...)
 
 \method{summary}{adaptspecfit}(fit, iterations_threshold = 0)
+
+\method{ntimes}{adaptspecfit}(fit)
 
 \method{diagnostic_plots}{adaptspecfit}(fit, ...)
 
@@ -54,6 +57,8 @@ These methods apply to the adaptspecfit objects returned by
 as per \code{\link[coda]{window.mcmc}}
 
 \item \code{summary}: Summarises MCMC samples.
+
+\item \code{ntimes}: Returns the number of time periods in the input
 
 \item \code{diagnostic_plots}: MCMC diagnostic plots to assess convergence.
 

@@ -96,6 +96,12 @@ summary.adaptspecfit <- function(fit, iterations_threshold = 0) {
   }
 }
 
+#' @describeIn adaptspecfit Returns the number of time periods in the input
+#' @export
+ntimes.adaptspecfit <- function(fit) {
+  fit$cut_points[1, ncol(fit$cut_points)]
+}
+
 #' @describeIn adaptspecfit MCMC diagnostic plots to assess convergence.
 #' @export
 diagnostic_plots.adaptspecfit <- function(fit, ...) {
@@ -391,6 +397,64 @@ segment_spectra_mean <- function(
   )
 }
 
+#' Samples of the time varying mean from an adaptspecfit object
+#'
+#' This method calculates samples from the time varying mean modelled by
+#' \code{\link{adaptspec}}. If \code{segment_means = FALSE} for the fit,
+#' the mean will be zero everywhere.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param time_step Time varying mean is calculated only at times
+#' divisible by this number. Reduces the size of the output. Ignore if
+#' \code{times} is provided.
+#' @param times Times at which to calculate the mean. Must be between
+#' 1 and \code{ntimes(fit)}, inclusive.
+#' @return A matrix. First dimension is sample, second dimension is time.
+#' Attribute 'times' contain the corresponding times (use \code{str()} to
+#' inspect this object to see).
+#' @export
+time_varying_mean_samples.adaptspecfit <- function(
+  fit,
+  time_step = 1,
+  times = seq(1, ntimes(fit), by = time_step)
+) {
+  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'mu'))
+  output <- .time_varying_mean_samples(
+    fit$n_segments,
+    fit$cut_points,
+    fit$mu,
+    times
+  )
+  output
+}
+
+#' Posterior mean estimate of the time varying mean from an adaptspecfit object
+#'
+#' This method calculates the posterior mean of the time varying mean modelled
+#' by \code{\link{adaptspec}}.
+#'
+#' @param fit \code{adaptspecfit} object
+#' @param time_step Time varying mean is calculated only at times
+#' divisible by this number. Reduces the size of the output. Ignore if
+#' \code{times} is provided.
+#' @param times Times at which to calculate the mean. Must be between
+#' 1 and \code{ntimes(fit)}, inclusive.
+#' @return A vector. The attribute 'times' contain the corresponding times
+#' (use \code{str()} to inspect this object to see).
+#' @seealso \code{time_varying_mean_samples} for samples of the time-varying
+#' mean
+#' @export
+time_varying_mean_mean.adaptspecfit <- function(
+  fit,
+  time_step = 1,
+  times = seq(1, ntimes(fit), by = time_step)
+) {
+  samples <- time_varying_mean_samples(fit, times = times)
+  output <- colMeans(samples)
+  attr(output, 'times') <- attr(samples, 'times')
+  output
+}
+
 #' Samples of the time varying spectral density from an adaptspecfit object
 #'
 #' This method calculates samples from the time varying spectral density
@@ -405,9 +469,14 @@ segment_spectra_mean <- function(
 #'
 #' @param fit \code{adaptspecfit} object
 #' @param n_frequencies Number of frequencies at which to evaluate the spectral
-#' densities
+#' densities. Ignored if \code{frequencies} is set.
 #' @param time_step Time varying spectral density is calculated only at times
-#' divisible by this number. Reduces the size of the output.
+#' divisible by this number. Reduces the size of the output. Ignored if
+#' \code{times} is set.
+#' @param frequencies Frequencies at which to evaluate the spectral density.
+#' Must be between 0 and 0.5, inclusive.
+#' @param times Times at which to calculate the spectra density. Must be between
+#' 1 and \code{ntimes(fit)}, inclusive.
 #' @return Three dimensional array. First dimension is sample, second
 #' dimension is frequency, and third dimension is time. Attributes 'frequencies'
 #' and 'times' contain the corresponding frequencies/times (use \code{str()}
@@ -415,16 +484,17 @@ segment_spectra_mean <- function(
 #' @export
 time_varying_spectra_samples.adaptspecfit <- function(
   fit,
-  n_frequencies,
-  time_step = 1
+  n_frequencies = 64,
+  time_step = 1,
+  frequencies = seq(0, 0.5, length.out = n_frequencies),
+  times = seq(1, ntimes(fit), by = time_step)
 ) {
+  stopifnot(min(times) >= 1 || max(times) <= ntimes(fit))
+  stopifnot(min(frequencies) >= 0 && max(frequencies) <= 0.5)
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'beta'))
   output <- .time_varying_spectra_samples(
     fit_lcm$n_segments, fit_lcm$cut_points, fit_lcm$beta,
-    n_frequencies, time_step, fit$prior$frequency_transform
-  )
-  attr(output, 'times') <- (
-    1 + (0 : (dim(output)[3] - 1)) * time_step
+    frequencies, times, fit$prior$frequency_transform
   )
   output
 }
@@ -444,9 +514,14 @@ time_varying_spectra_samples.adaptspecfit <- function(
 #'
 #' @param fit \code{adaptspecfit} object
 #' @param n_frequencies Number of frequencies at which to evaluate the spectral
-#' densities
+#' densities. Ignored if \code{frequencies} is set.
 #' @param time_step Time varying spectral density is calculated only at times
-#' divisible by this number. Reduces the size of the output.
+#' divisible by this number. Reduces the size of the output. Ignored if
+#' \code{times} is set.
+#' @param frequencies Frequencies at which to evaluate the spectral density.
+#' Must be between 0 and 0.5, inclusive.
+#' @param times Times at which to calculate the spectra density. Must be between
+#' 1 and \code{ntimes(fit)}, inclusive.
 #' @return Numeric matrix. Rows hold frequencies, columns hold times. Attributes
 #' 'frequencies' and 'times' contain the corresponding frequencies/times
 #' (use \code{str()} to inspect this object to see).
@@ -472,66 +547,18 @@ time_varying_spectra_samples.adaptspecfit <- function(
 #' @export
 time_varying_spectra_mean.adaptspecfit <- function(
   fit,
-  n_frequencies,
-  time_step = 1
+  n_frequencies = 64,
+  time_step = 1,
+  frequencies = seq(0, 0.5, length.out = n_frequencies),
+  times = seq(1, ntimes(fit), by = time_step)
 ) {
-  samples <- time_varying_spectra_samples(fit, n_frequencies, time_step)
+  samples <- time_varying_spectra_samples(
+    fit,
+    frequencies = frequencies,
+    times = times
+  )
   output <- apply(samples, 2 : 3, mean)
   attr(output, 'frequencies') <- attr(samples, 'frequencies')
-  attr(output, 'times') <- (
-    1 + (0 : (dim(output)[2] - 1)) * time_step
-  )
-  output
-}
-
-#' Samples of the time varying mean from an adaptspecfit object
-#'
-#' This method calculates samples from the time varying mean modelled by
-#' \code{\link{adaptspec}}. If \code{segment_means = FALSE} for the fit,
-#' the mean will be zero everywhere.
-#'
-#' @param fit \code{adaptspecfit} object
-#' @param time_step Time varying mean is calculated only at times
-#' divisible by this number. Reduces the size of the output.
-#' @return A matrix. First dimension is sample, second dimension is time.
-#' Attribute 'times' contain the corresponding times (use \code{str()} to
-#' inspect this object to see).
-#' @export
-time_varying_mean_samples.adaptspecfit <- function(
-  fit,
-  time_step = 1
-) {
-  fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'mu'))
-  output <- .time_varying_mean_samples(
-    fit$n_segments,
-    fit$cut_points,
-    fit$mu,
-    time_step
-  )
-  attr(output, 'times') <- 1 + (0 : (ncol(output) - 1)) * time_step
-  output
-}
-
-
-#' Posterior mean estimate of the time varying mean from an adaptspecfit object
-#'
-#' This method calculates the posterior mean of the time varying mean modelled
-#' by \code{\link{adaptspec}}.
-#'
-#' @param fit \code{adaptspecfit} object
-#' @param time_step Time varying mean is calculated only at times divisible by
-#' this number. Reduces the size of the output.
-#' @return A vector. The attribute 'times' contain the corresponding times
-#' (use \code{str()} to inspect this object to see).
-#' @seealso \code{time_varying_mean_samples} for samples of the time-varying
-#' mean
-#' @export
-time_varying_mean_mean.adaptspecfit <- function(
-  fit,
-  time_step = 1
-) {
-  samples <- time_varying_mean_samples(fit, time_step)
-  output <- colMeans(samples)
   attr(output, 'times') <- attr(samples, 'times')
   output
 }

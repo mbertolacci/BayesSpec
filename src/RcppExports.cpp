@@ -201,16 +201,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // timeVaryingMeanSamples
-NumericMatrix timeVaryingMeanSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericMatrix mu, unsigned int timeStep);
-RcppExport SEXP _BayesSpec_timeVaryingMeanSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP muSEXP, SEXP timeStepSEXP) {
+NumericMatrix timeVaryingMeanSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericMatrix mu, IntegerVector times);
+RcppExport SEXP _BayesSpec_timeVaryingMeanSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP muSEXP, SEXP timesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type nSegments(nSegmentsSEXP);
     Rcpp::traits::input_parameter< IntegerMatrix >::type cutPoints(cutPointsSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type timeStep(timeStepSEXP);
-    rcpp_result_gen = Rcpp::wrap(timeVaryingMeanSamples(nSegments, cutPoints, mu, timeStep));
+    Rcpp::traits::input_parameter< IntegerVector >::type times(timesSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingMeanSamples(nSegments, cutPoints, mu, times));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -238,19 +238,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// timeVaryingMeanMixtureSamplesProbabilities
+NumericVector timeVaryingMeanMixtureSamplesProbabilities(NumericVector componentSamples, NumericVector probabilities);
+RcppExport SEXP _BayesSpec_timeVaryingMeanMixtureSamplesProbabilities(SEXP componentSamplesSEXP, SEXP probabilitiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probabilities(probabilitiesSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingMeanMixtureSamplesProbabilities(componentSamples, probabilities));
+    return rcpp_result_gen;
+END_RCPP
+}
 // timeVaryingSpectraSamples
-NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, unsigned int nFrequencies, unsigned int timeStep, std::string frequencyTransform);
-RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP nFrequenciesSEXP, SEXP timeStepSEXP, SEXP frequencyTransformSEXP) {
+NumericVector timeVaryingSpectraSamples(IntegerVector nSegments, IntegerMatrix cutPoints, NumericVector beta, NumericVector frequencies, IntegerVector times, std::string frequencyTransform);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraSamples(SEXP nSegmentsSEXP, SEXP cutPointsSEXP, SEXP betaSEXP, SEXP frequenciesSEXP, SEXP timesSEXP, SEXP frequencyTransformSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type nSegments(nSegmentsSEXP);
     Rcpp::traits::input_parameter< IntegerMatrix >::type cutPoints(cutPointsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type nFrequencies(nFrequenciesSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type timeStep(timeStepSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type frequencies(frequenciesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type times(timesSEXP);
     Rcpp::traits::input_parameter< std::string >::type frequencyTransform(frequencyTransformSEXP);
-    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform));
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraSamples(nSegments, cutPoints, beta, frequencies, times, frequencyTransform));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -275,6 +287,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type probabilities(probabilitiesSEXP);
     rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraMixtureMeanProbabilities(componentSamples, probabilities));
+    return rcpp_result_gen;
+END_RCPP
+}
+// timeVaryingSpectraMixtureSamplesProbabilities
+NumericVector timeVaryingSpectraMixtureSamplesProbabilities(NumericVector componentSamples, NumericVector probabilities);
+RcppExport SEXP _BayesSpec_timeVaryingSpectraMixtureSamplesProbabilities(SEXP componentSamplesSEXP, SEXP probabilitiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type componentSamples(componentSamplesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probabilities(probabilitiesSEXP);
+    rcpp_result_gen = Rcpp::wrap(timeVaryingSpectraMixtureSamplesProbabilities(componentSamples, probabilities));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -350,9 +374,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BayesSpec_timeVaryingMeanSamples", (DL_FUNC) &_BayesSpec_timeVaryingMeanSamples, 4},
     {"_BayesSpec_timeVaryingMeanMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingMeanMixtureMeanCategories, 2},
     {"_BayesSpec_timeVaryingMeanMixtureMeanProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingMeanMixtureMeanProbabilities, 2},
+    {"_BayesSpec_timeVaryingMeanMixtureSamplesProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingMeanMixtureSamplesProbabilities, 2},
     {"_BayesSpec_timeVaryingSpectraSamples", (DL_FUNC) &_BayesSpec_timeVaryingSpectraSamples, 6},
     {"_BayesSpec_timeVaryingSpectraMixtureMeanCategories", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanCategories, 2},
     {"_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities, 2},
+    {"_BayesSpec_timeVaryingSpectraMixtureSamplesProbabilities", (DL_FUNC) &_BayesSpec_timeVaryingSpectraMixtureSamplesProbabilities, 2},
     {"_BayesSpec_logWhittleLikelihood", (DL_FUNC) &_BayesSpec_logWhittleLikelihood, 3},
     {"_BayesSpec_logWhittleLikelihoodBeta", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBeta, 4},
     {"_BayesSpec_logWhittleLikelihoodBetaDeriv", (DL_FUNC) &_BayesSpec_logWhittleLikelihoodBetaDeriv, 4},

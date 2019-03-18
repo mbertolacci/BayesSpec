@@ -50,8 +50,8 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }
 
-.time_varying_mean_samples <- function(nSegments, cutPoints, mu, timeStep) {
-    .Call('_BayesSpec_timeVaryingMeanSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, mu, timeStep)
+.time_varying_mean_samples <- function(nSegments, cutPoints, mu, times) {
+    .Call('_BayesSpec_timeVaryingMeanSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, mu, times)
 }
 
 .time_varying_mean_mixture_mean_categories <- function(componentSamples, categories) {
@@ -62,8 +62,12 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_timeVaryingMeanMixtureMeanProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
 }
 
-.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform) {
-    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, nFrequencies, timeStep, frequencyTransform)
+.time_varying_mean_mixture_samples_probabilities <- function(componentSamples, probabilities) {
+    .Call('_BayesSpec_timeVaryingMeanMixtureSamplesProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
+}
+
+.time_varying_spectra_samples <- function(nSegments, cutPoints, beta, frequencies, times, frequencyTransform) {
+    .Call('_BayesSpec_timeVaryingSpectraSamples', PACKAGE = 'BayesSpec', nSegments, cutPoints, beta, frequencies, times, frequencyTransform)
 }
 
 .time_varying_spectra_mixture_mean_categories <- function(componentSamples, categories) {
@@ -72,6 +76,10 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
 
 .time_varying_spectra_mixture_mean_probabilities <- function(componentSamples, probabilities) {
     .Call('_BayesSpec_timeVaryingSpectraMixtureMeanProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
+}
+
+.time_varying_spectra_mixture_samples_probabilities <- function(componentSamples, probabilities) {
+    .Call('_BayesSpec_timeVaryingSpectraMixtureSamplesProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
 }
 
 .log_whittle_likelihood <- function(fHatR, periodogramR, n) {

@@ -4,13 +4,18 @@
 \alias{time_varying_mean_mean.adaptspecfit}
 \title{Posterior mean estimate of the time varying mean from an adaptspecfit object}
 \usage{
-\method{time_varying_mean_mean}{adaptspecfit}(fit, time_step = 1)
+\method{time_varying_mean_mean}{adaptspecfit}(fit, time_step = 1,
+  times = seq(1, ntimes(fit), by = time_step))
 }
 \arguments{
 \item{fit}{\code{adaptspecfit} object}
 
-\item{time_step}{Time varying mean is calculated only at times divisible by
-this number. Reduces the size of the output.}
+\item{time_step}{Time varying mean is calculated only at times
+divisible by this number. Reduces the size of the output. Ignore if
+\code{times} is provided.}
+
+\item{times}{Times at which to calculate the mean. Must be between
+1 and \code{ntimes(fit)}, inclusive.}
 }
 \value{
 A vector. The attribute 'times' contain the corresponding times

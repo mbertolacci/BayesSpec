@@ -10,6 +10,11 @@
 }
 
 #' @export
+ntimes <- function(x, ...) {
+  UseMethod('ntimes', x)
+}
+
+#' @export
 diagnostics <- function(x, ...) UseMethod('diagnostics', x)
 
 #' @export

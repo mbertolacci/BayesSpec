@@ -42,6 +42,11 @@ window.adaptspecmixturefit <- function(fit, ...) {
 }
 
 #' @export
+ntimes.adaptspecmixturefit <- function(fit) {
+  ntimes(fit$components[[1]])
+}
+
+#' @export
 diagnostics.adaptspecmixturefit <- function(fit, ...) {
   cat(sprintf(
     'Tuning parameters: var_inflate = %f, prob_mm1 = %f\n',
@@ -86,11 +91,12 @@ diagnostic_warnings.adaptspecmixturefit <- function(fit, ...) {
 time_varying_mean_mean.adaptspecmixturefit <- function(
   fit,
   time_step = 1,
-  from = c('categories', 'probabilities')
+  times = seq(1, ntimes(fit), by = time_step),
+  from = c('probabilities', 'categories')
 ) {
   from <- match.arg(from)
   n_iterations <- nrow(fit$categories)
-  n_times <- ceiling(max(fit$components[[1]]$cut_points) / time_step)
+  n_times <- length(times)
   n_components <- length(fit$components)
 
   component_samples <- array(0, dim = c(
@@ -101,7 +107,7 @@ time_varying_mean_mean.adaptspecmixturefit <- function(
   for (component in 1 : n_components) {
     component_samples[, , component] <- time_varying_mean_samples(
       fit$components[[component]],
-      time_step
+      times = times
     )
   }
   if (from == 'categories') {
@@ -115,35 +121,108 @@ time_varying_mean_mean.adaptspecmixturefit <- function(
       component_probabilities(fit)
     )
   }
-  attr(output, 'times') <- (
-    1 + (0 : (n_times - 1)) * time_step
-  )
+  attr(output, 'times') <- times
   output
 }
 
 #' @export
-time_varying_spectra_mean.adaptspecmixturefit <- function(
+time_varying_mean_samples.adaptspecmixturefit <- function(
   fit,
-  n_frequencies,
   time_step = 1,
-  from = c('categories', 'probabilities')
+  times = seq(1, ntimes(fit), by = time_step),
+  from = c('probabilities')
 ) {
   from <- match.arg(from)
   n_iterations <- nrow(fit$categories)
-  n_times <- ceiling(max(fit$components[[1]]$cut_points) / time_step)
+  n_times <- length(times)
   n_components <- length(fit$components)
 
   component_samples <- array(0, dim = c(
     n_iterations,
-    n_frequencies,
+    n_times,
+    n_components
+  ))
+  for (component in 1 : n_components) {
+    component_samples[, , component] <- time_varying_mean_samples(
+      fit$components[[component]],
+      times = times
+    )
+  }
+  if (from == 'probabilities') {
+    output <- .time_varying_mean_mixture_samples_probabilities(
+      component_samples,
+      component_probabilities(fit)
+    )
+  }
+  attr(output, 'times') <- times
+  output
+}
+
+#' @export
+time_varying_spectra_samples.adaptspecmixturefit <- function(
+  fit,
+  n_frequencies = 64,
+  time_step = 1,
+  from = c('probabilities', 'categories'),
+  frequencies = seq(0, 0.5, length.out = n_frequencies),
+  times = seq(1, ntimes(fit), by = time_step)
+) {
+  from <- match.arg(from)
+  n_iterations <- nrow(fit$categories)
+  n_times <- length(times)
+  n_components <- length(fit$components)
+  n_frequencies_actual <- length(frequencies)
+
+  component_samples <- array(0, dim = c(
+    n_iterations,
+    n_frequencies_actual,
     n_times,
     n_components
   ))
   for (component in 1 : n_components) {
     component_samples[, , , component] <- time_varying_spectra_samples(
       fit$components[[component]],
-      n_frequencies,
-      time_step
+      frequencies = frequencies,
+      times = times
+    )
+  }
+  if (from == 'probabilities') {
+    output <- .time_varying_spectra_mixture_samples_probabilities(
+      component_samples,
+      component_probabilities(fit)
+    )
+  }
+  attr(output, 'frequencies') <- frequencies
+  attr(output, 'times') <- times
+  output
+}
+
+#' @export
+time_varying_spectra_mean.adaptspecmixturefit <- function(
+  fit,
+  n_frequencies = 64,
+  time_step = 1,
+  from = c('probabilities', 'categories'),
+  frequencies = seq(0, 0.5, length.out = n_frequencies),
+  times = seq(1, ntimes(fit), by = time_step)
+) {
+  from <- match.arg(from)
+  n_iterations <- nrow(fit$categories)
+  n_times <- length(times)
+  n_components <- length(fit$components)
+  n_frequencies_actual <- length(frequencies)
+
+  component_samples <- array(0, dim = c(
+    n_iterations,
+    n_frequencies_actual,
+    n_times,
+    n_components
+  ))
+  for (component in 1 : n_components) {
+    component_samples[, , , component] <- time_varying_spectra_samples(
+      fit$components[[component]],
+      frequencies = frequencies,
+      times = times
     )
   }
   if (from == 'categories') {
@@ -157,12 +236,8 @@ time_varying_spectra_mean.adaptspecmixturefit <- function(
       component_probabilities(fit)
     )
   }
-  attr(output, 'frequencies') <- (
-    (0 : (n_frequencies - 1)) / (2 * (n_frequencies - 1))
-  )
-  attr(output, 'times') <- (
-    1 + (0 : (n_times - 1)) * time_step
-  )
+  attr(output, 'frequencies') <- frequencies
+  attr(output, 'times') <- times
   output
 }
 

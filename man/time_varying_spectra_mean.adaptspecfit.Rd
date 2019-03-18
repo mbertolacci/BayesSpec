@@ -5,17 +5,25 @@
 \title{Posterior mean estimate of the time varying spectral density from
 an adaptspecfit object}
 \usage{
-\method{time_varying_spectra_mean}{adaptspecfit}(fit, n_frequencies,
-  time_step = 1)
+\method{time_varying_spectra_mean}{adaptspecfit}(fit, n_frequencies = 64,
+  time_step = 1, frequencies = seq(0, 0.5, length.out = n_frequencies),
+  times = seq(1, ntimes(fit), by = time_step))
 }
 \arguments{
 \item{fit}{\code{adaptspecfit} object}
 
 \item{n_frequencies}{Number of frequencies at which to evaluate the spectral
-densities}
+densities. Ignored if \code{frequencies} is set.}
 
 \item{time_step}{Time varying spectral density is calculated only at times
-divisible by this number. Reduces the size of the output.}
+divisible by this number. Reduces the size of the output. Ignored if
+\code{times} is set.}
+
+\item{frequencies}{Frequencies at which to evaluate the spectral density.
+Must be between 0 and 0.5, inclusive.}
+
+\item{times}{Times at which to calculate the spectra density. Must be between
+1 and \code{ntimes(fit)}, inclusive.}
 }
 \value{
 Numeric matrix. Rows hold frequencies, columns hold times. Attributes

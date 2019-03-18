@@ -183,6 +183,10 @@ public:
         return stream;
     }
 
+    void setUseHessian(bool useHessian) {
+        useHessian_ = useHessian;
+    }
+
 private:
     static const unsigned int maxIterations_ = 1000;
 

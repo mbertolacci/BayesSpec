@@ -236,8 +236,9 @@ public:
         Eigen::VectorXd gradient(prior_->nBases + 1);
         int status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
         if (status != 1) {
-            // Reattempt optimisation from a zero start
+            // Reattempt optimisation from a zero start, and force use of the hessian
             beta.fill(0);
+            optimiser.setUseHessian(true);
             status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
             if (status != 1) {
                 Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";

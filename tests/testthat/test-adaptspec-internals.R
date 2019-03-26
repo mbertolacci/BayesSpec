@@ -2,6 +2,20 @@ context('adaptspec internals')
 
 x <- as.matrix(sin(seq(0, 2 * pi, length.out = 20)))
 
+nu_20_2 <- rbind(
+  c(1,  4.501582e-01,  0.22507908),
+  c(1,  4.281258e-01,  0.18209280),
+  c(1,  3.641856e-01,  0.06955326),
+  c(1,  2.645963e-01, -0.06955326),
+  c(1,  1.391065e-01, -0.18209280),
+  c(1,  2.756424e-17, -0.22507908),
+  c(1, -1.391065e-01, -0.18209280),
+  c(1, -2.645963e-01, -0.06955326),
+  c(1, -3.641856e-01,  0.06955326),
+  c(1, -4.281258e-01,  0.18209280),
+  c(1, -4.501582e-01,  0.22507908)
+)
+
 prior <- adaptspec_model(
   n_segments_max = 3,
   t_min = 1,
@@ -51,35 +65,23 @@ test_that('fit and densities', {
     0.002946380, 0.002191168, 0.001779383, 0.001548366, 0.001429210,
     0.001392288
   ), ncol = 1))
-  expect_equal(result$nu[[1]], rbind(
-    c(1, 4.501582e-01,  2.250791e-01),
-    c(1, 4.446160e-01,  2.140629e-01),
-    c(1, 4.281258e-01,  1.820928e-01),
-    c(1, 4.010939e-01,  1.322982e-01),
-    c(1, 3.641856e-01,  6.955326e-02),
-    c(1, 3.183099e-01,  1.378212e-17),
-    c(1, 2.645963e-01, -6.955326e-02),
-    c(1, 2.043675e-01, -1.322982e-01),
-    c(1, 1.391065e-01, -1.820928e-01),
-    c(1, 7.042025e-02, -2.140629e-01),
-    c(1, 2.756424e-17, -2.250791e-01)
-  ), tolerance = 1e-5)
+  expect_equal(result$nu[[1]], nu_20_2, tolerance = 1e-5)
 
   # Likelihood and prior
   expect_equal(result$log_segment_likelihood[1], -23.12877, tolerance = 1e-5)
-  expect_equal(result$log_segment_prior[1], -3.449963, tolerance = 1e-5)
+  expect_equal(result$log_segment_prior[1], -3.256816, tolerance = 1e-5)
 
   # Proposal distribution
-  expect_equal(result$log_segment_proposal[1], -6.155771, tolerance = 1e-5)
+  expect_equal(result$log_segment_proposal[1], -11.74658, tolerance = 1e-5)
   expect_equal(
     result$beta_mode[1, ],
-    c(-1.4011321, 0.9491272, 1.8207917),
+    c(-2.106650, 3.223895, 1.371528),
     tolerance = 1e-5
   )
   expect_equal(result$precision_cholesky_mode[[1]], rbind(
-    c(3.098204, 1.229431, 0.58769266),
-    c(0.000000, 1.085998, 0.08152192),
-    c(0.000000, 0.000000, 1.01947443)
+    c(2.982172, 1.081056, 0.45990905),
+    c(0.000000, 1.117357, 0.07977929),
+    c(0.000000, 0.000000, 1.01976571)
   ), tolerance = 1e-5)
 
   # Multivariate fit
@@ -104,35 +106,23 @@ test_that('fit and densities', {
     0.002946380, 0.002191168, 0.001779383, 0.001548366, 0.001429210,
     0.001392288
   )))
-  expect_equal(result$nu[[1]], rbind(
-    c(1, 4.501582e-01,  2.250791e-01),
-    c(1, 4.446160e-01,  2.140629e-01),
-    c(1, 4.281258e-01,  1.820928e-01),
-    c(1, 4.010939e-01,  1.322982e-01),
-    c(1, 3.641856e-01,  6.955326e-02),
-    c(1, 3.183099e-01,  1.378212e-17),
-    c(1, 2.645963e-01, -6.955326e-02),
-    c(1, 2.043675e-01, -1.322982e-01),
-    c(1, 1.391065e-01, -1.820928e-01),
-    c(1, 7.042025e-02, -2.140629e-01),
-    c(1, 2.756424e-17, -2.250791e-01)
-  ), tolerance = 1e-5)
+  expect_equal(result$nu[[1]], nu_20_2, tolerance = 1e-5)
 
   # Likelihood and prior
   expect_equal(result$log_segment_likelihood[1], -46.25754, tolerance = 1e-5)
-  expect_equal(result$log_segment_prior[1], -3.449963, tolerance = 1e-5)
+  expect_equal(result$log_segment_prior[1], -3.256816, tolerance = 1e-5)
 
   # Proposal distribution
-  expect_equal(result$log_segment_proposal[1], -16.84566, tolerance = 1e-5)
+  expect_equal(result$log_segment_proposal[1], -52.59283, tolerance = 1e-5)
   expect_equal(
     result$beta_mode[1, ],
-    c(-2.316213, 2.067875, 3.687743),
+    c(-3.217252, 5.486818, 2.548590),
     tolerance = 1e-5
   )
   expect_equal(result$precision_cholesky_mode[[1]], rbind(
-    c(4.322475, 1.801671, 0.8531555),
-    c(0.000000, 1.098086, 0.1034432),
-    c(0.000000, 0.000000, 1.0311801)
+    c(4.21696, 1.301131, 0.6043667),
+    c(0.00000, 1.467915, 0.1732795),
+    c(0.00000, 0.000000, 1.0657376)
   ), tolerance = 1e-5)
 })
 
@@ -142,9 +132,9 @@ test_that('the nu matrix is correct for even and odd numbers of observations', {
     list(n_segments = 1), prior, y_even, tuning
   ), tuning)
   expect_equal(result_even$nu[[1]], rbind(
-    c(1, 4.501582e-01,  2.250791e-01),
-    c(1, 3.183099e-01,  1.378212e-17),
-    c(1, 2.756424e-17, -2.250791e-01)
+    c(1,  4.501582e-01,  0.2250791),
+    c(1,  2.756424e-17, -0.2250791),
+    c(1, -4.501582e-01,  0.2250791)
   ), tolerance = 1e-5)
 
   y_odd <- as.matrix(rnorm(5))
@@ -152,9 +142,9 @@ test_that('the nu matrix is correct for even and odd numbers of observations', {
     list(n_segments = 1), prior, y_odd, tuning
   ), tuning)
   expect_equal(result_odd$nu[[1]], rbind(
-    c(1, 0.4501582,  0.22507908),
-    c(1, 0.3641856,  0.06955326),
-    c(1, 0.1391065, -0.18209280)
+    c(1,  0.4501582,  0.22507908),
+    c(1,  0.1391065, -0.18209280),
+    c(1, -0.3641856,  0.06955326)
   ), tolerance = 1e-5)
 })
 
@@ -222,7 +212,7 @@ test_that('metropolis ratio within', {
       sample1_2,
       x, prior2, tuning
     ),
-    2.726997, tolerance = 1e-5
+    2.077288, tolerance = 1e-5
   )
 
   base_sample2 <- list(
@@ -249,7 +239,7 @@ test_that('metropolis ratio within', {
       sample2,
       x, prior2, tuning
     ),
-    0.1347071, tolerance = 1e-5
+    -0.07241276, tolerance = 1e-5
   )
 
   # Move the cutpoint by a small jump, unconstrained
@@ -261,7 +251,7 @@ test_that('metropolis ratio within', {
       sample2,
       x, prior2, tuning
     ),
-    0.03525622, tolerance = 1e-5
+    -0.009447008, tolerance = 1e-5
   )
 
   # Move the cutpoint down by a small jump, constrained
@@ -275,7 +265,7 @@ test_that('metropolis ratio within', {
       sample2,
       x, prior2, tuning
     ),
-    0.007820678, tolerance = 1e-5
+    -0.03213229, tolerance = 1e-5
   )
 
   # Move the cutpoint up by a small jump, constrained
@@ -289,6 +279,6 @@ test_that('metropolis ratio within', {
       sample2,
       x, prior2, tuning
     ),
-    0.007820678, tolerance = 1e-5
+    -0.03213229, tolerance = 1e-5
   )
 })

@@ -408,13 +408,16 @@ adaptspec_nu <- function(n_freq, n_bases) {
   if (is.null(start$mu)) {
     start$mu <- rep(0, model$n_segments_max)
     if (model$segment_means) {
-      start$mu[1 : start$n_segments] <- sapply(1 : start$n_segments, function(segment) {
-        mean(data[
-          (
-            if (segment == 1) 1 else (start$cut_points[segment - 1] + 1)
-          ) : start$cut_points[segment],
-        ], na.rm = TRUE)
-      })
+      start$mu[1 : start$n_segments] <- sapply(
+        1 : start$n_segments,
+        function(segment) {
+          mean(data[
+            (
+              if (segment == 1) 1 else (start$cut_points[segment - 1] + 1)
+            ) : start$cut_points[segment],
+          ], na.rm = TRUE)
+        }
+      )
       start$mu[!is.finite(start$mu)] <- 0
     }
   }

@@ -420,9 +420,9 @@ time_varying_mean_samples.adaptspecfit <- function(
 ) {
   fit_lcm <- .thin_to_lcm(fit, c('n_segments', 'cut_points', 'mu'))
   output <- .time_varying_mean_samples(
-    fit$n_segments,
-    fit$cut_points,
-    fit$mu,
+    fit_lcm$n_segments,
+    fit_lcm$cut_points,
+    fit_lcm$mu,
     times
   )
   output

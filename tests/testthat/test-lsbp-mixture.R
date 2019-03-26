@@ -35,6 +35,6 @@ test_that('sampler can take longer design matrix than data width', {
     run_diagnostics = FALSE
   )
   expect_equal(length(result$components), 2)
-  expect_equal(ncol(result$categories), 8)
+  expect_equal(ncol(result$categories), 4)
   expect_equal(nrow(result$categories), 50)
 })

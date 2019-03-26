@@ -61,7 +61,10 @@ adaptspec_lsbp_mixture <- function(
   mpi = FALSE
 ) {
   thin <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$thin), thin)
-  lsbp_tuning <- .extend_list(eval(formals(adaptspec_lsbp_mixture)$lsbp_tuning), lsbp_tuning)
+  lsbp_tuning <- .extend_list(
+    eval(formals(adaptspec_lsbp_mixture)$lsbp_tuning),
+    lsbp_tuning
+  )
 
   flog.debug('Preparing data', name = 'BayesSpec.lsbp-mixture')
   prepared_data <- .prepare_data(data, detrend)

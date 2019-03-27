@@ -166,7 +166,7 @@ private:
 
     void updateAllSegments_() {
         for (unsigned int segment = 0; segment < state.parameters.nSegments; ++segment) {
-            state.means[segment] = x->block(
+            state.means[segment] = state.x->cols() == 0 ? 0 : state.x->block(
                 state.parameters.cutPoints[segment] - state.segmentLengths[segment],
                 0,
                 state.segmentLengths[segment],

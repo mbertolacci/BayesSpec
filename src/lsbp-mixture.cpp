@@ -9,7 +9,9 @@
 
 #include "adaptspec/samples.hpp"
 #include "lsbp-mixture/sampler.hpp"
-#include "lsbp-mixture/sampler-mpi.hpp"
+#ifdef BAYESSPEC_MPI
+    #include "lsbp-mixture/sampler-mpi.hpp"
+#endif
 
 using namespace bayesspec;
 
@@ -217,6 +219,7 @@ Rcpp::List logisticStickBreakingMixture(
     bool mpi
 ) {
     if (mpi) {
+#ifdef BAYESSPEC_MPI
         return logisticStickBreakingMixtureBase<AdaptSpecLSBPMixtureSamplerMPI>(
             nLoop,
             nWarmUp,
@@ -237,6 +240,7 @@ Rcpp::List logisticStickBreakingMixture(
             thin,
             showProgress
         );
+#endif
     } else {
         return logisticStickBreakingMixtureBase<AdaptSpecLSBPMixtureSampler>(
             nLoop,

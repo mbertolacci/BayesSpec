@@ -129,7 +129,7 @@
 #'     var_inflate = 1,
 #'     warm_up_var_inflate = NULL,
 #'     use_cutpoint_within = TRUE,
-#'     use_single_within = FALSE,
+#'     use_single_within = TRUE,
 #'     use_hmc_within = FALSE,
 #'     l_min = 1,
 #'     l_max = 10,
@@ -200,7 +200,7 @@ adaptspec <- function(
     short_move_weights = c(0.5, 0.5, 0.5),
     var_inflate = 1,
     warm_up_var_inflate = NULL,
-    use_single_within = FALSE,
+    use_single_within = TRUE,
     use_hmc_within = FALSE,
     l_min = 1,
     l_max = 10,
@@ -418,7 +418,11 @@ adaptspec_nu <- function(n_freq, n_bases) {
           ], na.rm = TRUE)
         }
       )
-      start$mu[!is.finite(start$mu)] <- 0
+      start$mu[
+        !is.finite(start$mu) |
+        (start$mu >= model$mu_upper) |
+        (start$mu <= model$mu_lower)
+      ] <- (model$mu_lower + model$mu_upper) / 2
     }
   }
   if (is.null(start$beta)) {
@@ -459,6 +463,11 @@ adaptspec_nu <- function(n_freq, n_bases) {
   stopifnot(min(start$tau_squared) >= 0)
   stopifnot(min(start$tau_squared[model$n_segments_min : start$n_segments]) > 0)
   stopifnot(max(start$tau_squared) < model$tau_upper_limit)
+
+  if (model$segment_means) {
+    stopifnot(all(start$mu > model$mu_lower))
+    stopifnot(all(start$mu < model$mu_upper))
+  }
 }
 
 .adaptspec_tuning <- function(tuning) {

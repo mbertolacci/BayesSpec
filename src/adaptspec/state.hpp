@@ -375,8 +375,9 @@ private:
     AdaptSpecStatistics statistics_;
 
     void checkParameterValidity_() {
-        if (!parameters.isValid(*prior_)) {
-            Rcpp::Rcout << "Current state:\n" << *this << "\n";
+        int reason = parameters.isValid(*prior_);
+        if (reason > 0) {
+            Rcpp::Rcout << "Current state:\n" << *this << "\n" << "Reason: " << reason << "\n";
             Rcpp::stop("Parameters are not valid");
         }
     }

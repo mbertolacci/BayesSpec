@@ -30,36 +30,36 @@ public:
         }
     }
 
-    bool isValid(const AdaptSpecPrior& prior) {
+    int isValid(const AdaptSpecPrior& prior) {
         // Check that nSegments is valid
         if (nSegments < prior.nSegmentsMin || nSegments > prior.nSegmentsMax) {
-            return false;
+            return 1;
         }
 
         // Increasing sequence of cut points
         for (unsigned int segment = 1; segment < prior.nSegmentsMax; ++segment) {
             if (cutPoints[segment - 1] > cutPoints[segment]) {
-                return false;
+                return 2;
             }
         }
         unsigned int previousCutPoint = 0;
         // Distance between cut points at least tMin
         for (unsigned int segment = 0; segment < nSegments; ++segment) {
             if (cutPoints[segment] - previousCutPoint < prior.tMin) {
-                return false;
+                return 3;
             }
             previousCutPoint = cutPoints[segment];
         }
         // Cut points satisfy timeStep
         for (unsigned int segment = 0; segment < nSegments - 1; ++segment) {
             if (cutPoints[segment] % prior.timeStep != 0) {
-                return false;
+                return 4;
             }
         }
         // tauSquared satisfies upper limit
         for (unsigned int segment = 0; segment < nSegments; ++segment) {
             if (tauSquared[segment] >= prior.tauUpperLimit) {
-                return false;
+                return 5;
             }
         }
 
@@ -67,11 +67,11 @@ public:
             // mu within bounds
             for (unsigned int segment = 0; segment < nSegments; ++segment) {
                 if (mu[segment] < prior.muLower || mu[segment] > prior.muUpper) {
-                    return false;
+                    return 6;
                 }
             }
         }
-        return true;
+        return 0;
     }
 
     Rcpp::List asList() const {
@@ -97,8 +97,11 @@ public:
             start.mu = Rcpp::as<Eigen::VectorXd>(startList["mu"]);
         }
 
-        if (!start.isValid(prior)) {
-            throw std::runtime_error("Invalid starting values");
+        int validity = start.isValid(prior);
+        if (validity != 0) {
+            std::ostringstream out;
+            out << "Invalid starting values, reason = " << validity;
+            throw std::runtime_error(out.str());
         }
         return start;
     }

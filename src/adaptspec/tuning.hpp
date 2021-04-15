@@ -20,6 +20,7 @@ public:
     double epsilonMin;
     double epsilonMax;
     bool useHessianCurvature;
+    bool canAvoidOptimiser;
 
     static AdaptSpecTuning fromList(const Rcpp::List& tuningList) {
         AdaptSpecTuning tuning;
@@ -36,6 +37,7 @@ public:
         tuning.epsilonMin = tuningList["epsilon_min"];
         tuning.epsilonMax = tuningList["epsilon_max"];
         tuning.useHessianCurvature = tuningList["use_hessian_curvature"];
+        tuning.canAvoidOptimiser = tuningList["can_avoid_optimiser"];
         return tuning;
     }
 };

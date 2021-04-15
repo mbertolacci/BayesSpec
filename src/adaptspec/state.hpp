@@ -222,36 +222,38 @@ public:
             );
         }
 
-        BetaOptimiser optimiser(
-            segmentLengths[segment],
-            inputPeriodogram,
-            nu[segment],
-            prior_->sigmaSquaredAlpha,
-            parameters.tauSquared[segment],
-            tuning_.useHessianCurvature
-        );
+        if (!tuning_.canAvoidOptimiser) {
+            BetaOptimiser optimiser(
+                segmentLengths[segment],
+                inputPeriodogram,
+                nu[segment],
+                prior_->sigmaSquaredAlpha,
+                parameters.tauSquared[segment],
+                tuning_.useHessianCurvature
+            );
 
-        // Outputs
-        Eigen::VectorXd beta(parameters.beta.row(segment).transpose());
-        Eigen::VectorXd gradient(prior_->nBases + 1);
-        int status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
-        if (status != 1) {
-            // Reattempt optimisation from a zero start, and force use of the hessian
-            beta.fill(0);
-            optimiser.setUseHessian(true);
-            status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
+            // Outputs
+            Eigen::VectorXd beta(parameters.beta.row(segment).transpose());
+            Eigen::VectorXd gradient(prior_->nBases + 1);
+            int status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
             if (status != 1) {
-                Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
-                Rcpp::Rcout << "segment = " << segment << "\n";
-                Rcpp::Rcout << "Current state =\n" << *this << "\n";
-                Rcpp::stop("Optimiser failed");
+                // Reattempt optimisation from a zero start, and force use of the hessian
+                beta.fill(0);
+                optimiser.setUseHessian(true);
+                status = optimiser.run(beta, gradient, precisionCholeskyMode[segment]);
+                if (status != 1) {
+                    Rcpp::Rcout << "Warning: optimiser failed\n" << optimiser << "\n";
+                    Rcpp::Rcout << "segment = " << segment << "\n";
+                    Rcpp::Rcout << "Current state =\n" << *this << "\n";
+                    Rcpp::stop("Optimiser failed");
+                }
             }
-        }
 
-        betaMode.row(segment) = beta.transpose();
-        precisionCholeskyMode[segment] /= std::sqrt(
-            warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate
-        );
+            betaMode.row(segment) = beta.transpose();
+            precisionCholeskyMode[segment] /= std::sqrt(
+                warmedUp_ ? tuning_.varInflate : tuning_.warmUpVarInflate
+            );
+        }
 
         if (prior_->segmentMeans) {
             muModeMean[segment] = means[segment];

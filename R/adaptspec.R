@@ -383,6 +383,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
 }
 
 .adaptspec_start <- function(start, model, data, tuning) {
+  tuning$can_avoid_optimiser <- FALSE
   if (is.null(start$n_segments)) {
     if (model$n_segments_min == model$n_segments_max) {
       start$n_segments <- model$n_segments_min
@@ -483,7 +484,8 @@ adaptspec_nu <- function(n_freq, n_bases) {
     l_max = 10,
     epsilon_min = 0.1,
     epsilon_max = 1,
-    use_hessian_curvature = TRUE
+    use_hessian_curvature = TRUE,
+    can_avoid_optimiser = FALSE
   ), tuning)
 
   tuning$short_moves <- as.integer(tuning$short_moves)

@@ -69,7 +69,7 @@
     stopifnot(length(start$categories) == ncol(data))
   }
   stopifnot(length(start$components) == n_components)
-  for (i in 1 : length(start$components)) {
+  for (i in seq_len(length(start$components))) {
     .validate_adaptspec_start(
       start$components[[i]],
       component_priors[[i]],

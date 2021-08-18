@@ -1,46 +1,9 @@
-#' Adaptive Spectral Estimation for Non-stationary Time Series
+#' AdaptSPEC: Adaptive Spectral Estimation for Non-stationary Time Series
 #'
 #' This function implements a methodology for analyzing possibly non-stationary
 #' time series by adaptively dividing the time series into an unknown but finite
 #' number of segments and estimating the corresponding local spectra by
 #' smoothing splines.
-#'
-#' @section MCMC tuning parameters:
-#' The \code{tuning} argument allows you to change the tuning parameter of the
-#' reversible-jump MCMC algorithm used to estimate the model. It is a list with
-#' the following entries (and corresponding default values):
-#' \itemize{
-#'   \item \code{prob_short_move} (\code{0.8}): probability of proposing a small
-#'   move of a cutpoint in a within step
-#'   \item \code{short_moves} (\code{c(-1, 0, 1)}): set of possible small steps
-#'   for the 'small move' proposal. if using time_step > 1, will be multiplied
-#'   by time_step.
-#'   \item \code{short_move_weights} (\code{c(0.5, 0.5, 0.5)}) the probability
-#'   of picking each corresponding entry in \code{short_moves}. Need not be
-#'   normalised to sum to one
-#'   \item \code{var_inflate} (\code{1}): factor by which to inflate the
-#'   covariance matrix of the spline coefficient proposal
-#'   \item \code{warm_up_var_inflate} (\code{= var_inflate}): as above, but
-#'   applying only during warm-up
-#'   \item \code{use_cutpoint_within} (\code{TRUE}): whether to propose the
-#'   cutpoints. One would very rarely want to disable this.
-#'   \item \code{use_single_within} (\code{FALSE}): whether to also update
-#'   spline directly, not just when updating cutpoints
-#'   \item \code{use_hmc_within} (\code{FALSE}): whether to also update spline
-#'   parameters using HMC
-#'   \item \code{l_min} (\code{1}): minimum number of leap frog steps to
-#'   take in an HMC iteration. Number of steps is randomly selected from a
-#'   discrete uniform over \code{[l_min, l_max]}
-#'   \item \code{l_max} (\code{10}): maximum number of lead frog steps to
-#'   take in an HMC iteration
-#'   \item \code{epsilon_min} (\code{0.1}): minimum step size in HMC. Step size
-#'   is chosen from a uniform distribution over
-#'   \code{[epsilon_min, epsilon_max]}
-#'   \item \code{epsilon_max} (\code{1}): maximum step size in HMC.
-#'   \item \code{use_hessian_curvature} (\code{TRUE}): whether to use the
-#'   hessian or the Fisher information for curvature of spline fit
-#' }
-#' If a value is omitted or NULL, the default above will be used.
 #'
 #' @param n_loop Number of MCMC iterations to perform
 #' @param n_warm_up Number of warm-up iterations to discard, so that the
@@ -49,8 +12,8 @@
 #' it has multiple independent observations of the same random process, one per
 #' column.
 #' @param detrend Whether to remove a mean and linear trend from the time-series
-#' prior to fitting. If \code{data} is a matrix, this will be done independently for
-#' each column.
+#' prior to fitting. If \code{data} is a matrix, this will be done independently
+#' for each column.
 #' @param n_segments_min Minimum number of segments
 #' @param n_segments_max Maximum number of segments
 #' @param t_min Minimum number of observations per segment
@@ -69,22 +32,26 @@
 #' (FALSE, the default), or estimate segment means
 #' @param mu_lower Lower bound of uniform for segment means
 #' @param mu_upper Upper bound of uniform for segment means
-#' @param tuning Tuning parameters for the MCMC scheme
+#' @param tuning Tuning parameters for the MCMC scheme, created through the
+#' \code{\link{adaptspec_tuning}} function.
 #' @param start Starting values for MCMC chain. Initialised randomly if blank.
 #' Can be provided an adaptspecfit object in order to continue a previous chain.
 #' @param thin A list specifying how to thin each output of the MCMC sampler.
 #' A value of 1 indicates no thinning, 2 keeps every second sample, and so on.
 #' @param show_progress Whether to show a progress indicator during MCMC.
-#' @param run_diagnostics Whether to run diagnostics afterwards to determine
-#' whether the chain has reached convergence.
+#' @param debug If enabled, the sampler will output debug information on each
+#' iteration
+#' @param run_diagnostics Whether to run diagnostics afterwards to help
+#' determine whether the chain has reached convergence.
+#' @param model An object created with \code{adaptspec_model}
 #'
-#' @return An object of class \code{adaptspecfit}. The MCMC samples are available
-#' under the following list entries, each of which are of class
+#' @return An object of class \code{adaptspecfit}. The MCMC samples are
+#' available under the following list entries, each of which are of class
 #' \code{\link[coda]{mcmc}} or \code{\link[acoda]{mcmca}}:
 #' \itemize{
 #'   \item \code{n_segments}: Integer vector with samples of number of segments.
-#'   \item \code{cut_points}: Integer matrix with samples of each cut point, with
-#'   segment 1 cut point in column 1, and so on. Cells to the right of the
+#'   \item \code{cut_points}: Integer matrix with samples of each cut point,
+#'   with segment 1 cut point in column 1, and so on. Cells to the right of the
 #'   number of segments in that iteration are set to the length of the time
 #'   series.
 #'   \item \code{mu}: Numeric matrix with samples of segment means. Layout is
@@ -93,10 +60,10 @@
 #'   smoothing parameters. Layout is as for `cut_points`.
 #'   \item \code{beta}: Three dimensional array with samples of smoothing spline
 #'   parameters for each segment.
-#'   \item \code{x_missing}: List of numeric matrices, where each matrix holds the
-#'   samples of missing values for each column in `data`
-#'   \item \code{log_posterior}: Numeric vector of unnormalised values of the log
-#'   posterior in each iteration.
+#'   \item \code{x_missing}: List of numeric matrices, where each matrix holds
+#'   the samples of missing values for each column in `data`
+#'   \item \code{log_posterior}: Numeric vector of unnormalised values of the
+#'   log posterior in each iteration.
 #' }
 #'
 #' @usage
@@ -106,7 +73,7 @@
 #'   n_warm_up,
 #'   # Data
 #'   data,
-#'   detrend = TRUE,
+#'   detrend = FALSE,
 #'   # Model
 #'   n_segments_min = 1,
 #'   n_segments_max = 10,
@@ -122,21 +89,7 @@
 #'   mu_lower = -1000,
 #'   mu_upper = 1000,
 #'   # Sampler control
-#'   tuning = list(
-#'     prob_short_move = 0.8,
-#'     short_moves = c(-1, 0, 1),
-#'     short_move_weights = c(0.5, 0.5, 0.5),
-#'     var_inflate = 1,
-#'     warm_up_var_inflate = NULL,
-#'     use_cutpoint_within = TRUE,
-#'     use_single_within = TRUE,
-#'     use_hmc_within = FALSE,
-#'     l_min = 1,
-#'     l_max = 10,
-#'     epsilon_min = 0.1,
-#'     epsilon_max = 1,
-#'     use_hessian_curvature = TRUE
-#'   ),
+#'   tuning = adaptspec_tuning(),
 #'   # Starting values
 #'   start = list(
 #'     n_segments = NULL,
@@ -150,10 +103,12 @@
 #'     beta = 1,
 #'     tau_squared = 1,
 #'     cut_points = 1,
+#'     mu = 1,
 #'     log_posterior = 1,
 #'     x_missing = 1
 #'   ),
 #'   show_progress = FALSE,
+#'   debug = FALSE,
 #'   # Extra
 #'   run_diagnostics = TRUE
 #' )
@@ -166,11 +121,19 @@
 #'   simulated_piecewise
 #' )
 #' summary(model1)
-#' @seealso \code{\link{segment_log_spectra_mean}} for methods calculating
-#' estimates of the spectral densities in each segments.
-#' \code{\link{time_varying_spectra_mean}} for estimates of the time-varying
-#' spectral density. \code{\link{adaptspecfit}} for other useful methods
-#' applying to objects returned by this function.
+#' @seealso
+#' \code{\link{time_varying_mean_mean.adaptspecfit}} for estimates of the
+#' time-varying mean.
+#' \code{\link{time_varying_spectra_mean.adaptspecfit}} for estimates of the
+#' time-varying spectral density.
+#' \code{\link{adaptspecfit}} for other useful methods applying to objects
+#' returned by this function.
+#' \code{\link{segment_log_spectra_mean}} for methods calculating estimates of
+#' the spectral densities in each segments.
+#' \code{\link{cut_point_pmf}} to return the estimated probability mass function
+#' of the cutpoints.
+#' \code{\link{merge_samples}} to merge samples from independent runs of this
+#' function.
 #' @export
 adaptspec <- function(
   # Sampler
@@ -178,7 +141,7 @@ adaptspec <- function(
   n_warm_up,
   # Data
   data,
-  detrend = TRUE,
+  detrend = FALSE,
   # Model
   n_segments_min = 1,
   n_segments_max = 10,
@@ -194,20 +157,7 @@ adaptspec <- function(
   mu_lower = -1000,
   mu_upper = 1000,
   # Sampler control
-  tuning = list(
-    prob_short_move = 0.8,
-    short_moves = c(-1, 0, 1),
-    short_move_weights = c(0.5, 0.5, 0.5),
-    var_inflate = 1,
-    warm_up_var_inflate = NULL,
-    use_single_within = TRUE,
-    use_hmc_within = FALSE,
-    l_min = 1,
-    l_max = 10,
-    epsilon_min = 0.1,
-    epsilon_max = 1,
-    use_hessian_curvature = TRUE
-  ),
+  tuning = adaptspec_tuning(),
   # Starting values
   start = list(
     n_segments = NULL,
@@ -260,6 +210,7 @@ adaptspec <- function(
   )
 }
 
+#' @describeIn adaptspec Constructs an object representing an AdaptSPEC model
 #' @export
 adaptspec_model <- function(
   n_segments_min = 1,
@@ -297,6 +248,36 @@ adaptspec_model <- function(
   return(model)
 }
 
+#' @describeIn adaptspec Uses MCMC to sample from the posterior of an AdaptSPEC
+#' model given data
+#' @usage
+#' adaptspec_sample(
+#'   model,
+#'   n_loop,
+#'   n_warm_up,
+#'   data,
+#'   detrend = TRUE,
+#'   tuning = adaptspec_tuning(),
+#'   start = list(
+#'     n_segments = NULL,
+#'     cut_points = NULL,
+#'     beta = NULL,
+#'     tau_squared = NULL,
+#'     x_missing = NULL
+#'   ),
+#'   thin = list(
+#'     n_segments = 1,
+#'     beta = 1,
+#'     tau_squared = 1,
+#'     cut_points = 1,
+#'     mu = 1,
+#'     log_posterior = 1,
+#'     x_missing = 1
+#'   ),
+#'   show_progress = FALSE,
+#'   debug = FALSE,
+#'   run_diagnostics = TRUE
+#' )
 #' @export
 adaptspec_sample <- function(
   model,
@@ -304,11 +285,7 @@ adaptspec_sample <- function(
   n_warm_up,
   data,
   detrend = TRUE,
-  tuning = list(
-    prob_mm1 = 0.8,
-    var_inflate = 1,
-    warm_up_var_inflate = NULL
-  ),
+  tuning = adaptspec_tuning(),
   start = list(
     n_segments = NULL,
     cut_points = NULL,
@@ -339,7 +316,6 @@ adaptspec_sample <- function(
   # Cannot allow too many segments
   stopifnot(nrow(data) >= (model$n_segments_max * model$t_min))
 
-  tuning <- .adaptspec_tuning(tuning)
   .validate_adaptspec_tuning(tuning)
 
   if (inherits(start, 'adaptspecfit')) {
@@ -370,16 +346,11 @@ adaptspec_sample <- function(
   results$detrend_fits <- detrend_fits
   results$tuning <- tuning
   results$prior <- model
-  results <- adaptspecfit(results)
+  results <- .adaptspecfit(results)
 
   if (run_diagnostics) diagnostic_warnings(results)
 
   return(results)
-}
-
-#' @export
-adaptspec_nu <- function(n_freq, n_bases) {
-  splines_basis1d_demmler_reinsch(2 * seq(0, 0.5, length.out = n_freq), n_bases)
 }
 
 .adaptspec_start <- function(start, model, data, tuning) {
@@ -400,7 +371,7 @@ adaptspec_nu <- function(n_freq, n_bases) {
   }
   if (is.null(start$tau_squared)) {
     start$tau_squared <- rep(0, model$n_segments_max)
-    start$tau_squared[1 : start$n_segments] <- runif(
+    start$tau_squared[1 : start$n_segments] <- stats::runif(
       length(1 : start$n_segments),
       0,
       model$tau_upper_limit
@@ -433,10 +404,10 @@ adaptspec_nu <- function(n_freq, n_bases) {
       ncol = 1 + model$n_bases
     )
     for (n_segments in 1 : start$n_segments) {
-      start$beta[n_segments, ] <- rnorm(1 + model$n_bases)
+      start$beta[n_segments, ] <- stats::rnorm(1 + model$n_bases)
     }
     # Runs the optimisation algorithm to find the conditional mode for beta
-    data[is.na(data)] <- rnorm(sum(is.na(data)))
+    data[is.na(data)] <- stats::rnorm(sum(is.na(data)))
     state <- .get_sample_filled(data, model, start, tuning)
     start$beta <- state$beta_mode
   }
@@ -471,34 +442,66 @@ adaptspec_nu <- function(n_freq, n_bases) {
   }
 }
 
-.adaptspec_tuning <- function(tuning) {
-  tuning <- .extend_list(list(
-    prob_short_move = 0.8,
-    short_moves = c(-1, 0, 1),
-    short_move_weights = NULL,
-    var_inflate = 1,
-    use_cutpoint_within = TRUE,
-    use_single_within = FALSE,
-    use_hmc_within = FALSE,
-    l_min = 1,
-    l_max = 10,
-    epsilon_min = 0.1,
-    epsilon_max = 1,
-    use_hessian_curvature = TRUE,
+#' Tuning the AdaptSPEC sampler
+#'
+#' This specifies the tuning parameters of the reversible-jump MCMC algorithm
+#' used to estimate AdaptSPEC. The output is a list.
+#'
+#' @param prob_short_move probability of proposing a small move of a cutpoint
+#' in a within step
+#' @param short_moves set of possible small steps for the 'small move'
+#' proposal. if using time_step > 1, will be multiplied by time_step.
+#' @param short_move_weights the probability of picking each corresponding
+#' entry in \code{short_moves}. Need not be normalised to sum to one
+#' @param var_inflate factor by which to inflate the covariance matrix of the
+#' spline coefficient proposal
+#' @param warm_up_var_inflate as above, but applying only during warm-up
+#' @param use_cutpoint_within whether to propose the cutpoints. One would very
+#' rarely want to disable this.
+#' @param use_single_within whether to also update spline directly, not just
+#' when updating cutpoints
+#' @param use_hmc_within whether to also update spline parameters using HMC
+#' @param l_min minimum number of leap frog steps to take in an HMC iteration.
+#' Number of steps is randomly selected from a discrete uniform over
+#' \code{[l_min, l_max]}
+#' @param l_max maximum number of lead frog steps to take in an HMC iteration
+#' @param epsilon_min minimum step size in HMC. Step size is chosen from a
+#' uniform distribution over \code{[epsilon_min, epsilon_max]}
+#' @param epsilon_max maximum step size in HMC.
+#' @param use_hessian_curvature whether to use the hessian or the Fisher
+#' information for curvature of spline fit
+#' @export
+adaptspec_tuning <- function(
+  prob_short_move = 0.8,
+  short_moves = c(-1, 0, 1),
+  short_move_weights = c(0.5, 0.5, 0.5),
+  var_inflate = 1,
+  warm_up_var_inflate = var_inflate,
+  use_cutpoint_within = TRUE,
+  use_single_within = TRUE,
+  use_hmc_within = FALSE,
+  l_min = 1,
+  l_max = 10,
+  epsilon_min = 0.1,
+  epsilon_max = 1,
+  use_hessian_curvature = TRUE
+) {
+  list(
+    prob_short_move = prob_short_move,
+    short_moves = as.integer(short_moves),
+    short_move_weights = short_move_weights,
+    var_inflate = var_inflate,
+    warm_up_var_inflate = warm_up_var_inflate,
+    use_cutpoint_within = use_cutpoint_within,
+    use_single_within = use_single_within,
+    use_hmc_within = use_hmc_within,
+    l_min = as.integer(l_min),
+    l_max = as.integer(l_max),
+    epsilon_min = epsilon_min,
+    epsilon_max = epsilon_max,
+    use_hessian_curvature = use_hessian_curvature,
     can_avoid_optimiser = FALSE
-  ), tuning)
-
-  tuning$short_moves <- as.integer(tuning$short_moves)
-  if (is.null(tuning$short_move_weights)) {
-    tuning$short_move_weights <- rep(1, length(tuning$short_moves))
-  }
-
-  if (is.null(tuning$warm_up_var_inflate)) {
-    tuning$warm_up_var_inflate <- tuning$var_inflate
-  }
-  tuning$l_min <- as.integer(tuning$l_min)
-  tuning$l_max <- as.integer(tuning$l_max)
-  tuning
+  )
 }
 
 .validate_adaptspec_tuning <- function(tuning) {

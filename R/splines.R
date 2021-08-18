@@ -43,8 +43,7 @@
   return(design_matrix)
 }
 
-# Polynomial splines on [0, 1] (input scales where necessary)
-smoothing_spline_basis <- function(
+.smoothing_spline_basis <- function(
   covariates,
   n_bases = floor(length(covariates) / 10),
   order = 2,
@@ -79,8 +78,7 @@ smoothing_spline_basis <- function(
   )
 }
 
-#' Thin plate splines
-thinplate_spline_basis <- function(
+.thinplate_spline_basis <- function(
   covariates,
   n_bases = floor(nrow(covariates) / 10),
   order = 2,

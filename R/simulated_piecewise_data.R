@@ -2,11 +2,14 @@
 #' @docType data
 #' @aliases simulated_piecewise
 #' @title Simulated Piecewise Time Series Dataset
-#' @description This dataset is simulated from a piecewise autoregressive process (model (11), p. 1581, in Rosen et al. (2012)), see Examples.
+#' @description This dataset is simulated from a piecewise autoregressive
+#' process (model (11), p. 1581, in Rosen et al. (2012)), see Examples.
 #' @usage data(simulated_piecewise)
 #' @format A univariate numeric vector with 1,024 observations.
 #' @source Simulated
-#' @references Rosen, O., Wood, S. and Stoffer, D. (2012). AdaptSPEC: Adaptive Spectral Estimation for Nonstationary Time Series. J. of the American Statistical Association, 107, 1575-1589
+#' @references Rosen, O., Wood, S. and Stoffer, D. (2012). AdaptSPEC: Adaptive
+#' Spectral Estimation for Nonstationary Time Series. J. of the American
+#' Statistical Association, 107, 1575-1589
 #' @keywords datasets
 #' @examples
 #' #Created using the following script:

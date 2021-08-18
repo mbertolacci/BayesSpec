@@ -4,7 +4,9 @@
 \name{simulated_piecewise}
 \alias{simulated_piecewise}
 \title{Simulated Piecewise Time Series Dataset}
-\format{A univariate numeric vector with 1,024 observations.}
+\format{
+A univariate numeric vector with 1,024 observations.
+}
 \source{
 Simulated
 }
@@ -12,7 +14,8 @@ Simulated
 data(simulated_piecewise)
 }
 \description{
-This dataset is simulated from a piecewise autoregressive process (model (11), p. 1581, in Rosen et al. (2012)), see Examples.
+This dataset is simulated from a piecewise autoregressive
+process (model (11), p. 1581, in Rosen et al. (2012)), see Examples.
 }
 \examples{
 #Created using the following script:
@@ -29,6 +32,8 @@ simulated_piecewise <- c(x1, x2, x3)
 plot.ts(simulated_piecewise)
 }
 \references{
-Rosen, O., Wood, S. and Stoffer, D. (2012). AdaptSPEC: Adaptive Spectral Estimation for Nonstationary Time Series. J. of the American Statistical Association, 107, 1575-1589
+Rosen, O., Wood, S. and Stoffer, D. (2012). AdaptSPEC: Adaptive
+Spectral Estimation for Nonstationary Time Series. J. of the American
+Statistical Association, 107, 1575-1589
 }
 \keyword{datasets}

@@ -4,7 +4,10 @@
 \name{intracranial_eeg}
 \alias{intracranial_eeg}
 \title{Intracranial Electroencephalograph (IEEG) Dataset}
-\format{A vector time series of 6,000 observations of intracranial electroencephalograph}
+\format{
+A vector time series of 6,000 observations of intracranial
+electroencephalograph
+}
 \source{
 kaggle.com
 }

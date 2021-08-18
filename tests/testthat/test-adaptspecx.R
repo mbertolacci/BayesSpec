@@ -1,4 +1,4 @@
-context('adaptspec_lsbp_mixture')
+context('adaptspecx')
 
 test_that('sampler gives sane return samples', {
   x <- cbind(
@@ -9,7 +9,7 @@ test_that('sampler gives sane return samples', {
   )
   design_matrix <- as.matrix(1 : 4)
 
-  result <- adaptspec_lsbp_mixture(
+  result <- adaptspecx(
     50, 0, x, design_matrix, 2,
     component_model = adaptspec_model(n_segments_max = 2, t_min = 10),
     run_diagnostics = FALSE
@@ -29,7 +29,7 @@ test_that('sampler can take longer design matrix than data width', {
   )
   design_matrix <- as.matrix(1 : 8)
 
-  result <- adaptspec_lsbp_mixture(
+  result <- adaptspecx(
     50, 0, x, design_matrix, 2,
     component_model = adaptspec_model(n_segments_max = 2, t_min = 10),
     run_diagnostics = FALSE

@@ -11,24 +11,32 @@
 \alias{plot.adaptspecfit}
 \title{Methods for adaptspecfit objects}
 \usage{
-\method{window}{adaptspecfit}(fit, ...)
+\method{window}{adaptspecfit}(x, ...)
 
-\method{summary}{adaptspecfit}(fit, iterations_threshold = 0)
+\method{summary}{adaptspecfit}(object, iterations_threshold = 0, ...)
 
-\method{ntimes}{adaptspecfit}(fit)
+\method{ntimes}{adaptspecfit}(x, ...)
 
-\method{diagnostic_plots}{adaptspecfit}(fit, ...)
+\method{diagnostic_plots}{adaptspecfit}(x, ...)
 
-\method{diagnostics}{adaptspecfit}(fit, iterations_threshold = 0)
+\method{diagnostics}{adaptspecfit}(x, iterations_threshold = 0, ...)
 
-\method{diagnostic_warnings}{adaptspecfit}(fit,
-  effective_size_threshold = 100, iterations_proportion_threshold = 0.01,
-  prefix = "")
+\method{diagnostic_warnings}{adaptspecfit}(
+  x,
+  effective_size_threshold = 100,
+  iterations_proportion_threshold = 0.01,
+  prefix = "",
+  ...
+)
 
-\method{plot}{adaptspecfit}(fit, ask, auto_layout = TRUE)
+\method{plot}{adaptspecfit}(x, ask, auto_layout = TRUE, ...)
 }
 \arguments{
-\item{fit}{\code{adaptspecfit} object}
+\item{x, object}{\code{adaptspecfit} object}
+
+\item{...}{Extra arguments. For \code{window}, these are passed to
+\code{\link[coda]{window.mcmc}} to set the \code{thin} or \code{start}
+parameters (for example)}
 
 \item{iterations_threshold}{Number of iterations below which to suppress
 output. For example, if this is 100, and the MCMC chain spent less than
@@ -43,33 +51,39 @@ to suppress output. Just like \code{iterations_threshold}, but a proportion.}
 
 \item{prefix}{Used internally.}
 
-\item{ask}{Prompt user before each page of plots}
+\item{ask}{Prompt user before each page of plots.}
 
-\item{auto_layout}{Automatically generate output format}
+\item{auto_layout}{Automatically generate output format.}
 }
 \description{
 These methods apply to the adaptspecfit objects returned by
 \code{\link{adaptspec}}.
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{window}: Method to modify the start/thinning of MCMC samples,
+\item \code{window.adaptspecfit}: Method to modify the start/thinning of MCMC samples,
 as per \code{\link[coda]{window.mcmc}}
 
-\item \code{summary}: Summarises MCMC samples.
+\item \code{summary.adaptspecfit}: Summarises MCMC samples.
 
-\item \code{ntimes}: Returns the number of time periods in the input
+\item \code{ntimes.adaptspecfit}: Returns the number of time periods in the input
 
-\item \code{diagnostic_plots}: MCMC diagnostic plots to assess convergence.
+\item \code{diagnostic_plots.adaptspecfit}: MCMC diagnostic plots to assess convergence.
 
-\item \code{diagnostics}: Outputs MCMC diagnostics statistics to help assess
+\item \code{diagnostics.adaptspecfit}: Outputs MCMC diagnostics statistics to help assess
 convergence.
 
-\item \code{diagnostic_warnings}: Outputs warnings when MCMC diagnostics are below
+\item \code{diagnostic_warnings.adaptspecfit}: Outputs warnings when MCMC diagnostics are below
 outside of nominal threshold ranges. The user is cautioned that this is
 subject to both false positive and false negatives; examining diagnostics
 plots directly is advised.
 
-\item \code{plot}: Summary plots
+\item \code{plot.adaptspecfit}: Summary plots
 }}
 
+\seealso{
+\code{\link{segment_log_spectra_mean}} for methods calculating
+estimates of the spectral densities in each segments.
+\code{\link{time_varying_mean_mean.adaptspecfit}} for estimates of the
+time-varying mean and spectral density.
+}

@@ -2,7 +2,9 @@
 % Please edit documentation in R/adaptspec.R
 \name{adaptspec}
 \alias{adaptspec}
-\title{Adaptive Spectral Estimation for Non-stationary Time Series}
+\alias{adaptspec_model}
+\alias{adaptspec_sample}
+\title{AdaptSPEC: Adaptive Spectral Estimation for Non-stationary Time Series}
 \usage{
 adaptspec(
   # Sampler
@@ -10,7 +12,7 @@ adaptspec(
   n_warm_up,
   # Data
   data,
-  detrend = TRUE,
+  detrend = FALSE,
   # Model
   n_segments_min = 1,
   n_segments_max = 10,
@@ -26,21 +28,7 @@ adaptspec(
   mu_lower = -1000,
   mu_upper = 1000,
   # Sampler control
-  tuning = list(
-    prob_short_move = 0.8,
-    short_moves = c(-1, 0, 1),
-    short_move_weights = c(0.5, 0.5, 0.5),
-    var_inflate = 1,
-    warm_up_var_inflate = NULL,
-    use_cutpoint_within = TRUE,
-    use_single_within = FALSE,
-    use_hmc_within = FALSE,
-    l_min = 1,
-    l_max = 10,
-    epsilon_min = 0.1,
-    epsilon_max = 1,
-    use_hessian_curvature = TRUE
-  ),
+  tuning = adaptspec_tuning(),
   # Starting values
   start = list(
     n_segments = NULL,
@@ -54,11 +42,57 @@ adaptspec(
     beta = 1,
     tau_squared = 1,
     cut_points = 1,
+    mu = 1,
     log_posterior = 1,
     x_missing = 1
   ),
   show_progress = FALSE,
+  debug = FALSE,
   # Extra
+  run_diagnostics = TRUE
+)
+
+adaptspec_model(
+  n_segments_min = 1,
+  n_segments_max = 10,
+  t_min = time_step * floor(40/time_step),
+  sigma_squared_alpha = 100,
+  tau_prior_a = -1,
+  tau_prior_b = 0,
+  tau_upper_limit = 10000,
+  n_bases = 7,
+  time_step = 1,
+  frequency_transform = c("identity", "cbrt"),
+  segment_means = FALSE,
+  mu_lower = -1000,
+  mu_upper = 1000
+)
+
+adaptspec_sample(
+  model,
+  n_loop,
+  n_warm_up,
+  data,
+  detrend = TRUE,
+  tuning = adaptspec_tuning(),
+  start = list(
+    n_segments = NULL,
+    cut_points = NULL,
+    beta = NULL,
+    tau_squared = NULL,
+    x_missing = NULL
+  ),
+  thin = list(
+    n_segments = 1,
+    beta = 1,
+    tau_squared = 1,
+    cut_points = 1,
+    mu = 1,
+    log_posterior = 1,
+    x_missing = 1
+  ),
+  show_progress = FALSE,
+  debug = FALSE,
   run_diagnostics = TRUE
 )
 }
@@ -73,8 +107,8 @@ it has multiple independent observations of the same random process, one per
 column.}
 
 \item{detrend}{Whether to remove a mean and linear trend from the time-series
-prior to fitting. If \code{data} is a matrix, this will be done independently for
-each column.}
+prior to fitting. If \code{data} is a matrix, this will be done independently
+for each column.}
 
 \item{n_segments_min}{Minimum number of segments}
 
@@ -107,7 +141,8 @@ smoothing spline. Defaults to no transformation.}
 
 \item{mu_upper}{Upper bound of uniform for segment means}
 
-\item{tuning}{Tuning parameters for the MCMC scheme}
+\item{tuning}{Tuning parameters for the MCMC scheme, created through the
+\code{\link{adaptspec_tuning}} function.}
 
 \item{start}{Starting values for MCMC chain. Initialised randomly if blank.
 Can be provided an adaptspecfit object in order to continue a previous chain.}
@@ -117,17 +152,22 @@ A value of 1 indicates no thinning, 2 keeps every second sample, and so on.}
 
 \item{show_progress}{Whether to show a progress indicator during MCMC.}
 
-\item{run_diagnostics}{Whether to run diagnostics afterwards to determine
-whether the chain has reached convergence.}
+\item{debug}{If enabled, the sampler will output debug information on each
+iteration}
+
+\item{run_diagnostics}{Whether to run diagnostics afterwards to help
+determine whether the chain has reached convergence.}
+
+\item{model}{An object created with \code{adaptspec_model}}
 }
 \value{
-An object of class \code{adaptspecfit}. The MCMC samples are available
-under the following list entries, each of which are of class
+An object of class \code{adaptspecfit}. The MCMC samples are
+available under the following list entries, each of which are of class
 \code{\link[coda]{mcmc}} or \code{\link[acoda]{mcmca}}:
 \itemize{
   \item \code{n_segments}: Integer vector with samples of number of segments.
-  \item \code{cut_points}: Integer matrix with samples of each cut point, with
-  segment 1 cut point in column 1, and so on. Cells to the right of the
+  \item \code{cut_points}: Integer matrix with samples of each cut point,
+  with segment 1 cut point in column 1, and so on. Cells to the right of the
   number of segments in that iteration are set to the length of the time
   series.
   \item \code{mu}: Numeric matrix with samples of segment means. Layout is
@@ -136,10 +176,10 @@ under the following list entries, each of which are of class
   smoothing parameters. Layout is as for `cut_points`.
   \item \code{beta}: Three dimensional array with samples of smoothing spline
   parameters for each segment.
-  \item \code{x_missing}: List of numeric matrices, where each matrix holds the
-  samples of missing values for each column in `data`
-  \item \code{log_posterior}: Numeric vector of unnormalised values of the log
-  posterior in each iteration.
+  \item \code{x_missing}: List of numeric matrices, where each matrix holds
+  the samples of missing values for each column in `data`
+  \item \code{log_posterior}: Numeric vector of unnormalised values of the
+  log posterior in each iteration.
 }
 }
 \description{
@@ -148,44 +188,13 @@ time series by adaptively dividing the time series into an unknown but finite
 number of segments and estimating the corresponding local spectra by
 smoothing splines.
 }
-\section{MCMC tuning parameters}{
-
-The \code{tuning} argument allows you to change the tuning parameter of the
-reversible-jump MCMC algorithm used to estimate the model. It is a list with
-the following entries (and corresponding default values):
+\section{Functions}{
 \itemize{
-  \item \code{prob_short_move} (\code{0.8}): probability of proposing a small
-  move of a cutpoint in a within step
-  \item \code{short_moves} (\code{c(-1, 0, 1)}): set of possible small steps
-  for the 'small move' proposal. if using time_step > 1, will be multiplied
-  by time_step.
-  \item \code{short_move_weights} (\code{c(0.5, 0.5, 0.5)}) the probability
-  of picking each corresponding entry in \code{short_moves}. Need not be
-  normalised to sum to one
-  \item \code{var_inflate} (\code{1}): factor by which to inflate the
-  covariance matrix of the spline coefficient proposal
-  \item \code{warm_up_var_inflate} (\code{= var_inflate}): as above, but
-  applying only during warm-up
-  \item \code{use_cutpoint_within} (\code{TRUE}): whether to propose the
-  cutpoints. One would very rarely want to disable this.
-  \item \code{use_single_within} (\code{FALSE}): whether to also update
-  spline directly, not just when updating cutpoints
-  \item \code{use_hmc_within} (\code{FALSE}): whether to also update spline
-  parameters using HMC
-  \item \code{l_min} (\code{1}): minimum number of leap frog steps to
-  take in an HMC iteration. Number of steps is randomly selected from a
-  discrete uniform over \code{[l_min, l_max]}
-  \item \code{l_max} (\code{10}): maximum number of lead frog steps to
-  take in an HMC iteration
-  \item \code{epsilon_min} (\code{0.1}): minimum step size in HMC. Step size
-  is chosen from a uniform distribution over
-  \code{[epsilon_min, epsilon_max]}
-  \item \code{epsilon_max} (\code{1}): maximum step size in HMC.
-  \item \code{use_hessian_curvature} (\code{TRUE}): whether to use the
-  hessian or the Fisher information for curvature of spline fit
-}
-If a value is omitted or NULL, the default above will be used.
-}
+\item \code{adaptspec_model}: Constructs an object representing an AdaptSPEC model
+
+\item \code{adaptspec_sample}: Uses MCMC to sample from the posterior of an AdaptSPEC
+model given data
+}}
 
 \examples{
 # Running adaptspec with the simulated_piecewise data.
@@ -198,9 +207,16 @@ model1 <- adaptspec(
 summary(model1)
 }
 \seealso{
-\code{\link{segment_log_spectra_mean}} for methods calculating
-estimates of the spectral densities in each segments.
-\code{\link{time_varying_spectra_mean}} for estimates of the time-varying
-spectral density. \code{\link{adaptspecfit}} for other useful methods
-applying to objects returned by this function.
+\code{\link{time_varying_mean_mean.adaptspecfit}} for estimates of the
+time-varying mean.
+\code{\link{time_varying_spectra_mean.adaptspecfit}} for estimates of the
+time-varying spectral density.
+\code{\link{adaptspecfit}} for other useful methods applying to objects
+returned by this function.
+\code{\link{segment_log_spectra_mean}} for methods calculating estimates of
+the spectral densities in each segments.
+\code{\link{cut_point_pmf}} to return the estimated probability mass function
+of the cutpoints.
+\code{\link{merge_samples}} to merge samples from independent runs of this
+function.
 }

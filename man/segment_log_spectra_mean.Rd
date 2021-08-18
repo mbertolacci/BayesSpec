@@ -5,11 +5,17 @@
 \alias{segment_spectra_mean}
 \title{Estimates of segment spectral densities from adaptspecfit objects}
 \usage{
-segment_log_spectra_mean(fit, n_frequencies = 64, frequencies = seq(0, 0.5,
-  length.out = n_frequencies))
+segment_log_spectra_mean(
+  fit,
+  n_frequencies = 64,
+  frequencies = seq(0, 0.5, length.out = n_frequencies)
+)
 
-segment_spectra_mean(fit, n_frequencies = 64, frequencies = seq(0, 0.5,
-  length.out = n_frequencies))
+segment_spectra_mean(
+  fit,
+  n_frequencies = 64,
+  frequencies = seq(0, 0.5, length.out = n_frequencies)
+)
 }
 \arguments{
 \item{fit}{\code{adaptspecfit} object}

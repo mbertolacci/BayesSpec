@@ -13,10 +13,6 @@
     .Call('_BayesSpec_getMetropolisLogRatio', PACKAGE = 'BayesSpec', currentR, proposalR, xR, priorList, tuningList)
 }
 
-.dirichlet_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, componentTuningR, firstCategoryFixed, startR, thin, showProgress = FALSE) {
-    .Call('_BayesSpec_dirichletMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, alphaPriorShape, alphaPriorRate, componentTuningR, firstCategoryFixed, startR, thin, showProgress)
-}
-
 .fft_forward_r2c <- function(inputR) {
     .Call('_BayesSpec_fftForwardR2C', PACKAGE = 'BayesSpec', inputR)
 }
@@ -25,31 +21,10 @@
     .Call('_BayesSpec_fftForwardC2C', PACKAGE = 'BayesSpec', inputR)
 }
 
-.independent_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, componentTuningR, firstCategoryFixed, startR, thin, showProgress = FALSE) {
-    .Call('_BayesSpec_independentMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, priorsR, weightsPriorR, componentTuningR, firstCategoryFixed, startR, thin, showProgress)
-}
-
 .lsbp_mixture <- function(nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, lsbpTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi) {
     .Call('_BayesSpec_logisticStickBreakingMixture', PACKAGE = 'BayesSpec', nLoop, nWarmUp, xR, missingIndicesR, designMatrixR, priorsR, priorMeanR, priorPrecisionR, tauPriorASquared, tauPriorNu, tauPriorUpper, componentTuningR, lsbpTuningR, firstCategoryFixed, nSplineBases, startR, thin, showProgress, mpi)
 }
 
-.rand_gamma <- function(n, shape, scale) {
-    .Call('_BayesSpec_randGamma', PACKAGE = 'BayesSpec', n, shape, scale)
-}
-
-rlogbeta <- function(n, a, b) {
-    .Call('_BayesSpec_rlogbeta', PACKAGE = 'BayesSpec', n, a, b)
-}
-
-rloggamma <- function(n, shape, logScale) {
-    .Call('_BayesSpec_rloggamma', PACKAGE = 'BayesSpec', n, shape, logScale)
-}
-
-rtnorm <- function(n, mean, sd, lower, upper) {
-    .Call('_BayesSpec_rtnorm', PACKAGE = 'BayesSpec', n, mean, sd, lower, upper)
-}
-
-#' @export
 splines_basis1d_demmler_reinsch <- function(xR, nBases) {
     .Call('_BayesSpec_splines_basis1d_demmler_reinsch', PACKAGE = 'BayesSpec', xR, nBases)
 }
@@ -84,21 +59,5 @@ splines_basis1d_demmler_reinsch <- function(xR, nBases) {
 
 .time_varying_spectra_mixture_samples_probabilities <- function(componentSamples, probabilities) {
     .Call('_BayesSpec_timeVaryingSpectraMixtureSamplesProbabilities', PACKAGE = 'BayesSpec', componentSamples, probabilities)
-}
-
-.log_whittle_likelihood <- function(fHatR, periodogramR, n) {
-    .Call('_BayesSpec_logWhittleLikelihood', PACKAGE = 'BayesSpec', fHatR, periodogramR, n)
-}
-
-.log_whittle_likelihood_beta <- function(betaR, nuR, periodogramR, n) {
-    .Call('_BayesSpec_logWhittleLikelihoodBeta', PACKAGE = 'BayesSpec', betaR, nuR, periodogramR, n)
-}
-
-.log_whittle_likelihood_beta_deriv <- function(betaR, nuR, periodogramR, n) {
-    .Call('_BayesSpec_logWhittleLikelihoodBetaDeriv', PACKAGE = 'BayesSpec', betaR, nuR, periodogramR, n)
-}
-
-.sample_whittle_missing <- function(xR, missingIndicesR, halfSpectrumR, mu) {
-    .Call('_BayesSpec_sampleWhittleMissingR', PACKAGE = 'BayesSpec', xR, missingIndicesR, halfSpectrumR, mu)
 }
 

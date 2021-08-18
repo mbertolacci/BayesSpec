@@ -25,7 +25,7 @@ prior <- adaptspec_model(
   tau_upper_limit = 2,
   n_bases = 2
 )
-tuning <- .adaptspec_tuning(list(use_hessian_curvature = TRUE))
+tuning <- adaptspec_tuning(use_hessian_curvature = TRUE)
 
 test_that('initialise', {
   result <- .get_sample_filled(x, prior, .adaptspec_start(
@@ -127,7 +127,7 @@ test_that('fit and densities', {
 })
 
 test_that('the nu matrix is correct for even and odd numbers of observations', {
-  y_even <- as.matrix(rnorm(4))
+  y_even <- as.matrix(stats::rnorm(4))
   result_even <- .get_sample_filled(y_even, prior, .adaptspec_start(
     list(n_segments = 1), prior, y_even, tuning
   ), tuning)
@@ -137,7 +137,7 @@ test_that('the nu matrix is correct for even and odd numbers of observations', {
     c(1, -4.501582e-01,  0.2250791)
   ), tolerance = 1e-5)
 
-  y_odd <- as.matrix(rnorm(5))
+  y_odd <- as.matrix(stats::rnorm(5))
   result_odd <- .get_sample_filled(y_odd, prior, .adaptspec_start(
     list(n_segments = 1), prior, y_odd, tuning
   ), tuning)

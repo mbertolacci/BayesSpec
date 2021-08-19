@@ -4,7 +4,7 @@
 
 An implementation of methods for spectral analysis using the Bayesian framework. It includes functions for modelling spectrum as well as appropriate plotting and output estimates.
 
-Please note that this is the development version of the R package BayesSpec. It is a substantial revision of the [existing pacakge in CRAN](https://cran.r-project.org/package=BayesSpec).
+Please note that this is the development version of the R package BayesSpec. It is a substantial revision of the [existing package in CRAN](https://cran.r-project.org/package=BayesSpec).
 
 ## Installation
 
@@ -14,11 +14,11 @@ First, you need the dependency [acoda](https://github.com/mbertolacci/acoda/), a
 
 Then you can get the latest development version from GitHub with
 
-    devtools::install_github('mbertolacci/WoodburyMatrix')
+    devtools::install_github('mbertolacci/BayesSpec')
 
 The previous version of the software can be installed from CRAN using
 
-    install.packages('WoodburyMatrix')
+    install.packages('BayesSpec')
 
 It is planned to update the CRAN version at some point, but there is currently no timeline for doing so.
 

@@ -329,9 +329,9 @@ segment_log_spectra_mean <- function(
   }
   # Compute fits of the spectra
   if (fit$prior$frequency_transform == 'cbrt') {
-    transformed_frequencies <- frequencies ^ (1 / 3)
+    transformed_frequencies <- (2 * frequencies) ^ (1 / 3)
   } else {
-    transformed_frequencies <- frequencies
+    transformed_frequencies <- 2 * frequencies
   }
   nu <- splines_basis1d_demmler_reinsch(
     transformed_frequencies,
@@ -374,9 +374,9 @@ segment_spectra_mean <- function(
   }
   # Compute fits of the spectra
   if (fit$prior$frequency_transform == 'cbrt') {
-    transformed_frequencies <- frequencies ^ (1 / 3)
+    transformed_frequencies <- (2 * frequencies) ^ (1 / 3)
   } else {
-    transformed_frequencies <- frequencies
+    transformed_frequencies <-  2 * frequencies
   }
   nu <- splines_basis1d_demmler_reinsch(
     transformed_frequencies,
